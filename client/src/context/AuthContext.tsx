@@ -51,23 +51,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
 
           if (profile) {
             const hasChosenGoal = Boolean(profile.target_goal && profile.target_goal.trim() !== '' && profile.target_goal !== 'Not Set');
             setUser({
               id: profile.id,
-              name: profile.full_name || session.user.email?.split('@')[0] || 'User',
+              name: profile.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
               email: profile.email || session.user.email || '',
               role: profile.role || 'student',
               college: profile.college_name || '',
               degree: profile.degree || 'Computer Science',
               year: profile.year_of_study || '3rd Year',
-              avatar: profile.avatar_url || '/avatars/rishabh.png',
+              avatar: profile.avatar_url || session.user.user_metadata?.avatar_url || '/avatars/rishabh.png',
               bio: profile.bio || 'Building scalable applications and mastering algorithmic problem solving.',
               githubUsername: profile.github_username,
               targetGoal: profile.target_goal || undefined,
               isOnboarded: hasChosenGoal,
+            });
+          } else {
+            setUser({
+              id: session.user.id,
+              name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+              email: session.user.email || '',
+              role: 'student',
+              college: '',
+              degree: 'Computer Science',
+              year: '3rd Year',
+              avatar: session.user.user_metadata?.avatar_url || '/avatars/rishabh.png',
+              bio: 'Building scalable applications and mastering algorithmic problem solving.',
+              isOnboarded: false,
             });
           }
           if (session.access_token) {
@@ -123,17 +136,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const hasChosenGoal = Boolean(profile.target_goal && profile.target_goal.trim() !== '' && profile.target_goal !== 'Not Set');
               setUser({
                 id: profile.id,
-                name: profile.full_name,
-                email: profile.email,
-                role: profile.role,
-                college: profile.college_name,
-                degree: profile.degree,
-                year: profile.year_of_study,
-                avatar: profile.avatar_url,
+                name: profile.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+                email: profile.email || session.user.email || '',
+                role: profile.role || 'student',
+                college: profile.college_name || '',
+                degree: profile.degree || 'Computer Science',
+                year: profile.year_of_study || '3rd Year',
+                avatar: profile.avatar_url || session.user.user_metadata?.avatar_url || '/avatars/rishabh.png',
                 bio: profile.bio || 'Building real-world software & mastering code execution.',
                 githubUsername: profile.github_username,
                 targetGoal: profile.target_goal || undefined,
                 isOnboarded: hasChosenGoal,
+              });
+              setLoading(false);
+              return;
+            } else {
+              setUser({
+                id: session.user.id,
+                name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+                email: session.user.email || '',
+                role: 'student',
+                college: '',
+                degree: 'Computer Science',
+                year: '3rd Year',
+                avatar: session.user.user_metadata?.avatar_url || '/avatars/rishabh.png',
+                bio: 'Building scalable applications and mastering algorithmic problem solving.',
+                isOnboarded: false,
               });
               setLoading(false);
               return;
