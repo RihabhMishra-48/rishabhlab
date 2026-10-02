@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { api } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { DailyMission } from '../../types';
+import { getCuratedMission } from '../../data/curatedMissions';
+import { normalizeTrackName } from '../../data/curatedRoadmaps';
 import {
   CheckCircle2,
   Circle,
@@ -17,19 +20,28 @@ import {
 } from 'lucide-react';
 
 export const DailyMissionPage: React.FC = () => {
-  const [mission, setMission] = useState<DailyMission | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const track = normalizeTrackName(user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'App Development');
+  const [mission, setMission] = useState<DailyMission>(() => getCuratedMission(track));
+  const [loading, setLoading] = useState(false);
   const [shipModalOpen, setShipModalOpen] = useState(false);
   const [githubProofUrl, setGithubProofUrl] = useState('');
   const [commitMessage, setCommitMessage] = useState('');
   const [isShipping, setIsShipping] = useState(false);
 
   const fetchMission = async () => {
+    const fallback = getCuratedMission(track);
     try {
+      setLoading(true);
       const data = await api.getTodayMission();
-      setMission(data);
+      if (data && data.tasks && data.tasks.length > 0) {
+        setMission(data);
+      } else {
+        setMission(fallback);
+      }
     } catch (err) {
-      console.error(err);
+      console.warn('Using curated daily mission for', track);
+      setMission(fallback);
     } finally {
       setLoading(false);
     }
@@ -37,18 +49,38 @@ export const DailyMissionPage: React.FC = () => {
 
   useEffect(() => {
     fetchMission();
-  }, []);
+  }, [user?.targetGoal]);
 
   const handleToggleTask = async (taskId: string) => {
     if (!mission) return;
+    const updatedTasks = mission.tasks.map((t) =>
+      t.taskId === taskId ? { ...t, isCompleted: !t.isCompleted } : t
+    );
+    const completedTasksCount = updatedTasks.filter((t) => t.isCompleted).length;
+    const isAllCompleted = completedTasksCount === updatedTasks.length;
+    const updatedMission = {
+      ...mission,
+      tasks: updatedTasks,
+      completedTasksCount,
+      isAllCompleted,
+    };
+    setMission(updatedMission);
+
+    if (isAllCompleted) {
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    }
+
     try {
-      const res = await api.toggleMissionTask(mission._id, taskId);
-      setMission(res.mission);
-      if (res.mission.isAllCompleted) {
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-      }
+      const completedIds = updatedTasks.filter((t) => t.isCompleted).map((t) => t.taskId);
+      localStorage.setItem(`rishabhlabs_mission_completed_${track}`, JSON.stringify(completedIds));
+    } catch (e) {
+      // Ignore
+    }
+
+    try {
+      await api.toggleMissionTask(mission._id, taskId);
     } catch (err) {
-      console.error(err);
+      console.warn('Backend mission toggle sync note:', err);
     }
   };
 
@@ -56,17 +88,48 @@ export const DailyMissionPage: React.FC = () => {
     e.preventDefault();
     if (!mission) return;
     setIsShipping(true);
+
+    const updatedTasks = mission.tasks.map((t) =>
+      t.type === 'ship'
+        ? {
+            ...t,
+            isCompleted: true,
+            proofSubmitted: githubProofUrl,
+          }
+        : t
+    );
+    const completedTasksCount = updatedTasks.filter((t) => t.isCompleted).length;
+    const isAllCompleted = completedTasksCount === updatedTasks.length;
+    const updatedMission = {
+      ...mission,
+      tasks: updatedTasks,
+      completedTasksCount,
+      isAllCompleted,
+    };
+    setMission(updatedMission);
+
     try {
-      const res = await api.shipMissionProof(mission._id, githubProofUrl, commitMessage);
-      setMission(res.mission);
-      setShipModalOpen(false);
-      confetti({
-        particleCount: 150,
-        spread: 100,
-        origin: { y: 0.6 },
-      });
+      const completedIds = updatedTasks.filter((t) => t.isCompleted).map((t) => t.taskId);
+      localStorage.setItem(`rishabhlabs_mission_completed_${track}`, JSON.stringify(completedIds));
+      localStorage.setItem(
+        `rishabhlabs_mission_proof_${track}`,
+        JSON.stringify({ url: githubProofUrl, message: commitMessage })
+      );
+    } catch (e) {
+      // Ignore
+    }
+
+    setShipModalOpen(false);
+    confetti({
+      particleCount: 150,
+      spread: 100,
+      origin: { y: 0.6 },
+    });
+
+    try {
+      await api.shipMissionProof(mission._id, githubProofUrl, commitMessage);
     } catch (err) {
-      console.error(err);
+      console.warn('Backend ship proof sync note:', err);
     } finally {
       setIsShipping(false);
     }

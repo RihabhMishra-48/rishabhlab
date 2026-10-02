@@ -4,6 +4,11 @@ import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Roadmap, RoadmapNode } from '../../types';
 import {
+  AVAILABLE_TRACKS,
+  getCuratedRoadmap,
+  normalizeTrackName,
+} from '../../data/curatedRoadmaps';
+import {
   Check,
   Lock,
   Play,
@@ -17,25 +22,56 @@ import {
   Award,
   Terminal,
   Layers,
-  Server
+  Server,
+  Smartphone,
+  Shield,
+  BarChart3,
 } from 'lucide-react';
 
 export const RoadmapPage: React.FC = () => {
   const { user } = useAuth();
-  const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
-  const [selectedNode, setSelectedNode] = useState<RoadmapNode | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [regenerating, setRegenerating] = useState(false);
-  const [activeTrack, setActiveTrack] = useState<string>(
-    user?.targetGoal || 'AI / Machine Learning'
+  const initialTrack = normalizeTrackName(
+    user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'App Development'
   );
+  const [activeTrack, setActiveTrack] = useState<string>(initialTrack);
+  const [roadmap, setRoadmap] = useState<Roadmap>(() => getCuratedRoadmap(initialTrack));
+  const [selectedNode, setSelectedNode] = useState<RoadmapNode | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+
+  // Helper to load persisted statuses from localStorage
+  const applySavedStatuses = (baseRoadmap: Roadmap, track: string): Roadmap => {
+    try {
+      const saved = localStorage.getItem(`rishabhlabs_roadmap_${track}`);
+      if (saved) {
+        const statusMap: Record<string, 'completed' | 'in_progress' | 'locked'> = JSON.parse(saved);
+        const updatedNodes = baseRoadmap.nodes.map((n) => ({
+          ...n,
+          status: statusMap[n.nodeId] || n.status,
+        }));
+        const completedCount = updatedNodes.filter((n) => n.status === 'completed').length;
+        return {
+          ...baseRoadmap,
+          nodes: updatedNodes,
+          completedNodes: completedCount,
+        };
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+    return baseRoadmap;
+  };
 
   const fetchRoadmap = async (trackName?: string, shouldRegenerate = false) => {
+    const target = normalizeTrackName(
+      trackName || activeTrack || user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'App Development'
+    );
+    const fallbackRoadmap = applySavedStatuses(getCuratedRoadmap(target), target);
+
     try {
       if (shouldRegenerate) setRegenerating(true);
       else setLoading(true);
 
-      const target = trackName || activeTrack || user?.targetGoal || 'AI / Machine Learning';
       const data = await api.getRoadmap(target, shouldRegenerate);
 
       if (data?.roadmap?.nodes && data.roadmap.nodes.length > 0) {
@@ -44,9 +80,20 @@ export const RoadmapPage: React.FC = () => {
           data.roadmap.nodes.find((n: RoadmapNode) => n.status === 'in_progress') ||
           data.roadmap.nodes[0];
         setSelectedNode(active);
+      } else {
+        setRoadmap(fallbackRoadmap);
+        const active =
+          fallbackRoadmap.nodes.find((n: RoadmapNode) => n.status === 'in_progress') ||
+          fallbackRoadmap.nodes[0];
+        setSelectedNode(active);
       }
     } catch (err) {
-      console.error('Failed to fetch roadmap:', err);
+      console.warn('API roadmap fetch fallback to curated roadmap:', err);
+      setRoadmap(fallbackRoadmap);
+      const active =
+        fallbackRoadmap.nodes.find((n: RoadmapNode) => n.status === 'in_progress') ||
+        fallbackRoadmap.nodes[0];
+      setSelectedNode(active);
     } finally {
       setLoading(false);
       setRegenerating(false);
@@ -54,26 +101,57 @@ export const RoadmapPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const goal = user?.targetGoal || 'AI / Machine Learning';
+    const goal = normalizeTrackName(
+      user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'App Development'
+    );
     setActiveTrack(goal);
     fetchRoadmap(goal);
   }, [user?.targetGoal]);
 
   const handleTrackChange = (newTrack: string) => {
-    setActiveTrack(newTrack);
-    fetchRoadmap(newTrack, true);
+    const normalized = normalizeTrackName(newTrack);
+    setActiveTrack(normalized);
+    // Instantly set curated data for instant responsiveness
+    const immediateCurated = applySavedStatuses(getCuratedRoadmap(normalized), normalized);
+    setRoadmap(immediateCurated);
+    setSelectedNode(
+      immediateCurated.nodes.find((n) => n.status === 'in_progress') || immediateCurated.nodes[0]
+    );
+    fetchRoadmap(normalized, false);
   };
 
-  const handleUpdateStatus = async (nodeId: string, status: string) => {
+  const handleUpdateStatus = async (nodeId: string, status: 'completed' | 'in_progress' | 'locked') => {
+    // 1. Update in local state immediately
+    const updatedNodes = (roadmap?.nodes || []).map((n) =>
+      n.nodeId === nodeId ? { ...n, status } : n
+    );
+    const completedCount = updatedNodes.filter((n) => n.status === 'completed').length;
+    const updatedRoadmap = {
+      ...roadmap,
+      nodes: updatedNodes,
+      completedNodes: completedCount,
+    } as Roadmap;
+
+    setRoadmap(updatedRoadmap);
+    const updatedNode = updatedNodes.find((n) => n.nodeId === nodeId);
+    if (updatedNode) setSelectedNode(updatedNode);
+
+    // 2. Persist in localStorage
     try {
-      const res = await api.updateRoadmapNodeStatus(nodeId, status);
-      if (res?.roadmap) {
-        setRoadmap(res.roadmap);
-        const updated = res.roadmap.nodes.find((n: RoadmapNode) => n.nodeId === nodeId);
-        if (updated) setSelectedNode(updated);
-      }
+      const statusMap: Record<string, string> = {};
+      updatedNodes.forEach((n) => {
+        statusMap[n.nodeId] = n.status;
+      });
+      localStorage.setItem(`rishabhlabs_roadmap_${activeTrack}`, JSON.stringify(statusMap));
+    } catch (e) {
+      // Ignore storage errors
+    }
+
+    // 3. Sync to backend API asynchronously
+    try {
+      await api.updateRoadmapNodeStatus(nodeId, status);
     } catch (err) {
-      console.error(err);
+      console.warn('Backend node status sync note:', err);
     }
   };
 
@@ -96,28 +174,29 @@ export const RoadmapPage: React.FC = () => {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-            {roadmap?.category || activeTrack} • {roadmap?.targetLevel || 'Beginner'} • {roadmap?.estimatedDailyTime || '2 hr/day'} • {roadmap?.totalDurationDays || 90} days
+            {roadmap?.category || activeTrack} • {roadmap?.targetLevel || 'Beginner to Production'} • {roadmap?.estimatedDailyTime || '2 hr/day'} • {roadmap?.totalDurationDays || 90} days
           </p>
         </div>
 
         {/* Action Controls: Track Selector & Completed Badge */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Quick Track Switcher */}
-          <div className="flex items-center bg-neutral-100 dark:bg-neutral-850 p-1 rounded-full border border-neutral-200/80 dark:border-neutral-800 text-xs">
-            {['AI / Machine Learning', 'Web Development'].map((t) => {
-              const isSelected = activeTrack.toLowerCase().includes(t.toLowerCase().slice(0, 3));
+          {/* 5-Track Switcher */}
+          <div className="flex flex-wrap items-center bg-neutral-100 dark:bg-neutral-850 p-1 rounded-2xl sm:rounded-full border border-neutral-200/80 dark:border-neutral-800 text-xs gap-1">
+            {AVAILABLE_TRACKS.map((t) => {
+              const isSelected = activeTrack === t.id;
               return (
                 <button
-                  key={t}
+                  key={t.id}
                   disabled={regenerating}
-                  onClick={() => handleTrackChange(t)}
-                  className={`px-3 py-1 rounded-full font-medium transition-all ${
+                  onClick={() => handleTrackChange(t.id)}
+                  title={t.fullLabel}
+                  className={`px-3 py-1.5 rounded-full font-medium transition-all ${
                     isSelected
                       ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-bold'
                       : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
                   }`}
                 >
-                  {t === 'AI / Machine Learning' ? 'AI / ML Track' : 'Web Dev Track'}
+                  {t.label}
                 </button>
               );
             })}
@@ -130,7 +209,7 @@ export const RoadmapPage: React.FC = () => {
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 text-xs font-bold hover:opacity-90 transition-opacity shadow-xs disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? 'animate-spin' : ''}`} />
-            <span>{regenerating ? 'Generating...' : 'Regenerate'}</span>
+            <span>{regenerating ? 'Calibrating...' : 'Regenerate'}</span>
           </button>
 
           {/* Completed summary badge */}
@@ -210,17 +289,16 @@ export const RoadmapPage: React.FC = () => {
 
                     {/* Floating 3D Podium Block */}
                     <div
-                      className={`w-full p-3.5 sm:p-4 rounded-2xl border text-center transition-all ${
+                      className={`w-full p-3.5 sm:p-4 rounded-2xl border text-center transition-all duration-200 ${
                         isSelected
-                          ? 'border-neutral-950 dark:border-white bg-white dark:bg-[#111722] shadow-md ring-2 ring-neutral-950 dark:ring-white scale-102'
-                          : isCompleted
-                          ? 'border-emerald-500/30 bg-white/90 dark:bg-[#0D121B] shadow-xs'
-                          : isInProgress
-                          ? 'border-blue-500/50 bg-white dark:bg-[#111722] shadow-sm'
-                          : 'border-neutral-200/70 dark:border-neutral-800 bg-white/60 dark:bg-[#0A0E17]/60 opacity-80'
+                          ? 'border-blue-500/80 bg-white dark:bg-[#111722] shadow-lg shadow-blue-500/10 ring-1 ring-blue-500/50 -translate-y-1'
+                          : 'border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-[#0D121B]/70 hover:border-neutral-400 dark:hover:border-neutral-600'
                       }`}
                     >
-                      <p className="text-xs font-bold text-neutral-900 dark:text-white line-clamp-1">
+                      <span className="text-[10px] font-bold text-neutral-400 font-mono">
+                        STEP {node.stepNumber || index + 1}
+                      </span>
+                      <p className="text-xs font-bold text-neutral-900 dark:text-white mt-1 line-clamp-2 min-h-[32px]">
                         {node.title}
                       </p>
                       <p

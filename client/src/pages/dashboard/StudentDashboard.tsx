@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { getCuratedMission } from '../../data/curatedMissions';
+import { normalizeTrackName } from '../../data/curatedRoadmaps';
 import {
   CheckCircle2,
   Circle,
@@ -38,20 +40,41 @@ export const StudentDashboard: React.FC = () => {
     fetchDashboard();
   }, []);
 
+  const targetTrack = normalizeTrackName(user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'App Development');
+  const mission = dashboardData?.todayMission || getCuratedMission(targetTrack);
+
   const handleToggleTask = async (taskId: string) => {
-    if (!dashboardData?.todayMission) return;
+    if (!mission) return;
+    const updatedTasks = (mission.tasks || []).map((t: any) =>
+      t.taskId === taskId ? { ...t, isCompleted: !t.isCompleted } : t
+    );
+    const completedTasksCount = updatedTasks.filter((t: any) => t.isCompleted).length;
+    const updatedMission = {
+      ...mission,
+      tasks: updatedTasks,
+      completedTasksCount,
+      isAllCompleted: completedTasksCount === updatedTasks.length,
+    };
+    setDashboardData((prev: any) => ({
+      ...prev,
+      todayMission: updatedMission,
+    }));
+
     try {
-      const res = await api.toggleMissionTask(dashboardData.todayMission._id, taskId);
-      setDashboardData((prev: any) => ({
-        ...prev,
-        todayMission: res.mission,
-      }));
-    } catch (err) {
-      console.error(err);
+      const completedIds = updatedTasks.filter((t: any) => t.isCompleted).map((t: any) => t.taskId);
+      localStorage.setItem(`rishabhlabs_mission_completed_${targetTrack}`, JSON.stringify(completedIds));
+    } catch (e) {
+      // Ignore
+    }
+
+    if (dashboardData?.todayMission?._id) {
+      try {
+        await api.toggleMissionTask(dashboardData.todayMission._id, taskId);
+      } catch (err) {
+        console.warn('Backend mission toggle sync note:', err);
+      }
     }
   };
-
-  const mission = dashboardData?.todayMission;
   const stats = dashboardData?.stats || {
     progressPercent: 0,
     skillsCompleted: 0,

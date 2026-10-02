@@ -124,6 +124,9 @@ export const OnboardingPage: React.FC = () => {
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
+      localStorage.setItem('rishabhlabs_onboarded', 'true');
+      localStorage.setItem('rishabhlabs_goal', goal);
+
       // Sync directly to Supabase profile if configured
       try {
         const { supabase, isSupabaseConfigured } = await import('../../services/supabase');
@@ -145,21 +148,26 @@ export const OnboardingPage: React.FC = () => {
         console.warn('Direct Supabase profile update error:', sbErr);
       }
 
-      await api.completeOnboarding({
-        goal,
-        currentLevel,
-        availableTime,
-        desiredOutcome,
-        targetDate,
-        githubProfile,
-        preferredLearningStyle,
-      });
+      try {
+        await api.completeOnboarding({
+          goal,
+          currentLevel,
+          availableTime,
+          desiredOutcome,
+          targetDate,
+          githubProfile,
+          preferredLearningStyle,
+        });
+      } catch (apiErr) {
+        console.warn('Backend onboarding API sync note:', apiErr);
+      }
+
       await refreshUser();
-      navigate('/dashboard');
+      navigate('/roadmap', { replace: true });
     } catch (err: any) {
       console.error('Onboarding submission error:', err);
       await refreshUser();
-      navigate('/dashboard');
+      navigate('/roadmap', { replace: true });
     } finally {
       setIsSubmitting(false);
     }

@@ -53,8 +53,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('id', session.user.id)
             .maybeSingle();
 
+          const localOnboarded = localStorage.getItem('rishabhlabs_onboarded') === 'true';
+          const localGoal = localStorage.getItem('rishabhlabs_goal') || undefined;
+
           if (profile) {
-            const hasChosenGoal = Boolean(profile.target_goal && profile.target_goal.trim() !== '' && profile.target_goal !== 'Not Set');
+            const hasChosenGoal = Boolean(
+              (profile.target_goal && profile.target_goal.trim() !== '' && profile.target_goal !== 'Not Set') ||
+              localOnboarded
+            );
             setUser({
               id: profile.id,
               name: profile.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
@@ -66,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               avatar: profile.avatar_url || session.user.user_metadata?.avatar_url || '',
               bio: '',
               githubUsername: profile.github_username || '',
-              targetGoal: profile.target_goal || undefined,
+              targetGoal: profile.target_goal || localGoal,
               isOnboarded: hasChosenGoal,
             });
           } else {
@@ -81,7 +87,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               avatar: session.user.user_metadata?.avatar_url || '',
               bio: '',
               githubUsername: '',
-              isOnboarded: false,
+              targetGoal: localGoal,
+              isOnboarded: localOnboarded,
             });
           }
           if (session.access_token) {
@@ -96,7 +103,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (window.location.hash) {
               window.history.replaceState(null, '', window.location.pathname);
             }
-            const hasChosenGoal = profile ? Boolean(profile.target_goal && profile.target_goal.trim() !== '' && profile.target_goal !== 'Not Set') : false;
+            const hasChosenGoal = profile
+              ? Boolean((profile.target_goal && profile.target_goal.trim() !== '' && profile.target_goal !== 'Not Set') || localOnboarded)
+              : localOnboarded;
             const targetPath = hasChosenGoal ? '/dashboard' : '/onboarding';
             if (window.location.pathname !== targetPath) {
               window.location.href = targetPath;
@@ -123,7 +132,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           const data = await api.getMe();
           if (data && data.id) {
-            setUser(data);
+            const localOnboarded = localStorage.getItem('rishabhlabs_onboarded') === 'true';
+            const localGoal = localStorage.getItem('rishabhlabs_goal') || undefined;
+            setUser({
+              ...data,
+              targetGoal: data.targetGoal || localGoal,
+              isOnboarded: Boolean(data.isOnboarded || localOnboarded),
+            });
             setLoading(false);
             return;
           }
@@ -148,8 +163,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .eq('id', session.user.id)
               .maybeSingle();
 
+            const localOnboarded = localStorage.getItem('rishabhlabs_onboarded') === 'true';
+            const localGoal = localStorage.getItem('rishabhlabs_goal') || undefined;
+
             if (profile) {
-              const hasChosenGoal = Boolean(profile.target_goal && profile.target_goal.trim() !== '' && profile.target_goal !== 'Not Set');
+              const hasChosenGoal = Boolean(
+                (profile.target_goal && profile.target_goal.trim() !== '' && profile.target_goal !== 'Not Set') ||
+                localOnboarded
+              );
               setUser({
                 id: profile.id,
                 name: profile.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
@@ -161,7 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 avatar: profile.avatar_url || session.user.user_metadata?.avatar_url || '',
                 bio: '',
                 githubUsername: profile.github_username || '',
-                targetGoal: profile.target_goal || undefined,
+                targetGoal: profile.target_goal || localGoal,
                 isOnboarded: hasChosenGoal,
               });
               setLoading(false);
@@ -178,7 +199,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 avatar: session.user.user_metadata?.avatar_url || '',
                 bio: '',
                 githubUsername: '',
-                isOnboarded: false,
+                targetGoal: localGoal,
+                isOnboarded: localOnboarded,
               });
               setLoading(false);
               return;
@@ -276,6 +298,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await supabase.auth.signOut();
     }
     localStorage.removeItem('rishabhlabs_token');
+    localStorage.removeItem('rishabhlabs_onboarded');
+    localStorage.removeItem('rishabhlabs_goal');
     setUser(null);
   };
 
