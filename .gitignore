@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment variables & secrets (Never commit secrets)
+.env
+.env.*
+!.env.example
+client/.env
+server/.env
+client/.env.*
+server/.env.*
+!client/.env.example
+!server/.env.example
+
+# Production builds
+dist/
+*/dist/
+build/
+*/build/
+.next/
+*/.next/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Cache & Temporary files
+.cache/
+*/.cache/
+tmp/
+*/tmp/
+.temp/
+
+# OS & IDE Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
