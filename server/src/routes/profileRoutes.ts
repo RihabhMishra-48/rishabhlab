@@ -125,14 +125,16 @@ router.get('/public/:username', async (req, res) => {
 router.patch('/', requireAuth, async (req: AuthRequest, res) => {
   try {
     const user = req.user!;
-    const { name, bio, college, degree, year, githubUsername } = req.body;
+    const { name, bio, college, degree, year, githubUsername, avatar, targetGoal } = req.body;
 
     if (name) user.name = name;
     if (bio !== undefined) user.bio = bio;
     if (college) user.college = college;
     if (degree) user.degree = degree;
     if (year) user.year = year;
-    if (githubUsername) user.githubUsername = githubUsername;
+    if (githubUsername !== undefined) user.githubUsername = githubUsername;
+    if (avatar !== undefined) user.avatar = avatar;
+    if (targetGoal !== undefined) (user as any).targetGoal = targetGoal;
 
     await user.save();
     res.json({ success: true, user });
