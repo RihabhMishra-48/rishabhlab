@@ -94,10 +94,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCommandPalette }) => {
             <div className="flex items-center gap-2">
               {isPublicPage && (
                 <Link
-                  to="/dashboard"
+                  to={user.isOnboarded ? "/dashboard" : "/onboarding"}
                   className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 transition-all shadow-xs"
                 >
-                  <span>Dashboard</span>
+                  <span>{user.isOnboarded ? "Dashboard" : "Complete Onboarding"}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               )}

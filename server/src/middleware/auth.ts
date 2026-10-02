@@ -56,6 +56,7 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
             .eq('id', sbUser.id)
             .maybeSingle();
 
+          const hasChosenGoal = Boolean(sbProfile?.target_goal && sbProfile.target_goal.trim() !== '' && sbProfile.target_goal !== 'Not Set');
           let user = await User.findOne({ email: userEmail });
           if (!user && userEmail) {
             user = await User.create({
@@ -68,9 +69,11 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
               totalPoints: sbProfile?.total_points || 0,
               skillsCompleted: sbProfile?.skills_completed || 0,
               targetGoal: sbProfile?.target_goal || undefined,
+              isOnboarded: hasChosenGoal,
             });
           } else if (user && sbProfile) {
-            if (sbProfile.target_goal) (user as any).targetGoal = sbProfile.target_goal;
+            user.isOnboarded = hasChosenGoal;
+            (user as any).targetGoal = sbProfile.target_goal || '';
             if (typeof sbProfile.streak_days === 'number') user.streakDays = sbProfile.streak_days;
             if (typeof sbProfile.total_points === 'number') user.totalPoints = sbProfile.total_points;
             if (sbProfile.full_name) user.name = sbProfile.full_name;
