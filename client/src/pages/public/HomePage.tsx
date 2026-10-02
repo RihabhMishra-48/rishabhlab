@@ -49,20 +49,30 @@ export const HomePage: React.FC = () => {
 
             <div className="flex flex-wrap items-center gap-3.5 pt-2">
               <Link
-                to={user?.isOnboarded ? "/dashboard" : "/onboarding"}
+                to={user ? (user.isOnboarded ? "/dashboard" : "/onboarding") : "/onboarding"}
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 transition-all shadow-md group"
               >
-                <span>{user?.isOnboarded ? "Go to Dashboard" : "Build My Roadmap"}</span>
+                <span>{user ? (user.isOnboarded ? "Go to Dashboard" : "Complete Onboarding") : "Build My Roadmap"}</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
 
-              <Link
-                to="/login"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-800 transition-colors shadow-2xs"
-              >
-                <span>Sign In</span>
-                <ArrowRight className="w-4 h-4 text-neutral-400" />
-              </Link>
+              {!user ? (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-800 transition-colors shadow-2xs"
+                >
+                  <span>Sign In</span>
+                  <ArrowRight className="w-4 h-4 text-neutral-400" />
+                </Link>
+              ) : (
+                <Link
+                  to="/learn"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-800 transition-colors shadow-2xs"
+                >
+                  <span>Explore Lessons</span>
+                  <ArrowRight className="w-4 h-4 text-neutral-400" />
+                </Link>
+              )}
 
               <Link
                 to="/features"
@@ -73,12 +83,14 @@ export const HomePage: React.FC = () => {
               </Link>
             </div>
 
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Already have an account?{' '}
-              <Link to="/login" className="font-semibold text-neutral-900 dark:text-white underline underline-offset-4 hover:text-amber-500 transition-colors">
-                Sign in to your account →
-              </Link>
-            </p>
+            {!user && (
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                Already have an account?{' '}
+                <Link to="/login" className="font-semibold text-neutral-900 dark:text-white underline underline-offset-4 hover:text-amber-500 transition-colors">
+                  Sign in to your account →
+                </Link>
+              </p>
+            )}
 
             {/* Micro stats banner */}
             <div className="pt-6 flex items-center gap-6 text-xs text-neutral-500 dark:text-neutral-400">
@@ -229,10 +241,10 @@ export const HomePage: React.FC = () => {
               <p className="text-sm text-neutral-400">Complete the 2-minute diagnostic to receive your custom 90-day execution track.</p>
             </div>
             <Link
-              to="/onboarding"
+              to={user ? (user.isOnboarded ? "/dashboard" : "/onboarding") : "/onboarding"}
               className="px-6 py-3.5 rounded-full bg-white text-neutral-950 hover:bg-neutral-200 font-semibold text-sm transition-colors whitespace-nowrap shadow-md"
             >
-              Start Free Onboarding →
+              {user ? (user.isOnboarded ? "Go to Dashboard →" : "Complete Onboarding →") : "Start Free Onboarding →"}
             </Link>
           </div>
         </div>

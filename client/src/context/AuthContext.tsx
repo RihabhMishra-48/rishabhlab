@@ -86,6 +86,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (session.access_token) {
             localStorage.setItem('rishabhlabs_token', session.access_token);
           }
+
+          // Auto-redirect to dashboard/onboarding if returning from OAuth or on landing/auth pages
+          const isOAuthCallback = window.location.hash.includes('access_token');
+          const isAuthOrLandingPage = window.location.pathname === '/login' || window.location.pathname === '/register' || window.location.pathname === '/';
+
+          if (isOAuthCallback || (event === 'SIGNED_IN' && isAuthOrLandingPage)) {
+            if (window.location.hash) {
+              window.history.replaceState(null, '', window.location.pathname);
+            }
+            const hasChosenGoal = profile ? Boolean(profile.target_goal && profile.target_goal.trim() !== '' && profile.target_goal !== 'Not Set') : false;
+            const targetPath = hasChosenGoal ? '/dashboard' : '/onboarding';
+            if (window.location.pathname !== targetPath) {
+              window.location.href = targetPath;
+            }
+          }
         } catch (e) {
           console.error('Error syncing Supabase user profile:', e);
         }

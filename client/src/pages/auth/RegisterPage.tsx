@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ArrowRight } from 'lucide-react';
@@ -11,8 +11,14 @@ export const RegisterPage: React.FC = () => {
   const [role, setRole] = useState<'student' | 'mentor' | 'college_admin'>('student');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register, loginWithGoogle } = useAuth();
+  const { user, register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate(user.isOnboarded ? '/dashboard' : '/onboarding', { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
