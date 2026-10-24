@@ -41,6 +41,9 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        neutral: {
+          850: '#151b26',
+        },
         // Dark dashboard palette matching the UI reference
         navy: {
           950: '#070A0F',

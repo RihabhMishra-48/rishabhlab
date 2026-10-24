@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { api } from '../../services/api';
 import { Project } from '../../types';
+import { getCuratedProjectBySlug } from '../../data/curatedProjects';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -31,31 +32,109 @@ export const ProjectWorkspacePage: React.FC = () => {
 
   useEffect(() => {
     const fetchProject = async () => {
-      try {
-        const data = await api.getProjectBySlug(slug || 'ai-resume-analyzer');
-        setProject(data);
-        if (data.githubRepoUrl) setGithubRepoUrl(data.githubRepoUrl);
-        if (data.liveDeployUrl) setLiveDeployUrl(data.liveDeployUrl);
-        if (data.demoVideoUrl) setDemoVideoUrl(data.demoVideoUrl);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+      const targetSlug = slug || 'customer-churn-predictor';
+      // Load saved proof if any
+      const savedProof = localStorage.getItem(`rishabhlabs_project_proof_${targetSlug}`);
+      if (savedProof) {
+        try {
+          const parsed = JSON.parse(savedProof);
+          if (parsed.githubRepoUrl) setGithubRepoUrl(parsed.githubRepoUrl);
+          if (parsed.liveDeployUrl) setLiveDeployUrl(parsed.liveDeployUrl);
+          if (parsed.demoVideoUrl) setDemoVideoUrl(parsed.demoVideoUrl);
+          setProofSubmittedSuccess(true);
+        } catch {}
       }
+
+      try {
+        const data = await api.getProjectBySlug(targetSlug);
+        if (data && data.title) {
+          setProject(data);
+          if (data.githubRepoUrl) setGithubRepoUrl(data.githubRepoUrl);
+          if (data.liveDeployUrl) setLiveDeployUrl(data.liveDeployUrl);
+          if (data.demoVideoUrl) setDemoVideoUrl(data.demoVideoUrl);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('API getProjectBySlug fallback to curated project:', err);
+      }
+
+      // Resilient curated fallback
+      const fallback = getCuratedProjectBySlug(targetSlug) || getCuratedProjectBySlug('college-event-platform');
+      if (fallback) {
+        const savedTasks = localStorage.getItem(`rishabhlabs_project_${targetSlug}`);
+        if (savedTasks) {
+          try {
+            const completedMap: Record<string, boolean> = JSON.parse(savedTasks);
+            const updatedMilestones = (fallback.milestones || []).map((m) => {
+              const updatedTasks = (m.tasks || []).map((t) => ({
+                ...t,
+                isCompleted: completedMap[t.id] ?? (t as any).isCompleted ?? (t as any).completed ?? false,
+              }));
+              return { ...m, tasks: updatedTasks };
+            });
+            const totalTasks = updatedMilestones.flatMap((m) => m.tasks || []).length;
+            const compCount = updatedMilestones.flatMap((m) => m.tasks || []).filter((t) => (t as any).isCompleted).length;
+            setProject({
+              ...fallback,
+              milestones: updatedMilestones,
+              progressPercent: totalTasks > 0 ? Math.round((compCount / totalTasks) * 100) : fallback.progressPercent,
+            });
+          } catch {
+            setProject(fallback);
+          }
+        } else {
+          setProject(fallback);
+        }
+      }
+      setLoading(false);
     };
     fetchProject();
   }, [slug]);
 
   const handleToggleTask = async (milestoneId: string, taskId: string) => {
     if (!project) return;
-    try {
-      const res = await api.toggleProjectTask(project._id, milestoneId, taskId);
-      setProject(res.project);
-      if (res.project.progressPercent === 100) {
-        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+    // Update locally immediately
+    const updatedMilestones = (project.milestones || []).map((m) => {
+      if ((m as any)._id === milestoneId || m.id === milestoneId) {
+        const updatedTasks = (m.tasks || []).map((t) =>
+          t.id === taskId || (t as any)._id === taskId
+            ? { ...t, isCompleted: !(t.isCompleted ?? (t as any).completed) }
+            : t
+        );
+        return { ...m, tasks: updatedTasks };
       }
+      return m;
+    });
+
+    const allTasks = updatedMilestones.flatMap((m) => m.tasks || []);
+    const completedCount = allTasks.filter((t) => t.isCompleted ?? (t as any).completed).length;
+    const progress = allTasks.length > 0 ? Math.round((completedCount / allTasks.length) * 100) : project.progressPercent;
+
+    const updatedProject = {
+      ...project,
+      milestones: updatedMilestones,
+      progressPercent: progress,
+    };
+    setProject(updatedProject);
+
+    // Save to localStorage
+    try {
+      const taskMap: Record<string, boolean> = {};
+      allTasks.forEach((t) => {
+        taskMap[t.id || (t as any)._id] = Boolean(t.isCompleted ?? (t as any).completed);
+      });
+      localStorage.setItem(`rishabhlabs_project_${project.slug}`, JSON.stringify(taskMap));
+    } catch {}
+
+    if (progress === 100) {
+      confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+    }
+
+    try {
+      await api.toggleProjectTask(project._id, milestoneId, taskId);
     } catch (err) {
-      console.error(err);
+      console.warn('Backend toggleProjectTask note:', err);
     }
   };
 

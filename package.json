@@ -1,0 +1,13 @@
+{
+  "name": "rishabhlabs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rishabh Labs - Student Execution & Personalized Learning Platform",
+  "scripts": {
+    "dev": "npm --prefix client run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server run start"
+  }
+}

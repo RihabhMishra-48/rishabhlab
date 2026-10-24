@@ -124,6 +124,10 @@ export const OnboardingPage: React.FC = () => {
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
+      if (user?.id) {
+        localStorage.setItem(`rishabhlabs_onboarded_${user.id}`, 'true');
+        localStorage.setItem(`rishabhlabs_goal_${user.id}`, goal);
+      }
       localStorage.setItem('rishabhlabs_onboarded', 'true');
       localStorage.setItem('rishabhlabs_goal', goal);
 

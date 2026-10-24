@@ -32,9 +32,9 @@ export const HomePage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           {/* Left Hero Copy */}
           <div className="lg:col-span-7 space-y-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-neutral-100 dark:bg-neutral-850 text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Personalized Learning + Student Execution Platform</span>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-[#111722] text-neutral-800 dark:text-white border border-neutral-200 dark:border-neutral-700/80 shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 ring-2 ring-emerald-500/30 animate-pulse"></span>
+              <span className="tracking-wide">Personalized Learning + Student Execution Platform</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-[1.12]">

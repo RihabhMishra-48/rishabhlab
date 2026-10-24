@@ -3,6 +3,7 @@ import confetti from 'canvas-confetti';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Mentor } from '../../types';
+import { getCuratedMentors } from '../../data/curatedMentors';
 import {
   Users,
   Compass,
@@ -57,6 +58,13 @@ export const MentorshipPage: React.FC = () => {
   const [preferredSlot, setPreferredSlot] = useState('Tomorrow, 6:00 PM IST');
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookedSessions, setBookedSessions] = useState<any[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('rishabhlabs_booked_sessions') || '[]');
+    } catch {
+      return [];
+    }
+  });
 
   const commonTopics = [
     { id: 'Career Direction', label: 'Career Direction', icon: Compass, desc: 'Align your goals with hiring markets' },
@@ -71,32 +79,57 @@ export const MentorshipPage: React.FC = () => {
     const fetchMentors = async () => {
       try {
         const data = await api.getMentors();
-        setMentors(data);
-        if (data.length > 0) setSelectedMentor(data[0]);
+        if (data && data.length > 0) {
+          setMentors(data);
+          setSelectedMentor(data[0]);
+          return;
+        }
       } catch (err) {
-        console.error(err);
+        console.warn('API getMentors fallback to curated mentor list:', err);
       }
+
+      const curated = getCuratedMentors(selectedDomain);
+      setMentors(curated);
+      if (curated.length > 0) setSelectedMentor(curated[0]);
     };
     fetchMentors();
-  }, []);
+  }, [selectedDomain]);
 
   const handleBookSession = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMentor) return;
     setIsSubmitting(true);
     try {
-      await api.requestMentorship({
-        mentorId: selectedMentor._id,
+      const newSession = {
+        id: 'session-' + Date.now(),
+        mentorName: selectedMentor.name,
+        mentorRole: `${selectedMentor.title} at ${selectedMentor.company}`,
+        mentorAvatar: selectedMentor.avatar,
         topic: selectedTopic,
-        message: bookingMessage,
-        preferredSlot,
-      });
+        slot: preferredSlot,
+        meetLink: 'https://meet.google.com/new',
+        bookedAt: new Date().toLocaleDateString(),
+      };
+
+      const updated = [newSession, ...bookedSessions];
+      setBookedSessions(updated);
+      localStorage.setItem('rishabhlabs_booked_sessions', JSON.stringify(updated));
+
+      try {
+        await api.requestMentorship({
+          mentorId: selectedMentor._id,
+          topic: selectedTopic,
+          message: bookingMessage,
+          preferredSlot,
+        });
+      } catch {}
+
       setBookingSuccess(true);
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
       setTimeout(() => {
         setBookingModalOpen(false);
         setBookingSuccess(false);
-      }, 2000);
+      }, 1500);
     } catch (err) {
       console.error(err);
     } finally {

@@ -23,7 +23,7 @@ export const LoginPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       await login({ email, password });
-      navigate('/dashboard');
+      // Navigation handled by user.isOnboarded check in useEffect
     } catch (err: any) {
       setError(err.message || 'Login failed. Please verify your credentials.');
     } finally {

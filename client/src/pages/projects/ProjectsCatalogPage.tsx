@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Project } from '../../types';
+import { getCuratedProjects } from '../../data/curatedProjects';
 import {
   FolderGit2,
   Plus,
@@ -36,14 +37,26 @@ export const ProjectsCatalogPage: React.FC = () => {
   };
 
   const getTargetProjectSlug = () => {
-    const goal = (user?.targetGoal || '').toLowerCase();
-    if (goal.includes('cyber') || goal.includes('sec') || goal.includes('security')) {
+    const goal = (
+      user?.targetGoal ||
+      (user?.id ? localStorage.getItem(`rishabhlabs_goal_${user.id}`) : null) ||
+      localStorage.getItem('rishabhlabs_goal') ||
+      ''
+    ).toLowerCase();
+
+    if (goal.includes('cyber') || goal.includes('sec')) {
       return 'network-packet-sniffer';
     }
-    if (goal.includes('web') || goal.includes('full')) {
-      return 'college-event-platform';
+    if (goal.includes('ai') || goal.includes('ml') || goal.includes('machine')) {
+      return 'customer-churn-predictor';
     }
-    return 'customer-churn-predictor';
+    if (goal.includes('app') || goal.includes('mobile')) {
+      return 'mobile-fitness-tracker';
+    }
+    if (goal.includes('data') || goal.includes('analyt')) {
+      return 'automated-etl-pipeline';
+    }
+    return 'college-event-platform';
   };
 
   const [selectedCategory, setSelectedCategory] = useState<string>(getDefaultCategory);
@@ -65,9 +78,14 @@ export const ProjectsCatalogPage: React.FC = () => {
           status: activeTab,
           category: selectedCategory === 'All Tracks' ? undefined : selectedCategory,
         });
-        setProjects(data);
+        if (data && data.length > 0) {
+          setProjects(data);
+        } else {
+          setProjects(getCuratedProjects(selectedCategory));
+        }
       } catch (err) {
-        console.error(err);
+        console.warn('API getProjects fallback to curated projects:', err);
+        setProjects(getCuratedProjects(selectedCategory));
       } finally {
         setLoading(false);
       }

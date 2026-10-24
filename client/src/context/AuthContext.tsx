@@ -53,8 +53,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('id', session.user.id)
             .maybeSingle();
 
-          const localOnboarded = localStorage.getItem('rishabhlabs_onboarded') === 'true';
-          const localGoal = localStorage.getItem('rishabhlabs_goal') || undefined;
+          const userOnboardedKey = `rishabhlabs_onboarded_${session.user.id}`;
+          const userGoalKey = `rishabhlabs_goal_${session.user.id}`;
+          const localOnboarded = localStorage.getItem(userOnboardedKey) === 'true';
+          const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
 
           if (profile) {
             const hasChosenGoal = Boolean(
@@ -132,8 +134,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           const data = await api.getMe();
           if (data && data.id) {
-            const localOnboarded = localStorage.getItem('rishabhlabs_onboarded') === 'true';
-            const localGoal = localStorage.getItem('rishabhlabs_goal') || undefined;
+            const userOnboardedKey = `rishabhlabs_onboarded_${data.id}`;
+            const userGoalKey = `rishabhlabs_goal_${data.id}`;
+            const localOnboarded = localStorage.getItem(userOnboardedKey) === 'true' || localStorage.getItem('rishabhlabs_onboarded') === 'true';
+            const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
             setUser({
               ...data,
               targetGoal: data.targetGoal || localGoal,
@@ -163,8 +167,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .eq('id', session.user.id)
               .maybeSingle();
 
-            const localOnboarded = localStorage.getItem('rishabhlabs_onboarded') === 'true';
-            const localGoal = localStorage.getItem('rishabhlabs_goal') || undefined;
+            const userOnboardedKey = `rishabhlabs_onboarded_${session.user.id}`;
+            const userGoalKey = `rishabhlabs_goal_${session.user.id}`;
+            const localOnboarded = localStorage.getItem(userOnboardedKey) === 'true';
+            const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
 
             if (profile) {
               const hasChosenGoal = Boolean(
@@ -251,10 +257,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const res = await api.login(credentials);
     localStorage.setItem('rishabhlabs_token', res.token);
-    setUser(res.user);
+    const userOnboardedKey = `rishabhlabs_onboarded_${res.user.id}`;
+    const userGoalKey = `rishabhlabs_goal_${res.user.id}`;
+    const localOnboarded = localStorage.getItem(userOnboardedKey) === 'true' || localStorage.getItem('rishabhlabs_onboarded') === 'true';
+    const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
+    setUser({
+      ...res.user,
+      targetGoal: res.user.targetGoal || localGoal,
+      isOnboarded: Boolean(res.user.isOnboarded || localOnboarded),
+    });
   };
 
   const register = async (userData: any) => {
+    localStorage.removeItem('rishabhlabs_onboarded');
+    localStorage.removeItem('rishabhlabs_goal');
     if (isSupabaseConfigured) {
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,

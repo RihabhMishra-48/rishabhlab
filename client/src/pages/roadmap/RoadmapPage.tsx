@@ -26,18 +26,69 @@ import {
   Smartphone,
   Shield,
   BarChart3,
+  Cpu,
+  X,
+  Target
 } from 'lucide-react';
+
+const TRACK_CONFIGS = [
+  {
+    id: 'Web Development',
+    title: 'Web Development',
+    icon: Code2,
+    badge: 'Full Stack',
+    desc: 'React, TypeScript, Next.js, Node.js, REST APIs & Distributed Web Systems',
+    skills: ['React 18', 'TypeScript', 'Node.js', 'Next.js', 'PostgreSQL'],
+  },
+  {
+    id: 'AI / Machine Learning',
+    title: 'AI & Machine Learning',
+    icon: Cpu,
+    badge: 'GenAI & Deep Learning',
+    desc: 'Python, PyTorch, Neural Networks, Embeddings, LLMs & Production AI Serving',
+    skills: ['Python', 'PyTorch', 'Vector DBs', 'LLMs', 'Model Deployment'],
+  },
+  {
+    id: 'Mobile App Development',
+    title: 'Mobile App Development',
+    icon: Smartphone,
+    badge: 'Cross-Platform',
+    desc: 'React Native / Flutter, Mobile UI Architecture, State Machines & Device APIs',
+    skills: ['React Native', 'Flutter', 'State Machines', 'Native Bridges'],
+  },
+  {
+    id: 'Cyber Security',
+    title: 'Cyber Security',
+    icon: Shield,
+    badge: 'Infosec & Defense',
+    desc: 'Network Packet Analysis, Penetration Testing, Linux Hardening & Cryptography',
+    skills: ['Wireshark', 'Kali Linux', 'Burp Suite', 'Network Protocols', 'OWASP'],
+  },
+  {
+    id: 'Data & Analytics',
+    title: 'Data & Analytics',
+    icon: BarChart3,
+    badge: 'Data Engineering',
+    desc: 'SQL Mastery, Pandas, Distributed ETL Pipelines & Executive Visualizations',
+    skills: ['SQL', 'Pandas', 'Apache Spark', 'ETL Pipelines', 'Power BI'],
+  },
+];
 
 export const RoadmapPage: React.FC = () => {
   const { user } = useAuth();
   const initialTrack = normalizeTrackName(
-    user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'App Development'
+    user?.targetGoal ||
+    (user?.id ? localStorage.getItem(`rishabhlabs_goal_${user.id}`) : null) ||
+    localStorage.getItem('rishabhlabs_goal') ||
+    'Web Development'
   );
+
   const [activeTrack, setActiveTrack] = useState<string>(initialTrack);
   const [roadmap, setRoadmap] = useState<Roadmap>(() => getCuratedRoadmap(initialTrack));
   const [selectedNode, setSelectedNode] = useState<RoadmapNode | null>(null);
   const [loading, setLoading] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [showInterestModal, setShowInterestModal] = useState<boolean>(false);
 
   // Helper to load persisted statuses from localStorage
   const applySavedStatuses = (baseRoadmap: Roadmap, track: string): Roadmap => {
@@ -64,7 +115,7 @@ export const RoadmapPage: React.FC = () => {
 
   const fetchRoadmap = async (trackName?: string, shouldRegenerate = false) => {
     const target = normalizeTrackName(
-      trackName || activeTrack || user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'App Development'
+      trackName || activeTrack || user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'Web Development'
     );
     const fallbackRoadmap = applySavedStatuses(getCuratedRoadmap(target), target);
 
@@ -101,27 +152,47 @@ export const RoadmapPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const goal = normalizeTrackName(
-      user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'App Development'
-    );
-    setActiveTrack(goal);
-    fetchRoadmap(goal);
-  }, [user?.targetGoal]);
+    const savedGoal =
+      user?.targetGoal ||
+      (user?.id ? localStorage.getItem(`rishabhlabs_goal_${user.id}`) : null) ||
+      localStorage.getItem('rishabhlabs_goal');
 
-  const handleTrackChange = (newTrack: string) => {
-    const normalized = normalizeTrackName(newTrack);
+    if (!savedGoal) {
+      setShowInterestModal(true);
+    } else {
+      const normalized = normalizeTrackName(savedGoal);
+      setActiveTrack(normalized);
+      fetchRoadmap(normalized);
+    }
+  }, [user?.targetGoal, user?.id]);
+
+  const handleSelectInterest = (chosenTrack: string) => {
+    const normalized = normalizeTrackName(chosenTrack);
     setActiveTrack(normalized);
-    // Instantly set curated data for instant responsiveness
+
+    // Persist to user-scoped and global keys
+    if (user?.id) {
+      localStorage.setItem(`rishabhlabs_goal_${user.id}`, normalized);
+      localStorage.setItem(`rishabhlabs_onboarded_${user.id}`, 'true');
+    }
+    localStorage.setItem('rishabhlabs_goal', normalized);
+    localStorage.setItem('rishabhlabs_onboarded', 'true');
+
+    // Load curated roadmap immediately for zero-delay UX
     const immediateCurated = applySavedStatuses(getCuratedRoadmap(normalized), normalized);
     setRoadmap(immediateCurated);
     setSelectedNode(
       immediateCurated.nodes.find((n) => n.status === 'in_progress') || immediateCurated.nodes[0]
     );
+
+    setShowInterestModal(false);
+
+    // Sync to backend asynchronously
+    api.updateProfile({ targetGoal: normalized }).catch(() => {});
     fetchRoadmap(normalized, false);
   };
 
   const handleUpdateStatus = async (nodeId: string, status: 'completed' | 'in_progress' | 'locked') => {
-    // 1. Update in local state immediately
     const updatedNodes = (roadmap?.nodes || []).map((n) =>
       n.nodeId === nodeId ? { ...n, status } : n
     );
@@ -136,7 +207,6 @@ export const RoadmapPage: React.FC = () => {
     const updatedNode = updatedNodes.find((n) => n.nodeId === nodeId);
     if (updatedNode) setSelectedNode(updatedNode);
 
-    // 2. Persist in localStorage
     try {
       const statusMap: Record<string, string> = {};
       updatedNodes.forEach((n) => {
@@ -147,7 +217,6 @@ export const RoadmapPage: React.FC = () => {
       // Ignore storage errors
     }
 
-    // 3. Sync to backend API asynchronously
     try {
       await api.updateRoadmapNodeStatus(nodeId, status);
     } catch (err) {
@@ -164,9 +233,9 @@ export const RoadmapPage: React.FC = () => {
       {/* Header matching Screen 4 of Reference UI */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
-              Your Roadmap
+              Your 90-Day Roadmap
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 flex items-center gap-1">
               <Sparkles className="w-3 h-3" />
@@ -174,32 +243,21 @@ export const RoadmapPage: React.FC = () => {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-            {roadmap?.category || activeTrack} • {roadmap?.targetLevel || 'Beginner to Production'} • {roadmap?.estimatedDailyTime || '2 hr/day'} • {roadmap?.totalDurationDays || 90} days
+            <strong className="text-neutral-900 dark:text-white font-semibold">{activeTrack} Track</strong> • {roadmap?.targetLevel || 'Beginner to Production'} • {roadmap?.estimatedDailyTime || '2 hr/day'} • {roadmap?.totalDurationDays || 90} Days Focus
           </p>
         </div>
 
-        {/* Action Controls: Track Selector & Completed Badge */}
+        {/* Action Controls: Active Specialization Badge, Change Track, Regenerate */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* 5-Track Switcher */}
-          <div className="flex flex-wrap items-center bg-neutral-100 dark:bg-neutral-850 p-1 rounded-2xl sm:rounded-full border border-neutral-200/80 dark:border-neutral-800 text-xs gap-1">
-            {AVAILABLE_TRACKS.map((t) => {
-              const isSelected = activeTrack === t.id;
-              return (
-                <button
-                  key={t.id}
-                  disabled={regenerating}
-                  onClick={() => handleTrackChange(t.id)}
-                  title={t.fullLabel}
-                  className={`px-3 py-1.5 rounded-full font-medium transition-all ${
-                    isSelected
-                      ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-bold'
-                      : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              );
-            })}
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-850 text-xs font-semibold text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800 shadow-2xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>{activeTrack}</span>
+            <button
+              onClick={() => setShowInterestModal(true)}
+              className="ml-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+            >
+              Change Track
+            </button>
           </div>
 
           <button
@@ -213,7 +271,7 @@ export const RoadmapPage: React.FC = () => {
           </button>
 
           {/* Completed summary badge */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-850 text-xs font-semibold text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800">
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-850 text-xs font-semibold text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800">
             <span className={`w-2 h-2 rounded-full ${completedCount > 0 ? 'bg-emerald-500' : 'bg-neutral-400'}`}></span>
             <span>
               {completedCount} of {nodes.length || 6} Completed
@@ -254,51 +312,39 @@ export const RoadmapPage: React.FC = () => {
                   <div
                     key={node.nodeId || index}
                     onClick={() => setSelectedNode(node)}
-                    className="flex flex-col items-center cursor-pointer transition-all duration-300 group"
+                    className="group flex flex-col items-center cursor-pointer relative z-10"
                   >
-                    {/* 3D Sphere / Number Node Icon */}
-                    <div className="relative mb-3 flex items-center justify-center">
-                      <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all duration-200 ${
-                          isSelected
-                            ? 'scale-110 ring-4 ring-blue-500/40 shadow-blue-500/30'
-                            : 'group-hover:scale-105'
-                        } ${
-                          isCompleted
-                            ? 'bg-emerald-500 text-white shadow-emerald-500/20'
-                            : isInProgress
-                            ? 'bg-blue-600 text-white shadow-blue-500/40 ring-2 ring-blue-400/50 animate-pulse'
-                            : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
-                        }`}
-                      >
-                        {isCompleted ? <Check className="w-5 h-5 stroke-[2.5]" /> : node.stepNumber || index + 1}
-                      </div>
-
-                      {/* Status indicator bubble */}
-                      {isInProgress && (
-                        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-500 rounded-full border-2 border-white dark:border-neutral-900 flex items-center justify-center">
-                          <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                        </span>
-                      )}
-                      {isLocked && (
-                        <span className="absolute -bottom-1 -right-1 p-0.5 bg-neutral-300 dark:bg-neutral-700 rounded-full text-neutral-600 dark:text-neutral-300">
-                          <Lock className="w-3 h-3" />
-                        </span>
+                    {/* Floating Node Badge */}
+                    <div
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-md group-hover:scale-110 ${
+                        isCompleted
+                          ? 'bg-emerald-500 text-white ring-4 ring-emerald-500/20'
+                          : isInProgress
+                          ? 'bg-blue-600 text-white ring-4 ring-blue-600/30 shadow-blue-500/20'
+                          : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
+                      } ${isSelected ? 'scale-110 ring-4 ring-offset-2 ring-neutral-950 dark:ring-white dark:ring-offset-neutral-950' : ''}`}
+                    >
+                      {isCompleted ? (
+                        <Check className="w-5 h-5 stroke-[2.5]" />
+                      ) : isInProgress ? (
+                        <Play className="w-4 h-4 fill-current ml-0.5" />
+                      ) : (
+                        <Lock className="w-4 h-4" />
                       )}
                     </div>
 
-                    {/* Floating 3D Podium Block */}
-                    <div
-                      className={`w-full p-3.5 sm:p-4 rounded-2xl border text-center transition-all duration-200 ${
-                        isSelected
-                          ? 'border-blue-500/80 bg-white dark:bg-[#111722] shadow-lg shadow-blue-500/10 ring-1 ring-blue-500/50 -translate-y-1'
-                          : 'border-neutral-200/80 dark:border-neutral-800/80 bg-white/70 dark:bg-[#0D121B]/70 hover:border-neutral-400 dark:hover:border-neutral-600'
-                      }`}
-                    >
-                      <span className="text-[10px] font-bold text-neutral-400 font-mono">
-                        STEP {node.stepNumber || index + 1}
+                    {/* Step Title & Status */}
+                    <div className="mt-3 text-center px-1 max-w-[130px]">
+                      <span className="text-[10px] font-mono font-bold text-neutral-400">
+                        STAGE {node.stepNumber}
                       </span>
-                      <p className="text-xs font-bold text-neutral-900 dark:text-white mt-1 line-clamp-2 min-h-[32px]">
+                      <p
+                        className={`text-xs font-bold leading-tight mt-0.5 line-clamp-2 transition-colors ${
+                          isSelected
+                            ? 'text-neutral-950 dark:text-white'
+                            : 'text-neutral-700 dark:text-neutral-300 group-hover:text-neutral-950 dark:group-hover:text-white'
+                        }`}
+                      >
                         {node.title}
                       </p>
                       <p
@@ -432,7 +478,7 @@ export const RoadmapPage: React.FC = () => {
 
           <div className="pt-2">
             <Link
-              to="/learn"
+              to={`/learn?track=${encodeURIComponent(activeTrack)}`}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-bold hover:opacity-90 transition-opacity shadow-xs"
             >
               <span>Start Stage Lessons</span>
@@ -460,13 +506,94 @@ export const RoadmapPage: React.FC = () => {
         </div>
 
         <Link
-          to="/learn"
+          to={`/learn?track=${encodeURIComponent(activeTrack)}`}
           className="p-2.5 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors shadow-2xs"
           title="Continue"
         >
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
+
+      {/* Interest Pop-up / Specialization Selection Screen */}
+      {showInterestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">
+                  <Target className="w-3.5 h-3.5" />
+                  <span>Choose Your Engineering Specialization</span>
+                </div>
+                <h2 className="text-2xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
+                  What is your primary focus?
+                </h2>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                  Select your track to launch your personalized 90-day learning & building roadmap.
+                </p>
+              </div>
+
+              {user?.targetGoal && (
+                <button
+                  onClick={() => setShowInterestModal(false)}
+                  className="p-2 rounded-xl text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+              {TRACK_CONFIGS.map((tc) => {
+                const Icon = tc.icon;
+                const isCurrent = activeTrack === tc.id;
+
+                return (
+                  <button
+                    key={tc.id}
+                    onClick={() => handleSelectInterest(tc.id)}
+                    className={`p-4 rounded-2xl border text-left transition-all relative group flex flex-col justify-between space-y-3 ${
+                      isCurrent
+                        ? 'border-blue-600 bg-blue-50/20 dark:bg-blue-950/20 ring-2 ring-blue-500/40 shadow-sm'
+                        : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-white dark:hover:bg-[#151b26]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
+                        {tc.badge}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {tc.title}
+                      </h3>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-snug line-clamp-2">
+                        {tc.desc}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {tc.skills.slice(0, 3).map((sk) => (
+                        <span key={sk} className="text-[10px] px-2 py-0.5 rounded bg-neutral-200/60 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-medium">
+                          {sk}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="pt-2 flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">
+                      <span>Launch 90-Day Sprint</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
