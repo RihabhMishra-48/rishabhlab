@@ -1,24 +1,25 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const rawUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+const rawKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
+// Ensure the URL is a valid https URL pointing to Supabase (not an API key by mistake)
 export const isSupabaseConfigured = Boolean(
-  supabaseUrl && 
-  supabaseAnonKey && 
-  supabaseUrl !== 'https://your-project.supabase.co' &&
-  !supabaseUrl.includes('placeholder')
+  rawUrl &&
+  rawKey &&
+  rawUrl.startsWith('https://') &&
+  rawUrl.includes('.supabase.co') &&
+  !rawUrl.includes('placeholder') &&
+  !rawUrl.includes('your-project')
 );
 
-// Fallback dummy URL so createClient doesn't throw a fatal init error when env is empty
-export const supabase: SupabaseClient = createClient(
-  isSupabaseConfigured ? supabaseUrl : 'https://placeholder.supabase.co',
-  isSupabaseConfigured ? supabaseAnonKey : 'placeholder-anon-key',
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-  }
-);
+const validUrl = isSupabaseConfigured ? rawUrl : 'https://placeholder.supabase.co';
+const validKey = isSupabaseConfigured ? rawKey : 'placeholder-anon-key';
+
+export const supabase: SupabaseClient = createClient(validUrl, validKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});

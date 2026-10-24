@@ -305,7 +305,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       if (error) throw error;
     } else {
-      alert('Supabase is not configured yet. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your client/.env file.');
+      throw new Error(
+        'Supabase is not configured yet. Please verify your Supabase Project URL (https://<project-ref>.supabase.co) and Anon Key in your environment variables.'
+      );
     }
   };
 
