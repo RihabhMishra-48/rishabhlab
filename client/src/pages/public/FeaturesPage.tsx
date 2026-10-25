@@ -80,6 +80,7 @@ export const FeaturesPage: React.FC = () => {
       tagline: 'Contextual guidance from industry engineers',
       description: 'Book sessions for career direction, code reviews, and hackathon strategy right when you hit a roadblock.',
       icon: Users,
+      customGraphic: '/graphics/mentorship.png',
       color: 'text-rose-500',
       bgColor: 'bg-rose-500/10',
       actionUrl: '/mentorship',
@@ -130,8 +131,12 @@ export const FeaturesPage: React.FC = () => {
                 className="p-6 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-sm transition-colors flex flex-col justify-between group"
               >
                 <div className="space-y-4">
-                  <div className={`w-10 h-10 rounded-xl ${f.bgColor} ${f.color} flex items-center justify-center`}>
-                    <Icon className="w-5 h-5" />
+                  <div className={`w-10 h-10 rounded-xl ${f.bgColor} ${f.color} flex items-center justify-center p-2`}>
+                    {(f as any).customGraphic ? (
+                      <img src={(f as any).customGraphic} alt="" className="w-5 h-5 object-contain dark:invert" />
+                    ) : (
+                      <Icon className="w-5 h-5" />
+                    )}
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-neutral-900 dark:text-white">{f.title}</h3>

@@ -5,19 +5,21 @@ import { useAuth } from '../../context/AuthContext';
 import { CodingProblem } from '../../types';
 import { getCuratedProblems } from '../../data/curatedProblems';
 import {
-  Code2,
   Bug,
   CheckCircle2,
   ArrowRight,
   Filter,
   Search,
   Sparkles,
-  Terminal,
-  Cpu,
-  Shield,
-  Smartphone,
-  BarChart3
+  Terminal
 } from 'lucide-react';
+import {
+  DisplayCodeIcon,
+  ChipBrainIcon,
+  ShieldCheckIcon,
+  MobileNotchIcon,
+  ArrowTrendUpIcon
+} from '../../components/icons/TrackIcons';
 
 export const ProblemListPage: React.FC = () => {
   const { user } = useAuth();
@@ -202,21 +204,21 @@ export const ProblemListPage: React.FC = () => {
                       {prob.isDebuggingChallenge ? (
                         <Bug className="w-4 h-4 text-rose-500" />
                       ) : prob.category.includes('AI') ? (
-                        <Cpu className="w-4 h-4 text-purple-500" />
+                        <ChipBrainIcon className="w-4 h-4 text-purple-500" />
                       ) : prob.category.includes('Cyber') ? (
-                        <Shield className="w-4 h-4 text-emerald-500" />
+                        <ShieldCheckIcon className="w-4 h-4 text-emerald-500" />
                       ) : prob.category.includes('Data') ? (
-                        <BarChart3 className="w-4 h-4 text-amber-500" />
+                        <ArrowTrendUpIcon className="w-4 h-4 text-amber-500" />
                       ) : prob.category.includes('App') ? (
-                        <Smartphone className="w-4 h-4 text-indigo-500" />
+                        <MobileNotchIcon className="w-4 h-4 text-indigo-500" />
                       ) : (
-                        <Code2 className="w-4 h-4 text-blue-500" />
+                        <DisplayCodeIcon className="w-4 h-4 text-blue-500" />
                       )}
                     </div>
 
                     <div className="space-y-0.5 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-xs sm:text-sm font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors truncate">
+                        <h3 className="text-xs sm:text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">
                           {prob.title}
                         </h3>
                         {prob.isDebuggingChallenge && (
@@ -246,7 +248,7 @@ export const ProblemListPage: React.FC = () => {
                       {prob.difficulty}
                     </span>
 
-                    <ArrowRight className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-white group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-4 h-4 text-neutral-400 dark:text-neutral-500" />
                   </div>
                 </Link>
               );

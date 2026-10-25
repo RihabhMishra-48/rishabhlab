@@ -3,11 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import {
-  Code,
-  Cpu,
-  Smartphone,
-  Shield,
-  BarChart3,
   HelpCircle,
   ArrowRight,
   ArrowLeft,
@@ -18,6 +13,13 @@ import {
   Target,
   Calendar
 } from 'lucide-react';
+import {
+  DisplayCodeIcon,
+  ChipBrainIcon,
+  MobileNotchIcon,
+  ShieldCheckIcon,
+  ArrowTrendUpIcon
+} from '../../components/icons/TrackIcons';
 
 export const OnboardingPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -50,11 +52,11 @@ export const OnboardingPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const goalOptions = [
-    { id: 'Web Development', label: 'Web Development', icon: Code, desc: 'Full-stack apps, React, Node.js & APIs' },
-    { id: 'AI / ML', label: 'AI / ML', icon: Cpu, desc: 'Python, Neural Networks, PyTorch & LLMs' },
-    { id: 'App Development', label: 'App Development', icon: Smartphone, desc: 'Cross-platform mobile apps with React Native / Flutter' },
-    { id: 'Cybersecurity', label: 'Cybersecurity', icon: Shield, desc: 'Network security, penetration testing & hardening' },
-    { id: 'Data / Analytics', label: 'Data / Analytics', icon: BarChart3, desc: 'SQL, Pandas, ETL pipelines & visualization' },
+    { id: 'Web Development', label: 'Web Development', icon: DisplayCodeIcon, desc: 'Full-stack apps, React, Node.js & APIs' },
+    { id: 'AI / ML', label: 'AI / ML', icon: ChipBrainIcon, desc: 'Python, Neural Networks, PyTorch & LLMs' },
+    { id: 'App Development', label: 'App Development', icon: MobileNotchIcon, desc: 'Cross-platform mobile apps with React Native / Flutter' },
+    { id: 'Cybersecurity', label: 'Cybersecurity', icon: ShieldCheckIcon, desc: 'Network security, penetration testing & hardening' },
+    { id: 'Data / Analytics', label: 'Data / Analytics', icon: ArrowTrendUpIcon, desc: 'SQL, Pandas, ETL pipelines & visualization' },
     { id: 'Not Sure', label: 'Not Sure', icon: HelpCircle, desc: 'Take our 4-step diagnostic assessment' },
   ];
 

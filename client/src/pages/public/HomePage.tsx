@@ -166,8 +166,8 @@ export const HomePage: React.FC = () => {
               to="/mentorship"
               className="col-span-2 md:col-span-1 p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
             >
-              <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3">
-                <Users className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 p-1.5 flex items-center justify-center mb-3">
+                <img src="/graphics/mentorship.png" alt="Mentorship" className="w-full h-full object-contain dark:invert" />
               </div>
               <h3 className="text-xs font-bold text-neutral-900 dark:text-white">Mentorship</h3>
               <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">Get help from experts</p>

@@ -13,11 +13,15 @@ import {
   CheckCircle2,
   Sparkles,
   Layers,
-  Cpu,
-  Code2,
-  Clock,
-  Shield
+  Clock
 } from 'lucide-react';
+import {
+  DisplayCodeIcon,
+  ChipBrainIcon,
+  ShieldCheckIcon,
+  MobileNotchIcon,
+  ArrowTrendUpIcon
+} from '../../components/icons/TrackIcons';
 
 export const ProjectsCatalogPage: React.FC = () => {
   const { user } = useAuth();
@@ -97,18 +101,18 @@ export const ProjectsCatalogPage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
       {/* Header matching Screen 6 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-800/40 flex items-center justify-center p-2.5 shrink-0 shadow-2xs">
+        <div className="flex items-stretch gap-4 sm:gap-5">
+          <div className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-800/40 flex items-center justify-center p-3.5 sm:p-4 shrink-0 shadow-2xs">
             <img src="/graphics/support.png" alt="Projects & Launch" className="w-full h-full object-contain dark:invert" />
           </div>
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+          <div className="flex flex-col justify-between py-0.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 leading-none">
               Portfolio Proof-of-Work
             </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight">
               Projects & Engineering Launch
             </h1>
-            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none">
               Build real software projects from scratch. Check off milestones and submit verifiable proof of work.
             </p>
           </div>
@@ -172,6 +176,8 @@ export const ProjectsCatalogPage: React.FC = () => {
             const isInProgress = proj.status === 'In Progress';
             const isCyber = proj.category === 'Cybersecurity';
             const isAi = proj.category === 'AI & Machine Learning';
+            const isApp = proj.category === 'Mobile App Development' || proj.category === 'App Development';
+            const isData = proj.category === 'Data & Analytics' || proj.category === 'Data Analytics';
 
             return (
               <Link
@@ -179,21 +185,25 @@ export const ProjectsCatalogPage: React.FC = () => {
                 to={`/projects/${proj.slug}`}
                 className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-md transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
               >
-                <div className="flex items-start gap-4 min-w-0">
+                <div className="flex items-center gap-4 min-w-0">
                   {/* 3D project thumbnail icon */}
-                  <div className="w-12 h-12 rounded-2xl bg-neutral-950 dark:bg-neutral-900 border border-neutral-800 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <div className="w-14 h-14 rounded-2xl bg-neutral-950 dark:bg-neutral-900 border border-neutral-800 text-white flex items-center justify-center shrink-0 shadow-xs">
                     {isCyber ? (
-                      <Shield className="w-6 h-6 text-emerald-400" />
+                      <ShieldCheckIcon className="w-7 h-7 text-emerald-400" />
                     ) : isAi ? (
-                      <Cpu className="w-6 h-6 text-purple-400" />
+                      <ChipBrainIcon className="w-7 h-7 text-purple-400" />
+                    ) : isApp ? (
+                      <MobileNotchIcon className="w-7 h-7 text-indigo-400" />
+                    ) : isData ? (
+                      <ArrowTrendUpIcon className="w-7 h-7 text-amber-400" />
                     ) : (
-                      <Code2 className="w-6 h-6 text-blue-400" />
+                      <DisplayCodeIcon className="w-7 h-7 text-blue-400" />
                     )}
                   </div>
 
                   <div className="space-y-1 min-w-0">
                     <div className="flex items-center gap-3">
-                      <h3 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-blue-500 transition-colors truncate">
+                      <h3 className="text-sm font-bold text-neutral-900 dark:text-white truncate">
                         {proj.title}
                       </h3>
                       <span

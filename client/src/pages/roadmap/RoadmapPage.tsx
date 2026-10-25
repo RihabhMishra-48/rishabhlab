@@ -4,7 +4,6 @@ import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Roadmap, RoadmapNode } from '../../types';
 import {
-  AVAILABLE_TRACKS,
   getCuratedRoadmap,
   normalizeTrackName,
 } from '../../data/curatedRoadmaps';
@@ -15,7 +14,6 @@ import {
   ArrowRight,
   Sparkles,
   BookOpen,
-  Code2,
   FolderGit2,
   Clock,
   RefreshCw,
@@ -23,19 +21,22 @@ import {
   Terminal,
   Layers,
   Server,
-  Smartphone,
-  Shield,
-  BarChart3,
-  Cpu,
   X,
   Target
 } from 'lucide-react';
+import {
+  DisplayCodeIcon,
+  ChipBrainIcon,
+  ShieldCheckIcon,
+  MobileNotchIcon,
+  ArrowTrendUpIcon
+} from '../../components/icons/TrackIcons';
 
 const TRACK_CONFIGS = [
   {
     id: 'Web Development',
     title: 'Web Development',
-    icon: Code2,
+    icon: DisplayCodeIcon,
     badge: 'Full Stack',
     desc: 'React, TypeScript, Next.js, Node.js, REST APIs & Distributed Web Systems',
     skills: ['React 18', 'TypeScript', 'Node.js', 'Next.js', 'PostgreSQL'],
@@ -43,7 +44,7 @@ const TRACK_CONFIGS = [
   {
     id: 'AI / Machine Learning',
     title: 'AI & Machine Learning',
-    icon: Cpu,
+    icon: ChipBrainIcon,
     badge: 'GenAI & Deep Learning',
     desc: 'Python, PyTorch, Neural Networks, Embeddings, LLMs & Production AI Serving',
     skills: ['Python', 'PyTorch', 'Vector DBs', 'LLMs', 'Model Deployment'],
@@ -51,7 +52,7 @@ const TRACK_CONFIGS = [
   {
     id: 'Mobile App Development',
     title: 'Mobile App Development',
-    icon: Smartphone,
+    icon: MobileNotchIcon,
     badge: 'Cross-Platform',
     desc: 'React Native / Flutter, Mobile UI Architecture, State Machines & Device APIs',
     skills: ['React Native', 'Flutter', 'State Machines', 'Native Bridges'],
@@ -59,7 +60,7 @@ const TRACK_CONFIGS = [
   {
     id: 'Cyber Security',
     title: 'Cyber Security',
-    icon: Shield,
+    icon: ShieldCheckIcon,
     badge: 'Infosec & Defense',
     desc: 'Network Packet Analysis, Penetration Testing, Linux Hardening & Cryptography',
     skills: ['Wireshark', 'Kali Linux', 'Burp Suite', 'Network Protocols', 'OWASP'],
@@ -67,7 +68,7 @@ const TRACK_CONFIGS = [
   {
     id: 'Data & Analytics',
     title: 'Data & Analytics',
-    icon: BarChart3,
+    icon: ArrowTrendUpIcon,
     badge: 'Data Engineering',
     desc: 'SQL Mastery, Pandas, Distributed ETL Pipelines & Executive Visualizations',
     skills: ['SQL', 'Pandas', 'Apache Spark', 'ETL Pipelines', 'Power BI'],
@@ -242,17 +243,18 @@ export const RoadmapPage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
       {/* Header matching Screen 4 of Reference UI */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center p-2.5 shrink-0 shadow-2xs">
+        <div className="flex items-stretch gap-4 sm:gap-5">
+          <div className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center p-3.5 sm:p-4 shrink-0 shadow-2xs">
             <img src="/graphics/roadmap.png" alt="Roadmap" className="w-full h-full object-contain dark:invert" />
           </div>
-          <div>
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
-                Your 90-Day Roadmap
-              </h1>
-            </div>
-            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+          <div className="flex flex-col justify-between py-0.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 leading-none">
+              Structured Milestones
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight">
+              Your 90-Day Roadmap
+            </h1>
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none">
               <strong className="text-neutral-900 dark:text-white font-semibold">{activeTrack} Track</strong> • {roadmap?.targetLevel || 'Beginner to Production'} • {roadmap?.estimatedDailyTime || '2 hr/day'} • {roadmap?.totalDurationDays || 90} Days Focus
             </p>
           </div>
@@ -592,7 +594,7 @@ export const RoadmapPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
                         {tc.title}
                       </h3>
                       <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-snug line-clamp-2">
@@ -608,7 +610,7 @@ export const RoadmapPage: React.FC = () => {
                       ))}
                     </div>
 
-                    <div className="pt-2 flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">
+                    <div className="pt-2 flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400">
                       <span>Launch 90-Day Sprint</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </div>

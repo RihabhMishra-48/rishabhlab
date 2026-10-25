@@ -153,15 +153,15 @@ export const StudentDashboard: React.FC = () => {
         <div className="lg:col-span-8 p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col justify-between space-y-6">
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 p-2 flex items-center justify-center shrink-0">
+              <div className="flex items-stretch gap-3.5 min-w-0">
+                <div className="w-12 h-12 sm:w-[52px] sm:h-[52px] rounded-2xl bg-blue-500/10 border border-blue-500/20 p-2.5 sm:p-3 flex items-center justify-center shrink-0">
                   <img src="/graphics/daily-calendar.svg" alt="Daily Mission" className="w-full h-full object-contain dark:invert" />
                 </div>
-                <div className="min-w-0">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                <div className="min-w-0 flex flex-col justify-between py-0.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 leading-none">
                     Today's Mission
                   </span>
-                  <h2 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mt-0.5 truncate">
+                  <h2 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white leading-tight truncate">
                     Day {mission?.dayNumber || 1} • {currentTrack}
                   </h2>
                 </div>
@@ -438,8 +438,8 @@ export const StudentDashboard: React.FC = () => {
             to="/mentorship"
             className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#212121] hover:bg-neutral-50 dark:hover:bg-[#2a2a2a] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs transition-colors group"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 border border-rose-500/20 flex items-center justify-center mb-3">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 border border-rose-500/20 p-2 flex items-center justify-center mb-3">
+              <img src="/graphics/mentorship.png" alt="Find a Mentor" className="w-5 h-5 sm:w-6 sm:h-6 object-contain dark:invert" />
             </div>
             <h3 className="text-xs font-bold text-neutral-900 dark:text-white">Find a Mentor</h3>
             <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">Book 1:1 session</p>

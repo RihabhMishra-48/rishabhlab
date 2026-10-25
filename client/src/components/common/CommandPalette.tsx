@@ -35,7 +35,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
     { title: 'Project: AI Resume Analyzer', category: 'Projects', path: '/projects/ai-resume-analyzer', icon: FolderGit2 },
     { title: 'Project: College Event Platform', category: 'Projects', path: '/projects/college-event-platform', icon: FolderGit2 },
     { title: 'Hackathon Mode (12 Days Countdown)', category: 'Hackathon', path: '/hackathon', icon: Trophy },
-    { title: 'Book 1:1 Mentorship Session', category: 'Mentorship', path: '/mentorship', icon: Users },
+    { title: 'Book 1:1 Mentorship Session', category: 'Mentorship', path: '/mentorship', icon: Users, customGraphic: '/graphics/mentorship.png' },
     { title: 'Weekly Review (Week 3 Reflection)', category: 'Review', path: '/weekly-review', icon: CalendarDays },
     { title: 'GLA University College Dashboard', category: 'College', path: '/college', icon: Building2 },
   ];
@@ -116,7 +116,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-600 dark:text-neutral-300">
-                      <Icon className="w-4 h-4" />
+                      {item.customGraphic ? (
+                        <img src={item.customGraphic} alt="" className="w-4 h-4 object-contain dark:invert" />
+                      ) : (
+                        <Icon className="w-4 h-4" />
+                      )}
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-neutral-900 dark:text-white">{item.title}</p>

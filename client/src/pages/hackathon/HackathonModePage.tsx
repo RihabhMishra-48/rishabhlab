@@ -57,15 +57,18 @@ export const HackathonModePage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
       {/* Header matching Screen 7 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center p-2.5 shrink-0 shadow-2xs">
+        <div className="flex items-stretch gap-4 sm:gap-5">
+          <div className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center p-3.5 sm:p-4 shrink-0 shadow-2xs">
             <img src="/graphics/troph-cap.svg" alt="Hackathon" className="w-full h-full object-contain dark:invert" />
           </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
+          <div className="flex flex-col justify-between py-0.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 leading-none">
+              Sprint Execution Engine
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight">
               Hackathon Mode
             </h1>
-            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none">
               Turn your idea into a working product.
             </p>
           </div>

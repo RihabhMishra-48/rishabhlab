@@ -1,11 +1,11 @@
 import { Roadmap } from "../types";
 
 export const AVAILABLE_TRACKS = [
-  { id: "App Development", label: "App Dev", fullLabel: "App Development Track", icon: "Smartphone" },
-  { id: "Web Development", label: "Web Dev", fullLabel: "Web Development Track", icon: "Code" },
-  { id: "AI / ML", label: "AI / ML", fullLabel: "AI / Machine Learning Track", icon: "Cpu" },
-  { id: "Cybersecurity", label: "Cybersecurity", fullLabel: "Cybersecurity Track", icon: "Shield" },
-  { id: "Data / Analytics", label: "Data / Analytics", fullLabel: "Data & Analytics Track", icon: "BarChart3" },
+  { id: "App Development", label: "App Dev", fullLabel: "App Development Track", icon: "MobileNotch" },
+  { id: "Web Development", label: "Web Dev", fullLabel: "Web Development Track", icon: "DisplayCode" },
+  { id: "AI / ML", label: "AI / ML", fullLabel: "AI / Machine Learning Track", icon: "ChipBrain" },
+  { id: "Cybersecurity", label: "Cybersecurity", fullLabel: "Cybersecurity Track", icon: "ShieldCheck" },
+  { id: "Data / Analytics", label: "Data / Analytics", fullLabel: "Data & Analytics Track", icon: "ArrowTrendUp" },
 ];
 
 export const CURATED_ROADMAPS: Record<string, Roadmap> = {

@@ -20,6 +20,7 @@ import {
   PanelLeftOpen,
   Sparkles
 } from 'lucide-react';
+import { DisplayCodeIcon } from '../icons/TrackIcons';
 
 interface SidebarProps {
   isCollapsed?: boolean;
@@ -102,10 +103,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Roadmap', path: '/roadmap', icon: Compass, customGraphic: '/graphics/roadmap.png' },
     { label: 'Learn', path: '/learn', icon: BookOpen },
     { label: 'Missions', path: '/missions', icon: CheckCircle2, customGraphic: '/graphics/daily-calendar.svg' },
-    { label: 'Practice', path: '/practice', icon: Code2 },
+    { label: 'Practice', path: '/practice', icon: DisplayCodeIcon, customGraphic: '/graphics/display-code.svg' },
     { label: 'Projects', path: '/projects', icon: FolderGit2, customGraphic: '/graphics/support.png' },
     { label: 'Hackathon', path: '/hackathon', icon: Trophy, customGraphic: '/graphics/troph-cap.svg' },
-    { label: 'Mentorship', path: '/mentorship', icon: Users, customGraphic: '/graphics/online-meet.svg' },
+    { label: 'Mentorship', path: '/mentorship', icon: Users, customGraphic: '/graphics/mentorship.png' },
     { label: 'Weekly Review', path: '/weekly-review', icon: CalendarDays, customGraphic: '/graphics/rectangle-history-circle-plus.svg' },
     { label: 'Profile', path: '/profile', icon: UserIcon },
   ];

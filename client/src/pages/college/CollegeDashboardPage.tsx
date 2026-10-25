@@ -6,10 +6,8 @@ import {
   Users,
   CheckCircle2,
   Trophy,
-  BarChart3,
   Sparkles,
   ArrowRight,
-  TrendingUp,
   FolderGit2
 } from 'lucide-react';
 
