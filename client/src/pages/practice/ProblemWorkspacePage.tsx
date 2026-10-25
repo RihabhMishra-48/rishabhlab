@@ -19,6 +19,14 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { BugIcon } from '../../components/icons/TrackIcons';
+import { CustomDropdown, DropdownOption } from '../../components/common/CustomDropdown';
+
+const LANGUAGE_OPTIONS: DropdownOption[] = [
+  { value: 'javascript', label: 'JavaScript (Node 20)' },
+  { value: 'python', label: 'Python 3.11' },
+  { value: 'cpp', label: 'C++ (GCC 12)' },
+  { value: 'java', label: 'Java 17' },
+];
 
 export const ProblemWorkspacePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -261,17 +269,13 @@ export const ProblemWorkspacePage: React.FC = () => {
             <span>Hints</span>
           </button>
 
-          {/* Language Selector */}
-          <select
+          {/* Custom Language Selector Dropdown */}
+          <CustomDropdown
+            options={LANGUAGE_OPTIONS}
             value={selectedLanguage}
-            onChange={(e: any) => handleLanguageChange(e.target.value)}
-            className="px-2.5 py-1.5 rounded-xl bg-neutral-100 dark:bg-[#262626] border border-neutral-200 dark:border-neutral-800 text-xs font-mono text-neutral-800 dark:text-neutral-200 outline-none focus:outline-none focus:ring-0"
-          >
-            <option value="javascript">JavaScript (Node 20)</option>
-            <option value="python">Python 3.11</option>
-            <option value="cpp">C++ (GCC 12)</option>
-            <option value="java">Java 17</option>
-          </select>
+            onChange={(val) => handleLanguageChange(val as 'javascript' | 'python' | 'cpp' | 'java')}
+            ariaLabel="Select programming language"
+          />
 
           {/* Run Code Button */}
           <button

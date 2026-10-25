@@ -324,14 +324,14 @@ export const LessonDetailPage: React.FC = () => {
   const toggleLeftSidebar = () => {
     setLeftSidebarOpen(prev => {
       const next = !prev;
-      try { localStorage.setItem('rl_lesson_left_sidebar', next ? 'open' : 'closed'); } catch {}
+      try { localStorage.setItem('rl_lesson_left_sidebar', next ? 'open' : 'closed'); } catch { }
       return next;
     });
   };
   const toggleRightSidebar = () => {
     setRightSidebarOpen(prev => {
       const next = !prev;
-      try { localStorage.setItem('rl_lesson_right_sidebar', next ? 'open' : 'closed'); } catch {}
+      try { localStorage.setItem('rl_lesson_right_sidebar', next ? 'open' : 'closed'); } catch { }
       return next;
     });
   };
@@ -343,7 +343,7 @@ export const LessonDetailPage: React.FC = () => {
     try {
       const savedCompleted = localStorage.getItem(`rishabhlabs_lesson_completed_${currentSlug}`);
       setIsCompleted(savedCompleted === 'true');
-    } catch {}
+    } catch { }
 
     setQuizAnswers({});
     setQuizScore(null);
@@ -582,11 +582,10 @@ export const LessonDetailPage: React.FC = () => {
           {/* Quick Toggle Left Module Outline */}
           <button
             onClick={toggleLeftSidebar}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
-              leftSidebarOpen
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${leftSidebarOpen
                 ? 'bg-muted text-foreground'
                 : 'bg-card border border-border/50 text-muted-foreground hover:text-foreground'
-            }`}
+              }`}
             title={leftSidebarOpen ? 'Collapse module outline' : 'Expand module outline'}
           >
             {leftSidebarOpen ? <PanelLeftClose className="w-3.5 h-3.5" /> : <PanelLeftOpen className="w-3.5 h-3.5" />}
@@ -597,11 +596,10 @@ export const LessonDetailPage: React.FC = () => {
           {lesson.quiz && lesson.quiz.length > 0 && (
             <button
               onClick={toggleRightSidebar}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
-                rightSidebarOpen
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${rightSidebarOpen
                   ? 'bg-muted text-foreground'
                   : 'bg-card border border-border/50 text-muted-foreground hover:text-foreground'
-              }`}
+                }`}
               title={rightSidebarOpen ? 'Collapse quiz panel' : 'Expand quiz panel'}
             >
               {rightSidebarOpen ? <PanelRightClose className="w-3.5 h-3.5" /> : <PanelRightOpen className="w-3.5 h-3.5" />}
@@ -623,13 +621,12 @@ export const LessonDetailPage: React.FC = () => {
               try {
                 localStorage.setItem('rl_lesson_left_sidebar', shouldOpen ? 'open' : 'closed');
                 localStorage.setItem('rl_lesson_right_sidebar', shouldOpen ? 'open' : 'closed');
-              } catch {}
+              } catch { }
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
-              !leftSidebarOpen && !rightSidebarOpen
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${!leftSidebarOpen && !rightSidebarOpen
                 ? 'bg-primary text-primary-foreground shadow-xs'
                 : 'bg-card border border-border/50 text-muted-foreground hover:text-foreground'
-            }`}
+              }`}
             title={!leftSidebarOpen && !rightSidebarOpen ? 'Exit focus mode' : 'Focus mode (full-width reading)'}
           >
             {!leftSidebarOpen && !rightSidebarOpen ? (
@@ -650,25 +647,24 @@ export const LessonDetailPage: React.FC = () => {
       {/* 3-Column Flexible Architecture — Collapsible Sidebars with Persistent Sticky Pinning */}
       <div className="flex flex-col lg:flex-row gap-6 items-stretch">
         {/* Left Column: Course Navigation / Module Outline — Collapsible */}
-        <div className={`shrink-0 self-stretch transition-all duration-300 ease-in-out ${
-          leftSidebarOpen ? 'w-full lg:w-[260px]' : 'w-11'
-        }`}>
-          <div className={`sticky top-6 ${
-            leftSidebarOpen ? 'max-h-[calc(100vh-4rem)] overflow-y-auto overflow-x-hidden pr-0.5' : 'overflow-hidden'
+        <div className={`shrink-0 self-stretch transition-all duration-300 ease-in-out ${leftSidebarOpen ? 'w-full lg:w-[260px]' : 'w-11'
           }`}>
+          <div className={`sticky top-6 ${leftSidebarOpen ? 'overflow-visible' : 'overflow-hidden'
+            }`}>
             {leftSidebarOpen ? (
-              <div className="p-5 rounded-3xl bg-card border border-border/50 shadow-xs space-y-3">
+              <div className="relative p-5 rounded-3xl bg-card border border-border/50 shadow-xs space-y-3">
+                {/* Floating Dock Collapse Button on border — full visibility without clipping */}
+                <button
+                  onClick={toggleLeftSidebar}
+                  className="absolute -right-3.5 top-5 w-7 h-7 rounded-full bg-card border border-border shadow-xs flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all cursor-pointer z-20 group"
+                  title="Collapse module navigation"
+                >
+                  <PanelLeftClose className="w-3.5 h-3.5 transition-transform" />
+                </button>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     Module Navigation
                   </span>
-                  <button
-                    onClick={toggleLeftSidebar}
-                    className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-                    title="Collapse navigation"
-                  >
-                    <PanelLeftClose className="w-4 h-4" />
-                  </button>
                 </div>
                 <h3 className="text-xs font-bold text-foreground">
                   {lesson.moduleTitle}
@@ -682,11 +678,10 @@ export const LessonDetailPage: React.FC = () => {
                         <Link
                           key={m.slug}
                           to={`/learn/${m.track || track || 'cybersecurity'}/${m.slug}`}
-                          className={`block p-2.5 rounded-xl transition-all ${
-                            isActive
+                          className={`block p-2.5 rounded-xl transition-all ${isActive
                               ? 'bg-primary text-primary-foreground font-bold shadow-xs'
                               : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] font-mono opacity-70 shrink-0">
@@ -852,11 +847,10 @@ export const LessonDetailPage: React.FC = () => {
           <div className="p-5 sm:p-6 rounded-3xl bg-card text-card-foreground border border-border/40 flex items-center justify-between gap-4">
             <button
               onClick={handleCompleteLesson}
-              className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                isCompleted
+              className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${isCompleted
                   ? 'bg-emerald-500 text-white'
                   : 'bg-primary text-primary-foreground hover:bg-primary/90'
-              }`}
+                }`}
             >
               <Check className="w-3.5 h-3.5" />
               <span>{isCompleted ? 'Completed ✓' : 'Mark Complete'}</span>
@@ -882,204 +876,203 @@ export const LessonDetailPage: React.FC = () => {
         </div>
 
         {/* Right Column: Quiz & Progress Check — Collapsible */}
-        <div className={`shrink-0 self-stretch transition-all duration-300 ease-in-out ${
-          rightSidebarOpen ? 'w-full lg:w-[280px]' : 'w-11'
-        }`}>
-          <div className={`sticky top-6 ${
-            rightSidebarOpen ? 'max-h-[calc(100vh-4rem)] overflow-y-auto overflow-x-hidden pr-0.5' : 'overflow-hidden'
+        <div className={`shrink-0 self-stretch transition-all duration-300 ease-in-out ${rightSidebarOpen ? 'w-full lg:w-[280px]' : 'w-11'
           }`}>
+          <div className={`sticky top-6 ${rightSidebarOpen ? 'overflow-visible' : 'overflow-hidden'
+            }`}>
             {rightSidebarOpen ? (
               <div className="space-y-6">
-          {lesson.quiz && lesson.quiz.length > 0 && (
-            <div className="p-5 rounded-3xl bg-card text-card-foreground border border-border/40 shadow-xs space-y-4">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-mono">
-                    Concept Check
-                  </span>
-                  <h3 className="text-sm font-bold text-foreground mt-0.5">
-                    Quick Quiz
-                  </h3>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                    {lesson.quiz.length} Question{lesson.quiz.length > 1 ? 's' : ''}
-                  </span>
-                  <button
-                    onClick={toggleRightSidebar}
-                    className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-                    title="Collapse quiz panel"
-                  >
-                    <PanelRightClose className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+                {lesson.quiz && lesson.quiz.length > 0 && (
+                  <div className="relative p-5 rounded-3xl bg-card text-card-foreground border border-border/40 shadow-xs space-y-4">
+                    {/* Floating Dock Collapse Button on left border — full visibility without clipping */}
+                    <button
+                      onClick={toggleRightSidebar}
+                      className="absolute -left-3.5 top-5 w-7 h-7 rounded-full bg-card border border-border shadow-xs flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all cursor-pointer z-20 group"
+                      title="Collapse quiz panel"
+                    >
+                      <PanelRightClose className="w-3.5 h-3.5 group-hover:scale-105 transition-transform" />
+                    </button>
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-mono">
+                          Concept Check
+                        </span>
+                        <h3 className="text-sm font-bold text-foreground mt-0.5">
+                          Quick Quiz
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                          {lesson.quiz.length} Question{lesson.quiz.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    </div>
 
-              <div className="space-y-4">
-                {lesson.quiz.map((q, qIdx) => {
-                  const feedback = quizFeedback[qIdx];
-                  const hasSubmitted = quizSubmitted && Boolean(feedback);
-                  const optionLetters = ['A', 'B', 'C', 'D'];
+                    <div className="space-y-4">
+                      {lesson.quiz.map((q, qIdx) => {
+                        const feedback = quizFeedback[qIdx];
+                        const hasSubmitted = quizSubmitted && Boolean(feedback);
+                        const optionLetters = ['A', 'B', 'C', 'D'];
 
-                  return (
-                    <div key={qIdx} className="space-y-2.5">
-                      <p className="text-xs font-bold text-neutral-900 dark:text-white leading-relaxed">
-                        {qIdx + 1}. {q.question}
-                      </p>
-                      <div className="space-y-2">
-                        {q.options.map((opt, optIdx) => {
-                          const isSelected = quizAnswers[qIdx] === optIdx;
-                          const isCorrect = feedback?.correctIndex === optIdx;
-                          const isWrongSelection = isSelected && !feedback?.isCorrect;
-                          const letter = optionLetters[optIdx] || String(optIdx + 1);
+                        return (
+                          <div key={qIdx} className="space-y-2.5">
+                            <p className="text-xs font-bold text-neutral-900 dark:text-white leading-relaxed">
+                              {qIdx + 1}. {q.question}
+                            </p>
+                            <div className="space-y-2">
+                              {q.options.map((opt, optIdx) => {
+                                const isSelected = quizAnswers[qIdx] === optIdx;
+                                const isCorrect = feedback?.correctIndex === optIdx;
+                                const isWrongSelection = isSelected && !feedback?.isCorrect;
+                                const letter = optionLetters[optIdx] || String(optIdx + 1);
 
-                          // Borderless, pure tonal styling
-                          let containerStyle = 'bg-neutral-100/70 dark:bg-white/[0.04] hover:bg-neutral-200/70 dark:hover:bg-white/[0.08] text-neutral-800 dark:text-neutral-200';
-                          let badgeStyle = 'bg-neutral-200/80 dark:bg-white/10 text-neutral-600 dark:text-neutral-400';
-                          let rightBadge = null;
+                                // Borderless, pure tonal styling
+                                let containerStyle = 'bg-neutral-100/70 dark:bg-white/[0.04] hover:bg-neutral-200/70 dark:hover:bg-white/[0.08] text-neutral-800 dark:text-neutral-200';
+                                let badgeStyle = 'bg-neutral-200/80 dark:bg-white/10 text-neutral-600 dark:text-neutral-400';
+                                let rightBadge = null;
 
-                          if (hasSubmitted) {
-                            if (isCorrect) {
-                              containerStyle = 'bg-emerald-500/15 text-emerald-900 dark:text-emerald-200 font-medium';
-                              badgeStyle = 'bg-emerald-500 text-white dark:bg-emerald-400 dark:text-neutral-950 font-bold';
-                              rightBadge = (
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 flex items-center gap-1 shrink-0">
-                                  <CheckCircle2 className="w-3 h-3" />
-                                  <span>Correct</span>
-                                </span>
-                              );
-                            } else if (isWrongSelection) {
-                              containerStyle = 'bg-rose-500/15 text-rose-900 dark:text-rose-200 font-medium';
-                              badgeStyle = 'bg-rose-500 text-white dark:bg-rose-400 dark:text-neutral-950 font-bold';
-                              rightBadge = (
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-rose-500/20 text-rose-700 dark:text-rose-300 flex items-center gap-1 shrink-0">
-                                  <XCircle className="w-3 h-3" />
-                                  <span>Incorrect</span>
-                                </span>
-                              );
-                            } else {
-                              containerStyle = 'bg-neutral-50/50 dark:bg-white/[0.02] text-neutral-400 dark:text-neutral-500 opacity-60';
-                              badgeStyle = 'bg-neutral-200/40 dark:bg-white/5 text-neutral-400 dark:text-neutral-600';
-                            }
-                          } else if (isSelected) {
-                            containerStyle = 'bg-neutral-200/80 dark:bg-white/15 text-neutral-950 dark:text-white font-medium';
-                            badgeStyle = 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold';
-                          }
+                                if (hasSubmitted) {
+                                  if (isCorrect) {
+                                    containerStyle = 'bg-emerald-500/15 text-emerald-900 dark:text-emerald-200 font-medium';
+                                    badgeStyle = 'bg-emerald-500 text-white dark:bg-emerald-400 dark:text-neutral-950 font-bold';
+                                    rightBadge = (
+                                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 flex items-center gap-1 shrink-0">
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        <span>Correct</span>
+                                      </span>
+                                    );
+                                  } else if (isWrongSelection) {
+                                    containerStyle = 'bg-rose-500/15 text-rose-900 dark:text-rose-200 font-medium';
+                                    badgeStyle = 'bg-rose-500 text-white dark:bg-rose-400 dark:text-neutral-950 font-bold';
+                                    rightBadge = (
+                                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-rose-500/20 text-rose-700 dark:text-rose-300 flex items-center gap-1 shrink-0">
+                                        <XCircle className="w-3 h-3" />
+                                        <span>Incorrect</span>
+                                      </span>
+                                    );
+                                  } else {
+                                    containerStyle = 'bg-neutral-50/50 dark:bg-white/[0.02] text-neutral-400 dark:text-neutral-500 opacity-60';
+                                    badgeStyle = 'bg-neutral-200/40 dark:bg-white/5 text-neutral-400 dark:text-neutral-600';
+                                  }
+                                } else if (isSelected) {
+                                  containerStyle = 'bg-neutral-200/80 dark:bg-white/15 text-neutral-950 dark:text-white font-medium';
+                                  badgeStyle = 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold';
+                                }
 
-                          return (
-                            <button
-                              key={optIdx}
-                              type="button"
-                              onClick={() => {
-                                if (hasSubmitted) return;
-                                setQuizAnswers((prev) => ({ ...prev, [qIdx]: optIdx }));
-                              }}
-                              disabled={hasSubmitted}
-                              className={`w-full p-2.5 rounded-2xl text-left text-xs transition-colors flex items-center justify-between gap-2.5 cursor-pointer disabled:cursor-default ${containerStyle}`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                <span className={`w-5 h-5 rounded-md text-[10px] font-bold font-mono flex items-center justify-center shrink-0 ${badgeStyle}`}>
-                                  {letter}
-                                </span>
-                                <span className="leading-snug break-words text-left flex-1 min-w-0 text-xs">
-                                  {opt}
+                                return (
+                                  <button
+                                    key={optIdx}
+                                    type="button"
+                                    onClick={() => {
+                                      if (hasSubmitted) return;
+                                      setQuizAnswers((prev) => ({ ...prev, [qIdx]: optIdx }));
+                                    }}
+                                    disabled={hasSubmitted}
+                                    className={`w-full p-2.5 rounded-2xl text-left text-xs transition-colors flex items-center justify-between gap-2.5 cursor-pointer disabled:cursor-default ${containerStyle}`}
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                      <span className={`w-5 h-5 rounded-md text-[10px] font-bold font-mono flex items-center justify-center shrink-0 ${badgeStyle}`}>
+                                        {letter}
+                                      </span>
+                                      <span className="leading-snug break-words text-left flex-1 min-w-0 text-xs">
+                                        {opt}
+                                      </span>
+                                    </div>
+                                    {rightBadge}
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            {/* Explanation box on submitted answer */}
+                            {hasSubmitted && q.explanation && (
+                              <div className="p-3.5 rounded-2xl bg-neutral-100/70 dark:bg-white/[0.04] space-y-1.5">
+                                <div className="flex items-center gap-1.5 font-bold text-[10px] font-mono uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                                  <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                  <span>Explanation</span>
+                                </div>
+                                <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed font-sans">
+                                  {q.explanation}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {!quizSubmitted ? (
+                        <button
+                          onClick={handleSubmitQuiz}
+                          disabled={Object.keys(quizAnswers).length < lesson.quiz.length}
+                          className="w-full py-2.5 rounded-2xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-bold hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors shadow-2xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          Verify Answers
+                        </button>
+                      ) : (
+                        <div className="pt-1">
+                          {quizScore === lesson.quiz.length ? (
+                            <div className="p-4 rounded-2xl bg-emerald-500/10 dark:bg-emerald-950/30 space-y-3">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className="w-7 h-7 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
+                                    <CheckCircle2 className="w-4 h-4" />
+                                  </div>
+                                  <span className="text-xs font-bold text-neutral-900 dark:text-white truncate">
+                                    All Correct!
+                                  </span>
+                                </div>
+                                <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 shrink-0">
+                                  {quizScore} / {lesson.quiz.length}
                                 </span>
                               </div>
-                              {rightBadge}
-                            </button>
-                          );
-                        })}
-                      </div>
 
-                      {/* Explanation box on submitted answer */}
-                      {hasSubmitted && q.explanation && (
-                        <div className="p-3.5 rounded-2xl bg-neutral-100/70 dark:bg-white/[0.04] space-y-1.5">
-                          <div className="flex items-center gap-1.5 font-bold text-[10px] font-mono uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                            <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                            <span>Explanation</span>
-                          </div>
-                          <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed font-sans">
-                            {q.explanation}
-                          </p>
+                              <button
+                                onClick={() => {
+                                  setQuizSubmitted(false);
+                                  setQuizScore(null);
+                                  setQuizFeedback({});
+                                }}
+                                className="w-full py-2 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                <RefreshCw className="w-3.5 h-3.5" />
+                                <span>Retake Quiz</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="p-4 rounded-2xl bg-rose-500/10 dark:bg-rose-950/30 space-y-3">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className="w-7 h-7 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold shrink-0">
+                                    <XCircle className="w-4 h-4" />
+                                  </div>
+                                  <span className="text-xs font-bold text-neutral-900 dark:text-white truncate">
+                                    Review Recommended
+                                  </span>
+                                </div>
+                                <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-700 dark:text-rose-300 shrink-0">
+                                  {quizScore} / {lesson.quiz.length}
+                                </span>
+                              </div>
+
+                              <button
+                                onClick={() => {
+                                  setQuizSubmitted(false);
+                                  setQuizScore(null);
+                                  setQuizFeedback({});
+                                }}
+                                className="w-full py-2 px-3 rounded-xl bg-neutral-900/10 hover:bg-neutral-900/15 dark:bg-white/10 dark:hover:bg-white/15 text-neutral-900 dark:text-white text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                <RefreshCw className="w-3.5 h-3.5" />
+                                <span>Try Again</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  );
-                })}
-
-                {!quizSubmitted ? (
-                  <button
-                    onClick={handleSubmitQuiz}
-                    disabled={Object.keys(quizAnswers).length < lesson.quiz.length}
-                    className="w-full py-2.5 rounded-2xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-bold hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors shadow-2xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Verify Answers
-                  </button>
-                ) : (
-                  <div className="pt-1">
-                    {quizScore === lesson.quiz.length ? (
-                      <div className="p-4 rounded-2xl bg-emerald-500/10 dark:bg-emerald-950/30 space-y-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-7 h-7 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
-                              <CheckCircle2 className="w-4 h-4" />
-                            </div>
-                            <span className="text-xs font-bold text-neutral-900 dark:text-white truncate">
-                              All Correct!
-                            </span>
-                          </div>
-                          <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 shrink-0">
-                            {quizScore} / {lesson.quiz.length}
-                          </span>
-                        </div>
-
-                        <button
-                          onClick={() => {
-                            setQuizSubmitted(false);
-                            setQuizScore(null);
-                            setQuizFeedback({});
-                          }}
-                          className="w-full py-2 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                          <span>Retake Quiz</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="p-4 rounded-2xl bg-rose-500/10 dark:bg-rose-950/30 space-y-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-7 h-7 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold shrink-0">
-                              <XCircle className="w-4 h-4" />
-                            </div>
-                            <span className="text-xs font-bold text-neutral-900 dark:text-white truncate">
-                              Review Recommended
-                            </span>
-                          </div>
-                          <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-700 dark:text-rose-300 shrink-0">
-                            {quizScore} / {lesson.quiz.length}
-                          </span>
-                        </div>
-
-                        <button
-                          onClick={() => {
-                            setQuizSubmitted(false);
-                            setQuizScore(null);
-                            setQuizFeedback({});
-                          }}
-                          className="w-full py-2 px-3 rounded-xl bg-neutral-900/10 hover:bg-neutral-900/15 dark:bg-white/10 dark:hover:bg-white/15 text-neutral-900 dark:text-white text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                          <span>Try Again</span>
-                        </button>
-                      </div>
-                    )}
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-              {/* Close the right sidebar open wrapper */}
+                {/* Close the right sidebar open wrapper */}
               </div>
             ) : (
               <button
