@@ -27,7 +27,7 @@ export const PublicPortfolioPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#070A0F] text-neutral-900 dark:text-neutral-100 p-4 sm:p-8">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 p-4 sm:p-8">
       <div className="max-w-4xl mx-auto space-y-8">
         <Link
           to="/"
@@ -38,7 +38,7 @@ export const PublicPortfolioPage: React.FC = () => {
         </Link>
 
         {/* Public Header */}
-        <div className="p-8 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-xl space-y-6">
+        <div className="p-8 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xl space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
               <img
@@ -105,7 +105,7 @@ export const PublicPortfolioPage: React.FC = () => {
             {(profile?.verifiedProjects || []).map((proj: any) => (
               <div
                 key={proj.title}
-                className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">

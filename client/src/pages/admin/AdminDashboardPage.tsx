@@ -76,28 +76,28 @@ export const AdminDashboardPage: React.FC = () => {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-5 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 space-y-1">
+        <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Total Users</span>
           <p className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-white font-mono">
             {adminData?.metrics?.totalUsers || 2480}
           </p>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 space-y-1">
+        <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Verified Mentors</span>
           <p className="text-2xl sm:text-3xl font-extrabold text-purple-500 font-mono">
             {adminData?.metrics?.mentors || 24}
           </p>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 space-y-1">
+        <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Partner Campuses</span>
           <p className="text-2xl sm:text-3xl font-extrabold text-amber-500 font-mono">
             {adminData?.metrics?.partnerColleges || 6}
           </p>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 space-y-1">
+        <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Daily Execution Rate</span>
           <p className="text-2xl sm:text-3xl font-extrabold text-emerald-500 font-mono">
             {adminData?.metrics?.avgCompletionRate || '68%'}
@@ -106,7 +106,7 @@ export const AdminDashboardPage: React.FC = () => {
       </div>
 
       {/* Dynamic Pricing Management (Section 27 & 44) */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-6">
+      <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">

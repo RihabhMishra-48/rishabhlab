@@ -132,7 +132,7 @@ export const ProjectsCatalogPage: React.FC = () => {
             className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
               selectedCategory === cat
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-neutral-100 dark:bg-neutral-850 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200'
+                : 'bg-neutral-100 dark:bg-[#262626] text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200'
             }`}
           >
             {cat}
@@ -149,7 +149,7 @@ export const ProjectsCatalogPage: React.FC = () => {
             className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
               activeTab === tab
                 ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-2xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-850'
+                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2a2a2a]'
             }`}
           >
             {tab}
@@ -161,7 +161,7 @@ export const ProjectsCatalogPage: React.FC = () => {
       {loading ? (
         <div className="p-8 text-center text-xs text-neutral-400">Loading projects...</div>
       ) : projects.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#111722] space-y-2">
+        <div className="p-12 text-center rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#212121] space-y-2">
           <p className="text-sm font-semibold text-neutral-900 dark:text-white">No projects found</p>
           <p className="text-xs text-neutral-500">Try switching your category or status filter above.</p>
         </div>
@@ -177,7 +177,7 @@ export const ProjectsCatalogPage: React.FC = () => {
               <Link
                 key={proj._id}
                 to={`/projects/${proj.slug}`}
-                className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-md transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
+                className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-md transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
               >
                 <div className="flex items-start gap-4 min-w-0">
                   {/* 3D project thumbnail icon */}

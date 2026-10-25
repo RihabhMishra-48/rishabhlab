@@ -193,7 +193,7 @@ export const ProfilePage: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-5xl mx-auto">
       {/* Profile Header */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
           <div className="relative group cursor-pointer" onClick={() => setIsEditModalOpen(true)}>
             {user?.avatar ? (
@@ -299,7 +299,7 @@ export const ProfilePage: React.FC = () => {
             className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
               activeTab === tab
                 ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-2xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-850'
+                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2a2a2a]'
             }`}
           >
             {tab}
@@ -309,7 +309,7 @@ export const ProfilePage: React.FC = () => {
 
       {/* 4 Metric Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             Roadmap
           </span>
@@ -318,7 +318,7 @@ export const ProfilePage: React.FC = () => {
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             Projects
           </span>
@@ -327,7 +327,7 @@ export const ProfilePage: React.FC = () => {
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             Streak
           </span>
@@ -336,7 +336,7 @@ export const ProfilePage: React.FC = () => {
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             Status
           </span>
@@ -350,7 +350,7 @@ export const ProfilePage: React.FC = () => {
       {activeTab === 'Overview' && (
         <div className="space-y-6">
           {/* Skills Pills */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
                 Verified Skills
@@ -398,7 +398,7 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           {/* GitHub Activity Feed */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <GitBranch className="w-4 h-4 text-purple-500" />
@@ -519,7 +519,7 @@ export const ProfilePage: React.FC = () => {
             {skillsToDisplay.map((sk: any) => (
               <div
                 key={sk.name}
-                className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 space-y-1.5 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-1.5 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">{sk.category}</span>
@@ -620,7 +620,7 @@ export const ProfilePage: React.FC = () => {
             {projectsToDisplay.map((p: any) => (
               <div
                 key={p.title}
-                className="p-5 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
               >
                 <div className="space-y-1.5 min-w-0">
                   <div className="flex items-center gap-2">
@@ -699,7 +699,7 @@ export const ProfilePage: React.FC = () => {
             {achievementsToDisplay.map((a: any, i: number) => (
               <div
                 key={i}
-                className="p-5 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 space-y-2 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-2 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
               >
                 <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-lg">
                   {a.badge || '🏆'}
@@ -720,7 +720,7 @@ export const ProfilePage: React.FC = () => {
           onClick={() => setIsEditModalOpen(false)}
         >
           <div
-            className="bg-white dark:bg-[#111722] border border-neutral-200 dark:border-neutral-800 rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-8 space-y-6"
+            className="bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800 rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-8 space-y-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-4 border-b border-neutral-100 dark:border-neutral-800">

@@ -178,7 +178,7 @@ export const OnboardingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#070A0F] text-neutral-900 dark:text-neutral-100 flex flex-col justify-between p-4 sm:p-8 transition-colors">
+    <div className="min-h-screen bg-white dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 flex flex-col justify-between p-4 sm:p-8 transition-colors">
       {/* Top Header matching Screen 2 */}
       <header className="max-w-3xl mx-auto w-full flex items-center justify-between py-4">
         <div className="flex items-center gap-2.5">
@@ -186,7 +186,7 @@ export const OnboardingPage: React.FC = () => {
             <div className="w-3 h-3 border-2 border-current rotate-45"></div>
           </div>
           <span className="font-bold text-base tracking-tight text-neutral-900 dark:text-white">
-            Rishabh Labs
+            RishabhLabs
           </span>
         </div>
 
@@ -239,7 +239,7 @@ export const OnboardingPage: React.FC = () => {
                       onClick={() => setAssessmentInterests([item])}
                       className={`p-3 rounded-xl border text-left transition-colors ${
                         assessmentInterests.includes(item)
-                          ? 'border-neutral-950 dark:border-white bg-neutral-50 dark:bg-neutral-850 font-semibold'
+                          ? 'border-neutral-950 dark:border-white bg-neutral-50 dark:bg-[#262626] font-semibold'
                           : 'border-neutral-200 dark:border-neutral-800'
                       }`}
                     >
@@ -261,7 +261,7 @@ export const OnboardingPage: React.FC = () => {
                       onClick={() => setAssessmentComfort(lvl)}
                       className={`p-2.5 rounded-xl border text-center transition-colors ${
                         assessmentComfort === lvl
-                          ? 'border-neutral-950 dark:border-white bg-neutral-50 dark:bg-neutral-850 font-semibold'
+                          ? 'border-neutral-950 dark:border-white bg-neutral-50 dark:bg-[#262626] font-semibold'
                           : 'border-neutral-200 dark:border-neutral-800'
                       }`}
                     >
@@ -339,8 +339,8 @@ export const OnboardingPage: React.FC = () => {
                         }}
                         className={`p-4 rounded-2xl border text-left transition-all flex items-start gap-3.5 ${
                           isSelected
-                            ? 'border-neutral-950 dark:border-white bg-neutral-50/80 dark:bg-[#111722] shadow-xs ring-1 ring-neutral-950 dark:ring-white'
-                            : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-[#0D121B]'
+                            ? 'border-neutral-950 dark:border-white bg-neutral-50/80 dark:bg-[#212121] shadow-xs ring-1 ring-neutral-950 dark:ring-white'
+                            : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-[#262626]'
                         }`}
                       >
                         <div
@@ -390,8 +390,8 @@ export const OnboardingPage: React.FC = () => {
                         onClick={() => setCurrentLevel(opt.id)}
                         className={`w-full p-4 rounded-2xl border text-left transition-all flex items-center justify-between ${
                           isSelected
-                            ? 'border-neutral-950 dark:border-white bg-neutral-50/80 dark:bg-[#111722] shadow-xs ring-1 ring-neutral-950 dark:ring-white'
-                            : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-[#0D121B]'
+                            ? 'border-neutral-950 dark:border-white bg-neutral-50/80 dark:bg-[#212121] shadow-xs ring-1 ring-neutral-950 dark:ring-white'
+                            : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-[#262626]'
                         }`}
                       >
                         <div>
@@ -428,8 +428,8 @@ export const OnboardingPage: React.FC = () => {
                         onClick={() => setAvailableTime(opt.id)}
                         className={`w-full p-4 rounded-2xl border text-left transition-all flex items-center justify-between ${
                           isSelected
-                            ? 'border-neutral-950 dark:border-white bg-neutral-50/80 dark:bg-[#111722] shadow-xs ring-1 ring-neutral-950 dark:ring-white'
-                            : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-[#0D121B]'
+                            ? 'border-neutral-950 dark:border-white bg-neutral-50/80 dark:bg-[#212121] shadow-xs ring-1 ring-neutral-950 dark:ring-white'
+                            : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-[#262626]'
                         }`}
                       >
                         <div>
@@ -466,8 +466,8 @@ export const OnboardingPage: React.FC = () => {
                         onClick={() => setDesiredOutcome(opt.id)}
                         className={`w-full p-4 rounded-2xl border text-left transition-all flex items-center justify-between ${
                           isSelected
-                            ? 'border-neutral-950 dark:border-white bg-neutral-50/80 dark:bg-[#111722] shadow-xs ring-1 ring-neutral-950 dark:ring-white'
-                            : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-[#0D121B]'
+                            ? 'border-neutral-950 dark:border-white bg-neutral-50/80 dark:bg-[#212121] shadow-xs ring-1 ring-neutral-950 dark:ring-white'
+                            : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-[#262626]'
                         }`}
                       >
                         <div>
@@ -553,7 +553,7 @@ export const OnboardingPage: React.FC = () => {
                           type="text"
                           placeholder="Enter 6-digit code"
                           maxLength={6}
-                          className="w-32 px-3 py-1.5 rounded-lg text-xs bg-neutral-100 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white font-mono text-center outline-none focus:outline-none"
+                          className="w-32 px-3 py-1.5 rounded-lg text-xs bg-neutral-100 dark:bg-[#262626] border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white font-mono text-center outline-none focus:outline-none"
                           id="campus-pass-input"
                         />
                         <button

@@ -25,14 +25,14 @@ import {
 export const HomePage: React.FC = () => {
   const { user } = useAuth();
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#070A0F] text-neutral-900 dark:text-neutral-100 transition-colors flex flex-col justify-between">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 transition-colors flex flex-col justify-between">
       <Navbar />
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           {/* Left Hero Copy */}
           <div className="lg:col-span-7 space-y-8">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-[#111722] text-neutral-800 dark:text-white border border-neutral-200 dark:border-neutral-700/80 shadow-xs">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-[#212121] text-neutral-800 dark:text-white border border-neutral-200 dark:border-neutral-700/80 shadow-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 ring-2 ring-emerald-500/30 animate-pulse"></span>
               <span className="tracking-wide">Personalized Learning + Student Execution Platform</span>
             </div>
@@ -59,7 +59,7 @@ export const HomePage: React.FC = () => {
               {!user ? (
                 <Link
                   to="/login"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-800 transition-colors shadow-2xs"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-[#2a2a2a] text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-800 transition-colors shadow-2xs"
                 >
                   <span>Sign In</span>
                   <ArrowRight className="w-4 h-4 text-neutral-400" />
@@ -67,7 +67,7 @@ export const HomePage: React.FC = () => {
               ) : (
                 <Link
                   to="/learn"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-850 text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-800 transition-colors shadow-2xs"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-[#2a2a2a] text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-800 transition-colors shadow-2xs"
                 >
                   <span>Explore Lessons</span>
                   <ArrowRight className="w-4 h-4 text-neutral-400" />
@@ -120,7 +120,7 @@ export const HomePage: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <Link
               to="/roadmap"
-              className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
+              className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
             >
               <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
                 <Compass className="w-4 h-4" />
@@ -131,7 +131,7 @@ export const HomePage: React.FC = () => {
 
             <Link
               to="/missions"
-              className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
+              className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
             >
               <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3">
                 <CheckCircle2 className="w-4 h-4" />
@@ -142,7 +142,7 @@ export const HomePage: React.FC = () => {
 
             <Link
               to="/projects"
-              className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
+              className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
             >
               <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3">
                 <FolderGit2 className="w-4 h-4" />
@@ -153,7 +153,7 @@ export const HomePage: React.FC = () => {
 
             <Link
               to="/hackathon"
-              className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
+              className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
             >
               <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
                 <Trophy className="w-4 h-4" />
@@ -164,7 +164,7 @@ export const HomePage: React.FC = () => {
 
             <Link
               to="/mentorship"
-              className="col-span-2 md:col-span-1 p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
+              className="col-span-2 md:col-span-1 p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
             >
               <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3">
                 <Users className="w-4 h-4" />
@@ -177,7 +177,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* The Core Execution Engine Section */}
-      <section className="py-20 bg-neutral-100/60 dark:bg-[#0B0F17] border-y border-neutral-200 dark:border-neutral-800/80 px-4 sm:px-6 lg:px-8">
+      <section className="py-20 bg-neutral-100/60 dark:bg-[#171717] border-y border-neutral-200 dark:border-neutral-800/80 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-16">
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
@@ -193,7 +193,7 @@ export const HomePage: React.FC = () => {
 
           {/* Stepped Loop Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200 dark:border-neutral-800/80 shadow-2xs space-y-3">
+            <div className="p-6 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800/80 shadow-2xs space-y-3">
               <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center">
                 1
               </div>
@@ -203,17 +203,17 @@ export const HomePage: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200 dark:border-neutral-800/80 shadow-2xs space-y-3">
+            <div className="p-6 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800/80 shadow-2xs space-y-3">
               <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-center">
                 2
               </div>
               <h3 className="font-bold text-base text-neutral-900 dark:text-white">Practice</h3>
               <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                LeetCode-style editor with Monaco, sandboxed test cases, and "I'm Stuck" progressive AI hints that guide without spoiling.
+                LeetCode-style editor with Monaco, sandboxed test cases, and progressive AI hints that guide without spoiling.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200 dark:border-neutral-800/80 shadow-2xs space-y-3">
+            <div className="p-6 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800/80 shadow-2xs space-y-3">
               <div className="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 font-bold text-xs flex items-center justify-center">
                 3
               </div>
@@ -223,7 +223,7 @@ export const HomePage: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200 dark:border-neutral-800/80 shadow-2xs space-y-3">
+            <div className="p-6 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800/80 shadow-2xs space-y-3">
               <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-bold text-xs flex items-center justify-center">
                 4
               </div>

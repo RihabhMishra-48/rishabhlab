@@ -35,15 +35,15 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#070A0F] text-neutral-900 dark:text-neutral-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-xl p-8 space-y-6">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white dark:bg-[#212121] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-xl p-8 space-y-6">
         <div className="text-center space-y-2">
           <Link to="/" className="inline-flex items-center gap-2 group mb-2">
             <div className="w-8 h-8 rounded-lg bg-neutral-950 dark:bg-white flex items-center justify-center text-white dark:text-neutral-950 shadow-sm">
               <div className="w-3.5 h-3.5 border-2 border-current rotate-45"></div>
             </div>
             <span className="font-bold text-lg tracking-tight text-neutral-900 dark:text-white">
-              Rishabh Labs
+              RishabhLabs
             </span>
           </Link>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
@@ -147,7 +147,7 @@ export const RegisterPage: React.FC = () => {
               <div className="w-full border-t border-neutral-200 dark:border-neutral-800"></div>
             </div>
             <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-wider">
-              <span className="bg-white dark:bg-[#111722] px-2 text-neutral-400">or</span>
+              <span className="bg-white dark:bg-[#212121] px-2 text-neutral-400">or</span>
             </div>
           </div>
 

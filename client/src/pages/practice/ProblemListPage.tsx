@@ -124,7 +124,7 @@ export const ProblemListPage: React.FC = () => {
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all ${
               categoryFilter === cat
                 ? 'bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 shadow-xs'
-                : 'bg-white dark:bg-[#111722] text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300'
+                : 'bg-white dark:bg-[#212121] text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300'
             }`}
           >
             {cat}
@@ -133,7 +133,7 @@ export const ProblemListPage: React.FC = () => {
       </div>
 
       {/* Difficulty & Search Bar */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-4">
+      <div className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2 text-xs flex-wrap">
           <span className="text-neutral-400 text-[11px] font-semibold">Difficulty:</span>
           {['All', 'Easy', 'Medium', 'Hard'].map((diff) => (
@@ -163,7 +163,7 @@ export const ProblemListPage: React.FC = () => {
       </div>
 
       {/* Problem Table / List */}
-      <div className="bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-2xs overflow-hidden">
+      <div className="bg-white dark:bg-[#212121] rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-2xs overflow-hidden">
         {loading ? (
           <div className="py-16 text-center space-y-2">
             <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
@@ -195,10 +195,10 @@ export const ProblemListPage: React.FC = () => {
                 <Link
                   key={prob.slug}
                   to={`/practice/${prob.slug}`}
-                  className="p-4 sm:p-5 flex items-center justify-between hover:bg-neutral-50 dark:hover:bg-neutral-850/60 transition-colors group"
+                  className="p-4 sm:p-5 flex items-center justify-between hover:bg-neutral-50 dark:hover:bg-[#2a2a2a] transition-colors group"
                 >
                   <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-neutral-300 shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-neutral-100 dark:bg-[#1a1a1a] border border-neutral-200/60 dark:border-neutral-700/60 flex items-center justify-center text-neutral-700 dark:text-neutral-300 shrink-0">
                       {prob.isDebuggingChallenge ? (
                         <Bug className="w-4 h-4 text-rose-500" />
                       ) : prob.category.includes('AI') ? (
@@ -216,37 +216,37 @@ export const ProblemListPage: React.FC = () => {
 
                     <div className="space-y-0.5 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white group-hover:text-blue-500 transition-colors truncate">
+                        <h3 className="text-xs sm:text-sm font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors truncate">
                           {prob.title}
                         </h3>
                         {prob.isDebuggingChallenge && (
-                          <span className="text-[9px] px-1.5 py-0.2 bg-rose-500/10 text-rose-500 font-bold rounded">
+                          <span className="text-[9px] px-1.5 py-0.5 bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-bold rounded">
                             Fix the Bug
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 text-[11px] text-neutral-400">
-                        <span className="font-medium text-neutral-500 dark:text-neutral-400">{prob.category}</span>
+                      <div className="flex items-center gap-3 text-[11px] text-neutral-500 dark:text-neutral-400">
+                        <span className="font-medium text-neutral-600 dark:text-neutral-300">{prob.category}</span>
                         <span>•</span>
                         <span>Acceptance: {prob.acceptanceRate || 85}%</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6 shrink-0">
+                  <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                     <span
-                      className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                      className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
                         isEasy
-                          ? 'bg-emerald-500/10 text-emerald-500'
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
                           : isMedium
-                          ? 'bg-amber-500/10 text-amber-500'
-                          : 'bg-rose-500/10 text-rose-500'
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25'
+                          : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/25'
                       }`}
                     >
                       {prob.difficulty}
                     </span>
 
-                    <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-white group-hover:translate-x-1 transition-transform" />
                   </div>
                 </Link>
               );

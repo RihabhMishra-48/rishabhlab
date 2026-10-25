@@ -166,7 +166,7 @@ export const DailyMissionPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-neutral-500 dark:text-neutral-400 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-800">
+          <span className="text-xs font-mono text-neutral-500 dark:text-neutral-400 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-[#262626] border border-neutral-200 dark:border-neutral-800">
             {mission?.dateString || todayFormatted}
           </span>
         </div>
@@ -175,7 +175,7 @@ export const DailyMissionPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Mission Tasks & CTAs (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
               <span className="text-xs font-bold text-neutral-900 dark:text-white">
                 Core Execution Queue ({mission?.completedTasksCount || 2} / 4 Done)
@@ -185,62 +185,50 @@ export const DailyMissionPage: React.FC = () => {
               </span>
             </div>
 
-            <div className="space-y-3">
+            {/* Merged Tasks Group with Soft Outer Edges */}
+            <div className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-[#1a1a1a] divide-y divide-neutral-200/80 dark:divide-neutral-800 overflow-hidden shadow-2xs">
               {mission?.tasks.map((task) => (
                 <div
                   key={task.taskId}
-                  className={`p-4 rounded-2xl border transition-all ${
+                  className={`p-4 transition-colors ${
                     task.isCompleted
-                      ? 'bg-neutral-50/70 dark:bg-neutral-900/60 border-neutral-200 dark:border-neutral-800/80'
-                      : 'bg-white dark:bg-[#0D121B] border-neutral-200 dark:border-neutral-700/80 shadow-2xs hover:bg-neutral-50 dark:hover:bg-[#151c28]'
+                      ? 'bg-neutral-50/40 dark:bg-transparent text-neutral-400 dark:text-neutral-500'
+                      : 'bg-white dark:bg-[#212121] hover:bg-neutral-50/80 dark:hover:bg-[#262626] text-neutral-900 dark:text-white'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
                       <button
                         onClick={() => handleToggleTask(task.taskId)}
-                        className="mt-0.5"
+                        className="mt-0.5 shrink-0"
                       >
                         {task.isCompleted ? (
                           <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                         ) : (
-                          <Circle className="w-5 h-5 text-neutral-400 hover:text-neutral-600" />
+                          <Circle className="w-5 h-5 text-neutral-400 dark:text-neutral-500" />
                         )}
                       </button>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                              task.type === 'learn'
-                                ? 'bg-blue-500/10 text-blue-500'
-                                : task.type === 'practice'
-                                ? 'bg-emerald-500/10 text-emerald-500'
-                                : task.type === 'build'
-                                ? 'bg-purple-500/10 text-purple-500'
-                                : 'bg-amber-500/10 text-amber-500'
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3
+                            className={`text-xs font-semibold ${
+                              task.isCompleted ? 'line-through text-neutral-400 dark:text-neutral-500' : 'text-neutral-900 dark:text-neutral-100'
                             }`}
                           >
-                            {task.type}
-                          </span>
-                          <span className="text-xs font-mono text-neutral-400">
+                            {task.title}
+                          </h3>
+                          <span className="text-[11px] font-mono text-neutral-400 dark:text-neutral-500 shrink-0">
                             {task.durationText}
                           </span>
                         </div>
-                        <h3
-                          className={`text-xs font-bold text-neutral-900 dark:text-white ${
-                            task.isCompleted ? 'line-through text-neutral-400 dark:text-neutral-500' : ''
-                          }`}
-                        >
-                          {task.title}
-                        </h3>
-                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed truncate max-w-xl">
                           {task.description}
                         </p>
 
                         {task.proofSubmitted && (
-                          <div className="mt-2 text-[10px] text-emerald-600 dark:text-emerald-400 font-mono truncate flex items-center gap-1">
-                            <GitBranch className="w-3 h-3" />
-                            <span>Proof: {task.proofSubmitted}</span>
+                          <div className="mt-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-mono truncate flex items-center gap-1">
+                            <GitBranch className="w-3 h-3 shrink-0" />
+                            <span className="truncate">Proof: {task.proofSubmitted}</span>
                           </div>
                         )}
                       </div>
@@ -258,7 +246,7 @@ export const DailyMissionPage: React.FC = () => {
                       ) : (
                         <Link
                           to={task.actionUrl}
-                          className="p-2 rounded-xl text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                          className="p-2 rounded-xl text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-700/60 transition-colors"
                         >
                           <ArrowRight className="w-4 h-4" />
                         </Link>
@@ -281,7 +269,7 @@ export const DailyMissionPage: React.FC = () => {
           </div>
 
           {/* Today's Quote matching Screen 5 */}
-          <div className="p-5 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 flex items-center gap-3.5 shadow-2xs">
+          <div className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 flex items-center gap-3.5 shadow-2xs">
             <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
               <Quote className="w-4 h-4" />
             </div>
@@ -297,7 +285,7 @@ export const DailyMissionPage: React.FC = () => {
         </div>
 
         {/* Right Column: Daily Mission Focus Mode with Daily Calendar Graphic */}
-        <div className="lg:col-span-5 flex flex-col items-center justify-center p-8 rounded-3xl bg-neutral-50 dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 space-y-6">
+        <div className="lg:col-span-5 flex flex-col items-center justify-center p-8 rounded-3xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-6">
           <div className="relative w-44 h-44 flex items-center justify-center rounded-3xl bg-white dark:bg-neutral-800/90 shadow-md border border-neutral-200/70 dark:border-neutral-700/70 p-8">
             <img
               src="/graphics/daily-calendar.svg"
@@ -324,7 +312,7 @@ export const DailyMissionPage: React.FC = () => {
           onClick={() => setShipModalOpen(false)}
         >
           <div
-            className="w-full max-w-md bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 space-y-5 shadow-2xl"
+            className="w-full max-w-md bg-white dark:bg-[#212121] rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 space-y-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="space-y-1">

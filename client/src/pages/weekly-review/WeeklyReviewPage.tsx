@@ -122,7 +122,7 @@ export const WeeklyReviewPage: React.FC = () => {
       </div>
 
       {/* Planned vs Completed Hours Card matching Screen 10 */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-5">
+      <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
@@ -163,7 +163,7 @@ export const WeeklyReviewPage: React.FC = () => {
       {/* 2-Column Summary matching Screen 10 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Column 1: What you completed */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
           <div className="flex items-center justify-between pb-1 border-b border-neutral-100 dark:border-neutral-800/80">
             <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
               What you completed
@@ -191,7 +191,7 @@ export const WeeklyReviewPage: React.FC = () => {
         </div>
 
         {/* Column 2: Next week */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
           <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
             Next week
           </h2>
@@ -207,7 +207,7 @@ export const WeeklyReviewPage: React.FC = () => {
       </div>
 
       {/* Reflection Input Section matching Screen 10 */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
+      <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             Reflection

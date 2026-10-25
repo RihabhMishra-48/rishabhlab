@@ -205,7 +205,7 @@ export const LessonDetailPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Course Navigation / Module Outline (3 cols) */}
         <div className="lg:col-span-3 space-y-4 sticky top-20">
-          <div className="p-5 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
+          <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
             <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
               Module Navigation
             </span>
@@ -295,7 +295,7 @@ export const LessonDetailPage: React.FC = () => {
           </div>
 
           {/* "Try It Yourself" Embedded Code Sandbox (Matching Section 12) */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
@@ -344,7 +344,7 @@ export const LessonDetailPage: React.FC = () => {
           </div>
 
           {/* Bottom Action Bar: Mark Complete & Next Lesson */}
-          <div className="p-6 rounded-3xl bg-neutral-50 dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between gap-4">
+          <div className="p-6 rounded-3xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between gap-4">
             <button
               onClick={handleCompleteLesson}
               className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
@@ -379,7 +379,7 @@ export const LessonDetailPage: React.FC = () => {
         {/* Right Column: Quiz & Progress Check (3 cols) */}
         <div className="lg:col-span-3 space-y-6 sticky top-20">
           {lesson.quiz && lesson.quiz.length > 0 && (
-            <div className="p-5 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
+            <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                   Concept Check

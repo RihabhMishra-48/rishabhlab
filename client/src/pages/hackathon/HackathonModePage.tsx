@@ -62,10 +62,7 @@ export const HackathonModePage: React.FC = () => {
             <img src="/graphics/troph-cap.svg" alt="Hackathon" className="w-full h-full object-contain dark:invert" />
           </div>
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-              Sprint Execution Environment
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
               Hackathon Mode
             </h1>
             <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
@@ -80,7 +77,7 @@ export const HackathonModePage: React.FC = () => {
             {['RS', 'AK', 'PK', 'MN'].map((m) => (
               <span
                 key={m}
-                className="w-7 h-7 rounded-full bg-neutral-800 dark:bg-neutral-700 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white dark:border-[#0B0F17]"
+                className="w-7 h-7 rounded-full bg-neutral-800 dark:bg-neutral-700 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white dark:border-[#171717]"
               >
                 {m}
               </span>
@@ -98,24 +95,21 @@ export const HackathonModePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main 2-Column Grid matching Screen 7 */}
+      {/* Main 2-Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Countdown & Timeline Phases (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Countdown Card matching Screen 7 */}
-          <div className="relative p-6 sm:p-7 rounded-3xl bg-neutral-900 dark:bg-[#111722] text-white border border-neutral-800 shadow-xl overflow-hidden space-y-4">
+          {/* Countdown Card */}
+          <div className="relative p-6 sm:p-7 rounded-3xl bg-neutral-900 dark:bg-[#212121] text-white border border-neutral-800 shadow-xl overflow-hidden space-y-4">
             {/* Background Mountain Peak Graphic */}
             <div className="absolute right-4 bottom-2 opacity-20 pointer-events-none select-none w-36 h-28 flex items-end justify-end">
               <img src="/graphics/mountain.svg" alt="Summit Mountain" className="w-28 h-28 object-contain invert" />
             </div>
 
             <div className="relative z-10 space-y-3">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">
-                Upcoming Hackathon Target
-              </span>
               <div>
-                <p className="text-xs text-neutral-400">Time Left</p>
-                <div className="flex items-baseline gap-3 text-3xl sm:text-4xl font-extrabold tracking-tight font-mono text-white">
+                <p className="text-xs text-neutral-400 font-medium">Time Left</p>
+                <div className="flex items-baseline gap-3 text-3xl sm:text-4xl font-extrabold tracking-tight font-mono text-white mt-1">
                   <span>12<span className="text-sm font-sans font-normal text-neutral-400 ml-0.5">d</span></span>
                   <span>04<span className="text-sm font-sans font-normal text-neutral-400 ml-0.5">h</span></span>
                   <span>32<span className="text-sm font-sans font-normal text-neutral-400 ml-0.5">m</span></span>
@@ -127,13 +121,14 @@ export const HackathonModePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Timeline Phases List matching Screen 7 */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
+          {/* Timeline Phases List */}
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
             <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400 pb-2 border-b border-neutral-100 dark:border-neutral-800">
               Sprint Timeline Phases
             </h2>
 
-            <div className="space-y-4">
+            {/* Merged Timeline Container with Soft Outer Edges & No Purple */}
+            <div className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-[#1a1a1a] divide-y divide-neutral-200/80 dark:divide-neutral-800 overflow-hidden shadow-2xs">
               {hackathon?.phases?.map((phase) => {
                 const isCompleted = phase.status === 'completed';
                 const isActive = phase.status === 'active';
@@ -141,39 +136,32 @@ export const HackathonModePage: React.FC = () => {
                 return (
                   <div
                     key={phase.phaseId}
-                    className={`p-3.5 rounded-2xl border transition-all flex items-start justify-between gap-3 ${
+                    className={`p-3.5 sm:p-4 transition-colors flex items-start justify-between gap-3.5 ${
                       isActive
-                        ? 'border-purple-500/40 bg-purple-500/5 dark:bg-purple-950/20'
+                        ? 'bg-white dark:bg-[#262626] text-neutral-900 dark:text-white'
                         : isCompleted
-                        ? 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 text-neutral-500'
-                        : 'border-neutral-200/70 dark:border-neutral-800/60 opacity-70'
+                        ? 'bg-neutral-50/40 dark:bg-transparent text-neutral-500 dark:text-neutral-400'
+                        : 'bg-white/60 dark:bg-transparent text-neutral-600 dark:text-neutral-400 opacity-75'
                     }`}
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5">
+                    <div className="flex items-start gap-3.5 min-w-0">
+                      <div className="mt-0.5 shrink-0">
                         {isCompleted ? (
                           <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                         ) : isActive ? (
-                          <div className="w-5 h-5 rounded-full border-2 border-purple-500 flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-purple-500 animate-ping"></div>
+                          <div className="w-5 h-5 rounded-full border-2 border-blue-500 flex items-center justify-center">
+                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                           </div>
                         ) : (
-                          <Circle className="w-5 h-5 text-neutral-400" />
+                          <Circle className="w-5 h-5 text-neutral-400 dark:text-neutral-600" />
                         )}
                       </div>
 
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-neutral-900 dark:text-white">
-                            {phase.daysRange}: {phase.name}
-                          </span>
-                          {isActive && (
-                            <span className="text-[10px] px-2 py-0.2 bg-purple-500/20 text-purple-400 rounded-full font-bold">
-                              Current Phase
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-neutral-500 leading-relaxed">
+                      <div className="space-y-0.5 min-w-0">
+                        <span className={`text-xs block ${isActive ? 'font-bold text-neutral-900 dark:text-white' : 'font-semibold text-neutral-800 dark:text-neutral-200'}`}>
+                          {phase.daysRange}: {phase.name}
+                        </span>
+                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
                           {phase.description}
                         </p>
                       </div>
@@ -187,21 +175,21 @@ export const HackathonModePage: React.FC = () => {
 
         {/* Right Column: AI Assistant Tools matching Screen 7 (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-5">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-5">
             <div>
               <h2 className="text-base font-bold text-neutral-900 dark:text-white">
                 Hackathon Tool Suite
               </h2>
             </div>
 
-            {/* Tool Selector Buttons matching Screen 7 */}
+            {/* Tool Selector Buttons */}
             <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
               <button
                 onClick={() => runTool('ideas')}
-                className={`p-3 rounded-2xl border text-left transition-colors flex items-center gap-2 ${
+                className={`p-3 rounded-2xl text-left transition-colors flex items-center gap-2 ${
                   activeTool === 'ideas'
-                    ? 'border-neutral-950 dark:border-white bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white'
-                    : 'border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+                    ? 'bg-neutral-900 text-white dark:bg-[#2b2b2b] dark:text-white font-bold border border-transparent shadow-xs'
+                    : 'bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800/80 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#242424]'
                 }`}
               >
                 <Lightbulb className="w-4 h-4 text-amber-500 shrink-0" />
@@ -210,10 +198,10 @@ export const HackathonModePage: React.FC = () => {
 
               <button
                 onClick={() => runTool('techStack')}
-                className={`p-3 rounded-2xl border text-left transition-colors flex items-center gap-2 ${
+                className={`p-3 rounded-2xl text-left transition-colors flex items-center gap-2 ${
                   activeTool === 'techStack'
-                    ? 'border-neutral-950 dark:border-white bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white'
-                    : 'border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+                    ? 'bg-neutral-900 text-white dark:bg-[#2b2b2b] dark:text-white font-bold border border-transparent shadow-xs'
+                    : 'bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800/80 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#242424]'
                 }`}
               >
                 <FileCode className="w-4 h-4 text-blue-500 shrink-0" />
@@ -222,22 +210,22 @@ export const HackathonModePage: React.FC = () => {
 
               <button
                 onClick={() => runTool('mvpPlan')}
-                className={`p-3 rounded-2xl border text-left transition-colors flex items-center gap-2 ${
+                className={`p-3 rounded-2xl text-left transition-colors flex items-center gap-2 ${
                   activeTool === 'mvpPlan'
-                    ? 'border-neutral-950 dark:border-white bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white'
-                    : 'border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+                    ? 'bg-neutral-900 text-white dark:bg-[#2b2b2b] dark:text-white font-bold border border-transparent shadow-xs'
+                    : 'bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800/80 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#242424]'
                 }`}
               >
-                <Layers className="w-4 h-4 text-purple-500 shrink-0" />
+                <Layers className="w-4 h-4 text-blue-500 shrink-0" />
                 <span>MVP Planner</span>
               </button>
 
               <button
                 onClick={() => runTool('pitchDeck')}
-                className={`p-3 rounded-2xl border text-left transition-colors flex items-center gap-2 ${
+                className={`p-3 rounded-2xl text-left transition-colors flex items-center gap-2 ${
                   activeTool === 'pitchDeck'
-                    ? 'border-neutral-950 dark:border-white bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white'
-                    : 'border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+                    ? 'bg-neutral-900 text-white dark:bg-[#2b2b2b] dark:text-white font-bold border border-transparent shadow-xs'
+                    : 'bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800/80 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#242424]'
                 }`}
               >
                 <Presentation className="w-4 h-4 text-rose-500 shrink-0" />
@@ -246,10 +234,10 @@ export const HackathonModePage: React.FC = () => {
 
               <button
                 onClick={() => runTool('judgeQuestions')}
-                className={`col-span-2 p-3 rounded-2xl border text-left transition-colors flex items-center gap-2 ${
+                className={`col-span-2 p-3 rounded-2xl text-left transition-colors flex items-center gap-2 ${
                   activeTool === 'judgeQuestions'
-                    ? 'border-neutral-950 dark:border-white bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white'
-                    : 'border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+                    ? 'bg-neutral-900 text-white dark:bg-[#2b2b2b] dark:text-white font-bold border border-transparent shadow-xs'
+                    : 'bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800/80 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#242424]'
                 }`}
               >
                 <HelpCircle className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -266,65 +254,73 @@ export const HackathonModePage: React.FC = () => {
               ) : (
                 <div className="space-y-3 text-xs">
                   {toolOutput?.type === 'ideas' && (
-                    <div className="space-y-2.5">
-                      <p className="font-bold text-neutral-900 dark:text-white">Generated High-Viability Angles:</p>
-                      {toolOutput.items?.map((item: any, i: number) => (
-                        <div key={i} className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 space-y-1">
-                          <p className="font-bold text-neutral-900 dark:text-white">{item.title}</p>
-                          <p className="text-neutral-500">{item.pitch}</p>
-                          <span className="inline-block text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">{item.viability}</span>
-                        </div>
-                      ))}
+                    <div className="space-y-2">
+                      <p className="font-bold text-neutral-900 dark:text-white">Generated Angles:</p>
+                      <div className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-[#1a1a1a] divide-y divide-neutral-200/80 dark:divide-neutral-800 overflow-hidden shadow-2xs">
+                        {toolOutput.items?.map((item: any, i: number) => (
+                          <div key={i} className="p-3.5 space-y-1">
+                            <p className="font-bold text-neutral-900 dark:text-white">{item.title}</p>
+                            <p className="text-neutral-500 dark:text-neutral-400 leading-relaxed">{item.pitch}</p>
+                            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">{item.viability}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
                   {toolOutput?.type === 'techStack' && (
                     <div className="space-y-2.5">
-                      <p className="font-bold text-neutral-900 dark:text-white">Recommended Hackathon Stack:</p>
+                      <p className="font-bold text-neutral-900 dark:text-white">Recommended Stack:</p>
                       <div className="flex flex-wrap gap-1.5">
                         {toolOutput.recommended?.map((t: string, i: number) => (
-                          <span key={i} className="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-500 font-bold font-mono text-[11px]">
+                          <span key={i} className="px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-semibold font-mono text-[11px]">
                             {t}
                           </span>
                         ))}
                       </div>
-                      <p className="text-neutral-500 text-[11px] leading-relaxed pt-1">{toolOutput.reasoning}</p>
+                      <p className="text-neutral-500 dark:text-neutral-400 text-[11px] leading-relaxed pt-1">{toolOutput.reasoning}</p>
                     </div>
                   )}
 
                   {toolOutput?.type === 'mvpPlan' && (
                     <div className="space-y-2">
                       <p className="font-bold text-neutral-900 dark:text-white">48-Hour Scope Checklist:</p>
-                      {toolOutput.checklist?.map((item: string, i: number) => (
-                        <div key={i} className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                          <span>{item}</span>
-                        </div>
-                      ))}
+                      <div className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-[#1a1a1a] divide-y divide-neutral-200/80 dark:divide-neutral-800 overflow-hidden shadow-2xs">
+                        {toolOutput.checklist?.map((item: string, i: number) => (
+                          <div key={i} className="p-3 flex items-center gap-2.5 text-neutral-700 dark:text-neutral-300">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                            <span>{item}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
                   {toolOutput?.type === 'pitchDeck' && (
                     <div className="space-y-2">
                       <p className="font-bold text-neutral-900 dark:text-white">7-Slide Winning Pitch Deck:</p>
-                      {toolOutput.slides?.map((s: any, i: number) => (
-                        <div key={i} className="p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
-                          <span className="font-bold text-neutral-900 dark:text-white">{s.slide}</span>
-                          <p className="text-neutral-500 text-[11px]">{s.content}</p>
-                        </div>
-                      ))}
+                      <div className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-[#1a1a1a] divide-y divide-neutral-200/80 dark:divide-neutral-800 overflow-hidden shadow-2xs">
+                        {toolOutput.slides?.map((s: any, i: number) => (
+                          <div key={i} className="p-3 space-y-0.5">
+                            <span className="font-bold text-neutral-900 dark:text-white">{s.slide}</span>
+                            <p className="text-neutral-500 dark:text-neutral-400 text-[11px] leading-relaxed">{s.content}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
                   {toolOutput?.type === 'judgeQuestions' && (
-                    <div className="space-y-2.5">
+                    <div className="space-y-2">
                       <p className="font-bold text-neutral-900 dark:text-white">Likely Judge Curveballs & Defense:</p>
-                      {toolOutput.questions?.map((q: any, i: number) => (
-                        <div key={i} className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 space-y-1">
-                          <p className="font-bold text-neutral-900 dark:text-white">Q: {q.question}</p>
-                          <p className="text-neutral-500">Answer Strategy: {q.goodAnswerStrategy}</p>
-                        </div>
-                      ))}
+                      <div className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-[#1a1a1a] divide-y divide-neutral-200/80 dark:divide-neutral-800 overflow-hidden shadow-2xs">
+                        {toolOutput.questions?.map((q: any, i: number) => (
+                          <div key={i} className="p-3.5 space-y-1">
+                            <p className="font-bold text-neutral-900 dark:text-white">Q: {q.question}</p>
+                            <p className="text-neutral-500 dark:text-neutral-400 leading-relaxed text-[11px]">Strategy: {q.goodAnswerStrategy}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

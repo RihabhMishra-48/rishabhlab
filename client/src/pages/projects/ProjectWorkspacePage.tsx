@@ -213,7 +213,7 @@ export const ProjectWorkspacePage: React.FC = () => {
                 href={project.liveDeployUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-850 hover:bg-neutral-200 text-xs font-medium text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-[#262626] hover:bg-neutral-200 text-xs font-medium text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800 transition-colors"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>Live App</span>
@@ -235,7 +235,7 @@ export const ProjectWorkspacePage: React.FC = () => {
       </div>
 
       {/* Progress Metric Banner */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="space-y-1 w-full sm:w-auto">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             Milestone Completion
@@ -264,7 +264,7 @@ export const ProjectWorkspacePage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Milestones & Task Checklist (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-6">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-6">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
               <h2 className="text-sm font-bold text-neutral-900 dark:text-white">
                 Project Milestone Checklist
@@ -295,7 +295,7 @@ export const ProjectWorkspacePage: React.FC = () => {
                         className={`p-3 rounded-xl border text-xs font-medium flex items-center gap-3 cursor-pointer transition-colors ${
                           task.isCompleted
                             ? 'bg-neutral-50 dark:bg-neutral-900/60 border-neutral-200 dark:border-neutral-800/80 text-neutral-400 line-through'
-                            : 'bg-white dark:bg-[#0D121B] border-neutral-200 dark:border-neutral-700/80 text-neutral-800 dark:text-neutral-200 hover:border-neutral-400'
+                            : 'bg-white dark:bg-[#262626] border-neutral-200 dark:border-neutral-700/80 text-neutral-800 dark:text-neutral-200 hover:border-neutral-400'
                         }`}
                       >
                         {task.isCompleted ? (
@@ -313,7 +313,7 @@ export const ProjectWorkspacePage: React.FC = () => {
           </div>
 
           {/* Technical Requirements Spec */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 space-y-4">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-4">
             <h3 className="text-xs font-bold text-neutral-900 dark:text-white uppercase tracking-wider">
               Technical Requirements
             </h3>
@@ -331,7 +331,7 @@ export const ProjectWorkspacePage: React.FC = () => {
         {/* Right Column: Proof of Work Submission & Mentor Feedback (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
           {/* Submit Proof of Work Form */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
             <div className="space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5" />
@@ -404,7 +404,7 @@ export const ProjectWorkspacePage: React.FC = () => {
           </div>
 
           {/* Mentor Review Card */}
-          <div className="p-6 rounded-3xl bg-neutral-50 dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
+          <div className="p-6 rounded-3xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded-md bg-blue-500/10 dark:bg-blue-500/20 p-1 flex items-center justify-center shrink-0">
                 <img src="/graphics/thumbs-up-trust.svg" alt="Code Review" className="w-full h-full object-contain dark:invert" />

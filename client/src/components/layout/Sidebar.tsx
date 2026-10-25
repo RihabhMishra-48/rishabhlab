@@ -113,7 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       ref={sidebarRef}
-      className={`hidden lg:flex flex-col shrink-0 h-full bg-[#0B0F17] text-neutral-300 border-r border-neutral-800/80 select-none justify-between transition-all duration-300 ease-in-out z-30 ${
+      className={`hidden lg:flex flex-col shrink-0 h-full bg-[#171717] text-neutral-300 border-r border-neutral-800/80 select-none justify-between transition-all duration-300 ease-in-out z-30 ${
         isCollapsed ? 'w-[72px] px-2 py-3 overflow-visible' : 'w-64 px-3 py-4'
       }`}
     >
@@ -168,8 +168,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   : 'opacity-0 invisible pointer-events-none'
               }`}
             >
-              <div className="relative px-3 py-1.5 rounded-lg bg-[#0F1420]/95 backdrop-blur-md border border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
-                <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-[#0F1420] border-l border-b border-neutral-700/80 rotate-45" />
+              <div className="relative px-3 py-1.5 rounded-lg bg-[#262626]/95 backdrop-blur-md border border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
+                <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-[#262626] border-l border-b border-neutral-700/80 rotate-45" />
                 <span className="font-medium text-white text-xs">Expand Sidebar</span>
               </div>
             </div>
@@ -231,11 +231,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {item.label === 'Missions' && (
                       <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     )}
-                    {item.label === 'Hackathon' && (
-                      <span className="ml-auto text-[10px] px-1.5 py-0.2 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-full font-mono">
-                        12d
-                      </span>
-                    )}
                   </>
                 )}
 
@@ -248,8 +243,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         : 'opacity-0 invisible pointer-events-none'
                     }`}
                   >
-                    <div className="relative px-3 py-1.5 rounded-lg bg-[#0F1420]/95 backdrop-blur-md border border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
-                      <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-[#0F1420] border-l border-b border-neutral-700/80 rotate-45" />
+                    <div className="relative px-3 py-1.5 rounded-lg bg-[#262626]/95 backdrop-blur-md border border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
+                      <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-[#262626] border-l border-b border-neutral-700/80 rotate-45" />
                       <span className="font-medium text-white text-xs">{item.label}</span>
                     </div>
                   </div>
@@ -299,12 +294,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <Bug className="w-4 h-4 shrink-0 text-rose-400" />
             {!isCollapsed ? (
-              <>
-                <span className="truncate">Debugging Lab</span>
-                <span className="ml-auto text-[9px] px-1.5 py-0.5 bg-rose-500/10 text-rose-400 rounded">
-                  Fix
-                </span>
-              </>
+              <span className="truncate">Debugging Lab</span>
             ) : (
               <div
                 className={`absolute left-full ml-3 inset-y-0 my-auto h-fit z-50 transition-all duration-150 ${
@@ -313,8 +303,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     : 'opacity-0 invisible pointer-events-none'
                 }`}
               >
-                <div className="relative px-3 py-1.5 rounded-lg bg-[#0F1420]/95 backdrop-blur-md border border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
-                  <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-[#0F1420] border-l border-b border-neutral-700/80 rotate-45" />
+                <div className="relative px-3 py-1.5 rounded-lg bg-[#262626]/95 backdrop-blur-md border border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
+                  <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-[#262626] border-l border-b border-neutral-700/80 rotate-45" />
                   <span className="font-medium text-white text-xs">Debugging Lab</span>
                 </div>
               </div>
@@ -362,8 +352,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       : 'opacity-0 invisible pointer-events-none'
                   }`}
                 >
-                  <div className="relative px-3 py-1.5 rounded-lg bg-[#0F1420]/95 backdrop-blur-md border border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
-                    <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-[#0F1420] border-l border-b border-neutral-700/80 rotate-45" />
+                  <div className="relative px-3 py-1.5 rounded-lg bg-[#262626]/95 backdrop-blur-md border border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
+                    <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-[#262626] border-l border-b border-neutral-700/80 rotate-45" />
                     <span className="font-medium text-white text-xs">College Admin</span>
                   </div>
                 </div>
@@ -409,8 +399,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       : 'opacity-0 invisible pointer-events-none'
                   }`}
                 >
-                  <div className="relative px-3 py-1.5 rounded-lg bg-[#0F1420]/95 backdrop-blur-md border border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
-                    <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-[#0F1420] border-l border-b border-neutral-700/80 rotate-45" />
+                  <div className="relative px-3 py-1.5 rounded-lg bg-[#262626]/95 backdrop-blur-md border border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
+                    <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-[#262626] border-l border-b border-neutral-700/80 rotate-45" />
                     <span className="font-medium text-white text-xs">Platform Admin</span>
                   </div>
                 </div>
@@ -490,8 +480,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     : 'opacity-0 invisible pointer-events-none'
                 }`}
               >
-                <div className="relative px-3 py-1.5 rounded-lg bg-[#0F1420]/95 backdrop-blur-md border border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
-                  <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-[#0F1420] border-l border-b border-neutral-700/80 rotate-45" />
+                <div className="relative px-3 py-1.5 rounded-lg bg-[#262626]/95 backdrop-blur-md border border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
+                  <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-[#262626] border-l border-b border-neutral-700/80 rotate-45" />
                   <span className="font-medium text-white text-xs">{user.name}</span>
                 </div>
               </div>

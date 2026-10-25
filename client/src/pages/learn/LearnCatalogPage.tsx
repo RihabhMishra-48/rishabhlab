@@ -156,8 +156,8 @@ export const LearnCatalogPage: React.FC = () => {
               onClick={() => handleTrackChange(t.id)}
               className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between space-y-2.5 ${
                 isSelected
-                  ? 'border-neutral-950 dark:border-white bg-white dark:bg-[#111722] shadow-sm ring-2 ring-neutral-950 dark:ring-white'
-                  : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#0D121B] hover:border-neutral-300 dark:hover:border-neutral-700'
+                  ? 'border-neutral-950 dark:border-white bg-white dark:bg-[#212121] shadow-sm ring-2 ring-neutral-950 dark:ring-white'
+                  : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#262626] hover:border-neutral-300 dark:hover:border-neutral-700'
               }`}
             >
               <div className="flex items-center justify-between w-full">
@@ -184,7 +184,7 @@ export const LearnCatalogPage: React.FC = () => {
           <p className="text-xs text-neutral-500">Loading lessons...</p>
         </div>
       ) : Object.keys(groupedLessons).length === 0 ? (
-        <div className="p-8 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200 dark:border-neutral-800 text-center">
+        <div className="p-8 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800 text-center">
           <p className="text-sm font-semibold text-neutral-600 dark:text-neutral-400">
             No lessons available yet for this track.
           </p>
@@ -207,7 +207,7 @@ export const LearnCatalogPage: React.FC = () => {
                   <Link
                     key={les.slug}
                     to={`/learn/${les.track || selectedTrack}/${les.slug}`}
-                    className="p-5 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-md transition-all flex items-center justify-between group"
+                    className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-md transition-all flex items-center justify-between group"
                   >
                     <div className="space-y-1.5 min-w-0 pr-4">
                       <div className="flex items-center gap-2">

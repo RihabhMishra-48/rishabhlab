@@ -6,7 +6,7 @@ import { Target, Compass, Code2, Users, ArrowRight } from 'lucide-react';
 
 export const AboutPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#070A0F] text-neutral-900 dark:text-neutral-100 flex flex-col justify-between">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 flex flex-col justify-between">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-16">
         <div className="space-y-4">
@@ -41,7 +41,7 @@ export const AboutPage: React.FC = () => {
             <p>
               Rishabh Labs replaces endless playlists with a continuous daily feedback loop:
             </p>
-            <div className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200 dark:border-neutral-800 font-mono text-xs text-neutral-800 dark:text-neutral-200 leading-loose">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800 font-mono text-xs text-neutral-800 dark:text-neutral-200 leading-loose">
               Goal + Current Skill Level + Available Time + Deadline + Progress <br />
               <span className="text-blue-500 font-bold">↓</span> <br />
               Personalized Roadmap → Daily Mission → Learn → Practice → Build → Ship → Review → Adaptive Roadmap

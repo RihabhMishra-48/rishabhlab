@@ -53,7 +53,7 @@ export const PricingPage: React.FC = () => {
               'Hackathon Mode with 48-hour MVP planner',
               'Full LeetCode-style multi-language compiler',
               'Debugging Lab ("Fix the Bug" challenges)',
-              'Progressive AI hints ("I\'m Stuck")',
+              'Progressive AI hints',
               'Verified public Proof of Work portfolio',
             ],
           },
@@ -83,11 +83,11 @@ export const PricingPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#070A0F] text-neutral-900 dark:text-neutral-100 flex flex-col justify-between">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 flex flex-col justify-between">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
         <div className="text-center max-w-2xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-850 text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-[#262626] text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800">
             <Zap className="w-3.5 h-3.5 text-amber-500" />
             <span>Invest In Your Execution</span>
           </div>
@@ -127,8 +127,8 @@ export const PricingPage: React.FC = () => {
                 key={p.key}
                 className={`relative rounded-3xl p-8 flex flex-col justify-between transition-all ${
                   p.isPopular
-                    ? 'bg-white dark:bg-[#111722] border-2 border-neutral-950 dark:border-blue-500 shadow-xl'
-                    : 'bg-white dark:bg-[#0D121B] border border-neutral-200 dark:border-neutral-800/80 shadow-xs'
+                    ? 'bg-white dark:bg-[#212121] border-2 border-neutral-950 dark:border-blue-500 shadow-xl'
+                    : 'bg-white dark:bg-[#262626] border border-neutral-200 dark:border-neutral-800/80 shadow-xs'
                 }`}
               >
                 {p.isPopular && (
@@ -192,7 +192,7 @@ export const PricingPage: React.FC = () => {
         </div>
 
         {/* Enterprise / College Plan Callout */}
-        <div className="p-8 rounded-2xl bg-neutral-100 dark:bg-[#111722] border border-neutral-200 dark:border-neutral-800 text-center max-w-2xl mx-auto space-y-3">
+        <div className="p-8 rounded-2xl bg-neutral-100 dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800 text-center max-w-2xl mx-auto space-y-3">
           <h3 className="font-bold text-sm text-neutral-900 dark:text-white">Looking for Campus or University Partnerships?</h3>
           <p className="text-xs text-neutral-600 dark:text-neutral-400">
             We partner directly with institutions like GLA University to provide cohort-wide execution tracking, faculty dashboards, and hackathon incubation.

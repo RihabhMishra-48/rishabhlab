@@ -77,7 +77,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl bg-white dark:bg-[#111722] rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden"
+        className="w-full max-w-xl bg-white dark:bg-[#212121] rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Input Bar */}

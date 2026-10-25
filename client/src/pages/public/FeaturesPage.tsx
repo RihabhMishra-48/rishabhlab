@@ -105,11 +105,11 @@ export const FeaturesPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#070A0F] text-neutral-900 dark:text-neutral-100 flex flex-col justify-between">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 flex flex-col justify-between">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-850 text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-[#262626] text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800">
             <Sparkles className="w-3.5 h-3.5 text-blue-500" />
             <span>The Full Platform Suite</span>
           </div>
@@ -127,7 +127,7 @@ export const FeaturesPage: React.FC = () => {
             return (
               <div
                 key={f.title}
-                className="p-6 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-sm transition-colors flex flex-col justify-between group"
+                className="p-6 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-sm transition-colors flex flex-col justify-between group"
               >
                 <div className="space-y-4">
                   <div className={`w-10 h-10 rounded-xl ${f.bgColor} ${f.color} flex items-center justify-center`}>

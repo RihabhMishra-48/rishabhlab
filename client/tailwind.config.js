@@ -42,16 +42,16 @@ export default {
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         neutral: {
-          850: '#151b26',
+          850: '#242424',
         },
-        // Dark dashboard palette matching the UI reference
+        // Dark dashboard palette matching ChatGPT neutral dark system
         navy: {
-          950: '#070A0F',
-          900: '#0D111A',
-          850: '#111722',
-          800: '#161F2E',
-          700: '#1F2B3E',
-          600: '#2A3A54',
+          950: '#171717',
+          900: '#1a1a1a',
+          850: '#212121',
+          800: '#262626',
+          700: '#2f2f2f',
+          600: '#383838',
         },
         brand: {
           emerald: '#10B981',

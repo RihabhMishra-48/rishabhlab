@@ -37,7 +37,7 @@ export const AppLayout: React.FC = () => {
   }, []);
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#FAFAFA] dark:bg-[#070A0F] text-neutral-900 dark:text-neutral-100 transition-colors">
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 transition-colors">
       <Navbar
         onOpenCommandPalette={() => setCommandPaletteOpen(true)}
       />
@@ -54,7 +54,7 @@ export const AppLayout: React.FC = () => {
       </div>
 
       {/* Mobile Bottom Navigation Bar (Matching UI Reference Bottom Right Screens) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-[#0B0F17]/95 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-800 px-6 py-2 flex items-center justify-around shadow-lg">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-[#171717]/95 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-800 px-6 py-2 flex items-center justify-around shadow-lg">
         <NavLink
           to="/dashboard"
           className={({ isActive }) =>

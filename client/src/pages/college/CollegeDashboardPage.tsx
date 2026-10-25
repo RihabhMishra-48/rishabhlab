@@ -76,7 +76,7 @@ export const CollegeDashboardPage: React.FC = () => {
 
       {/* 4 Core Institutional Metrics Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-5 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
+        <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Total Enrolled</span>
           <p className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-white font-mono">
             {college.totalStudents.toLocaleString()}
@@ -84,7 +84,7 @@ export const CollegeDashboardPage: React.FC = () => {
           <span className="text-[11px] text-neutral-500">Engineering & Tech</span>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
+        <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Active Builders</span>
           <p className="text-2xl sm:text-3xl font-extrabold text-blue-500 font-mono">
             {college.activeStudents.toLocaleString()}
@@ -92,7 +92,7 @@ export const CollegeDashboardPage: React.FC = () => {
           <span className="text-[11px] text-emerald-500 font-semibold">80.8% Active Ratio</span>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
+        <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Avg Execution Rate</span>
           <p className="text-2xl sm:text-3xl font-extrabold text-emerald-500 font-mono">
             {college.averageExecutionRate}%
@@ -100,7 +100,7 @@ export const CollegeDashboardPage: React.FC = () => {
           <span className="text-[11px] text-neutral-500">Missions Completed</span>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
+        <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Hackathon Squads</span>
           <p className="text-2xl sm:text-3xl font-extrabold text-purple-500 font-mono">
             {college.activeHackathonTeamsCount}
@@ -110,7 +110,7 @@ export const CollegeDashboardPage: React.FC = () => {
       </div>
 
       {/* Skill Distribution Section matching Section 26 */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-6">
+      <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-6">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             Cohort Competencies

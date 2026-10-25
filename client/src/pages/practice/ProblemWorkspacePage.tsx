@@ -39,7 +39,7 @@ export const ProblemWorkspacePage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedTestCaseIdx, setSelectedTestCaseIdx] = useState(0);
 
-  // Progressive "I'm Stuck" Hints (Level 1, 2, 3, 4)
+  // Progressive Hints (Level 1, 2, 3, 4)
   const [hintModalOpen, setHintModalOpen] = useState(false);
   const [currentHintLevel, setCurrentHintLevel] = useState<1 | 2 | 3 | 4>(1);
   const [activeHintData, setActiveHintData] = useState<any>(null);
@@ -213,9 +213,9 @@ export const ProblemWorkspacePage: React.FC = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col bg-[#FAFAFA] dark:bg-[#070A0F] text-neutral-900 dark:text-neutral-100 overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] flex flex-col bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 overflow-hidden">
       {/* Top Workspace Header Bar */}
-      <header className="h-12 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#0B0F17] px-4 flex items-center justify-between shrink-0">
+      <header className="h-12 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#171717] px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <Link
             to="/practice"
@@ -241,20 +241,21 @@ export const ProblemWorkspacePage: React.FC = () => {
 
         {/* Action Controls */}
         <div className="flex items-center gap-3">
-          {/* Progressive Hint Button ("I'm Stuck") */}
+          {/* Progressive Hint Button */}
           <button
             onClick={openHintModal}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold transition-colors"
+            title="Step-by-step hints"
           >
             <HelpCircle className="w-3.5 h-3.5" />
-            <span>I'm Stuck</span>
+            <span>Hints</span>
           </button>
 
           {/* Language Selector */}
           <select
             value={selectedLanguage}
             onChange={(e: any) => handleLanguageChange(e.target.value)}
-            className="px-2.5 py-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 text-xs font-mono text-neutral-800 dark:text-neutral-200 outline-none focus:outline-none focus:ring-0"
+            className="px-2.5 py-1.5 rounded-xl bg-neutral-100 dark:bg-[#262626] border border-neutral-200 dark:border-neutral-800 text-xs font-mono text-neutral-800 dark:text-neutral-200 outline-none focus:outline-none focus:ring-0"
           >
             <option value="javascript">JavaScript (Node 20)</option>
             <option value="python">Python 3.11</option>
@@ -287,7 +288,7 @@ export const ProblemWorkspacePage: React.FC = () => {
       {/* Main Split Layout: Left Problem Spec (5 cols), Right Monaco Editor + Test Cases (7 cols) */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
         {/* Left Column: Problem Statement & Examples (5 cols) */}
-        <div className="lg:col-span-5 h-full overflow-y-auto border-r border-neutral-200 dark:border-neutral-800 p-6 space-y-6 bg-white dark:bg-[#0B0F17]">
+        <div className="lg:col-span-5 h-full overflow-y-auto border-r border-neutral-200 dark:border-neutral-800 p-6 space-y-6 bg-white dark:bg-[#171717]">
           {problem.isDebuggingChallenge && (
             <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs space-y-1">
               <div className="flex items-center gap-2 font-bold">
@@ -372,9 +373,9 @@ export const ProblemWorkspacePage: React.FC = () => {
           </div>
 
           {/* Bottom Execution Panel (LeetCode Style) */}
-          <div className="h-72 border-t border-neutral-700 bg-[#0E121A] text-neutral-200 flex flex-col overflow-hidden">
+          <div className="h-72 border-t border-neutral-700 bg-[#171717] text-neutral-200 flex flex-col overflow-hidden">
             {/* Tab Header Bar */}
-            <div className="h-10 px-4 border-b border-neutral-800 bg-[#0A0D14] flex items-center justify-between text-xs shrink-0">
+            <div className="h-10 px-4 border-b border-neutral-800 bg-[#212121] flex items-center justify-between text-xs shrink-0">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setActiveBottomTab('testcases')}
@@ -570,19 +571,19 @@ export const ProblemWorkspacePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Progressive AI "I'm Stuck" Hint Modal (Matching Section 15) */}
+      {/* Progressive AI Hint Modal (Matching Section 15) */}
       {hintModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
           onClick={() => setHintModalOpen(false)}
         >
           <div
-            className="w-full max-w-lg bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 space-y-5 shadow-2xl"
+            className="w-full max-w-lg bg-white dark:bg-[#212121] rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 space-y-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
-                "I'm Stuck" — Step-by-Step Guidance
+                Step-by-Step Guidance
               </h3>
               <p className="text-xs text-neutral-500">
                 We guide your thinking without spoiling the answer so you build genuine problem-solving muscles.

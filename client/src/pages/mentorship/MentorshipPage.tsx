@@ -18,7 +18,8 @@ import {
   X,
   Sparkles,
   Calendar,
-  Shield
+  Shield,
+  Video
 } from 'lucide-react';
 
 export const MentorshipPage: React.FC = () => {
@@ -188,15 +189,15 @@ export const MentorshipPage: React.FC = () => {
               }}
               className="px-5 py-2.5 rounded-xl bg-white hover:bg-neutral-100 text-neutral-950 font-bold text-xs inline-flex items-center gap-2 transition-colors shadow-sm"
             >
-              <img src="/graphics/online-meet.svg" alt="Meet" className="w-4 h-4 object-contain invert" />
+              <Video className="w-4 h-4 text-neutral-950 shrink-0" />
               <span>Schedule Mentorship Session</span>
             </button>
           </div>
         </div>
 
         {/* Book Meeting Graphic */}
-        <div className="relative z-10 shrink-0 select-none w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 p-5 flex items-center justify-center shadow-lg">
-          <img src="/graphics/online-meet.svg" alt="Book 1:1 Meeting" className="w-full h-full object-contain invert" />
+        <div className="relative z-10 shrink-0 select-none w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 p-5 flex items-center justify-center shadow-lg">
+          <Video className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
         </div>
       </div>
 
@@ -219,8 +220,8 @@ export const MentorshipPage: React.FC = () => {
                 }}
                 className={`p-4 rounded-2xl border text-center transition-colors flex flex-col items-center justify-center gap-2 group ${
                   isSelected
-                    ? 'border-neutral-950 dark:border-white bg-white dark:bg-[#111722] shadow-sm'
-                    : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-[#0D121B] hover:border-neutral-300'
+                    ? 'border-neutral-950 dark:border-white bg-white dark:bg-[#212121] shadow-sm'
+                    : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-[#262626] hover:border-neutral-300'
                 }`}
               >
                 <div className="w-8 h-8 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center p-1.5">
@@ -260,7 +261,7 @@ export const MentorshipPage: React.FC = () => {
                 className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
                   selectedDomain === dom
                     ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-xs'
-                    : 'bg-white dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'
+                    : 'bg-white dark:bg-[#262626] border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'
                 }`}
               >
                 {dom}
@@ -273,7 +274,7 @@ export const MentorshipPage: React.FC = () => {
           {(selectedDomain === 'All' ? mentors : mentors.filter((m) => m.domain === selectedDomain)).map((mentor) => (
             <div
               key={mentor._id}
-              className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs flex flex-col justify-between space-y-4"
+              className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs flex flex-col justify-between space-y-4"
             >
               <div className="space-y-4">
                 <div className="flex items-center gap-3.5">
@@ -346,13 +347,13 @@ export const MentorshipPage: React.FC = () => {
           onClick={() => setBookingModalOpen(false)}
         >
           <div
-            className="w-full max-w-md bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 space-y-5 shadow-2xl"
+            className="w-full max-w-md bg-white dark:bg-[#212121] rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 space-y-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 p-2 flex items-center justify-center shrink-0">
-                  <img src="/graphics/online-meet.svg" alt="Online Meeting" className="w-full h-full object-contain dark:invert" />
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                  <Video className="w-5 h-5 text-blue-500" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-neutral-900 dark:text-white">

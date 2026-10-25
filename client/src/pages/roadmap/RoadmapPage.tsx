@@ -260,7 +260,7 @@ export const RoadmapPage: React.FC = () => {
 
         {/* Action Controls: Active Specialization Badge, Change Track, Regenerate */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-850 text-xs font-semibold text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800 shadow-2xs">
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-[#262626] text-xs font-semibold text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800 shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span>{activeTrack}</span>
             <button
@@ -282,7 +282,7 @@ export const RoadmapPage: React.FC = () => {
           </button>
 
           {/* Completed summary badge */}
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-850 text-xs font-semibold text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800">
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-[#262626] text-xs font-semibold text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800">
             <span className={`w-2 h-2 rounded-full ${completedCount > 0 ? 'bg-emerald-500' : 'bg-neutral-400'}`}></span>
             <span>
               {completedCount} of {nodes.length || 6} Completed
@@ -292,7 +292,7 @@ export const RoadmapPage: React.FC = () => {
       </div>
 
       {/* 3D Stepped Connected Path Visual (Matching UI Reference Screen 4) */}
-      <div className="relative py-12 px-4 sm:px-8 bg-neutral-50/70 dark:bg-[#0B0F17]/80 rounded-3xl border border-neutral-200/80 dark:border-neutral-800 overflow-hidden shadow-2xs">
+      <div className="relative py-12 px-4 sm:px-8 bg-neutral-50/70 dark:bg-[#171717]/80 rounded-3xl border border-neutral-200/80 dark:border-neutral-800 overflow-hidden shadow-2xs">
         {/* Subtle grid pattern background */}
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
 
@@ -327,13 +327,21 @@ export const RoadmapPage: React.FC = () => {
                   >
                     {/* Floating Node Badge */}
                     <div
-                      className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-md ${
-                        isCompleted
-                          ? 'bg-emerald-500 text-white ring-4 ring-emerald-500/20'
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm transition-all duration-200 shadow-md ${
+                        isSelected
+                          ? 'ring-2 ring-neutral-950 dark:ring-white'
+                          : isCompleted
+                          ? 'ring-2 ring-emerald-500/25'
                           : isInProgress
-                          ? 'bg-blue-600 text-white ring-4 ring-blue-600/30 shadow-blue-500/20'
+                          ? 'ring-2 ring-blue-600/30 shadow-blue-500/20'
+                          : ''
+                      } ${
+                        isCompleted
+                          ? 'bg-emerald-500 text-white'
+                          : isInProgress
+                          ? 'bg-blue-600 text-white'
                           : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
-                      } ${isSelected ? 'ring-4 ring-offset-2 ring-neutral-950 dark:ring-white dark:ring-offset-neutral-950' : ''}`}
+                      }`}
                     >
                       {isCompleted ? (
                         <Check className="w-5 h-5 stroke-[2.5]" />
@@ -380,7 +388,7 @@ export const RoadmapPage: React.FC = () => {
 
       {/* Selected Node Details Drawer / Card */}
       {selectedNode && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-6">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-100 dark:border-neutral-800">
             <div>
               <div className="flex items-center gap-2">
@@ -500,7 +508,7 @@ export const RoadmapPage: React.FC = () => {
       )}
 
       {/* Next Up Card (Bottom of Screen 4 matching UI Reference) */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between shadow-xs">
+      <div className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
             {activeNode?.stepNumber || 1}
@@ -532,7 +540,7 @@ export const RoadmapPage: React.FC = () => {
           onClick={() => setShowInterestModal(false)}
         >
           <div
-            className="w-full max-w-2xl bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-2xl bg-white dark:bg-[#212121] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
@@ -571,7 +579,7 @@ export const RoadmapPage: React.FC = () => {
                     className={`p-4 rounded-2xl border text-left transition-all relative group flex flex-col justify-between space-y-3 ${
                       isCurrent
                         ? 'border-blue-600 bg-blue-50/20 dark:bg-blue-950/20 ring-2 ring-blue-500/40 shadow-sm'
-                        : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-white dark:hover:bg-[#151b26]'
+                        : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-white dark:hover:bg-[#242424]'
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">

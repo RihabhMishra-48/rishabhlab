@@ -85,7 +85,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isPublicPage = ['/', '/features', '/pricing', '/about', '/login', '/register'].includes(location.pathname);
 
   return (
-    <header className="sticky top-0 z-40 w-full shrink-0 backdrop-blur-md bg-white/80 dark:bg-[#0B0F17]/85 border-b border-neutral-200/80 dark:border-neutral-800/80 transition-colors">
+    <header className="sticky top-0 z-40 w-full shrink-0 backdrop-blur-md bg-white/80 dark:bg-[#171717]/85 border-b border-neutral-200/80 dark:border-neutral-800/80 transition-colors">
       <div className={`${isPublicPage ? 'max-w-7xl mx-auto' : 'w-full'} px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4`}>
         {/* Left: Brand Logo */}
         <div className="flex items-center gap-4 sm:gap-6">
@@ -95,7 +95,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="w-3.5 h-3.5 border-2 border-current rotate-45 transform"></div>
             </div>
             <span className="font-bold text-lg tracking-tight text-neutral-900 dark:text-white">
-              Rishabh <span className="font-medium text-neutral-500 dark:text-neutral-400">Labs</span>
+              Rishabh<span className="font-medium text-neutral-500 dark:text-neutral-400">Labs</span>
             </span>
           </Link>
 
@@ -152,7 +152,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div ref={dropdownRef} className="relative">
               <button
                 onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-                className="flex items-center gap-2 p-1 pr-2.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 transition-colors"
+                className="flex items-center gap-2 p-1 pr-2.5 rounded-full hover:bg-neutral-100 dark:hover:bg-[#2a2a2a] border border-neutral-200 dark:border-neutral-800 transition-colors"
               >
                 <img
                   src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop'}
@@ -169,7 +169,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               {roleDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-[#111722] border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-xl py-2 z-50 text-xs animate-in fade-in slide-in-from-top-2">
+                <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-xl py-2 z-50 text-xs animate-in fade-in slide-in-from-top-2">
                   <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
                     <p className="font-semibold text-neutral-900 dark:text-white truncate">{user.name}</p>
                     <p className="text-[11px] text-neutral-500 truncate">{user.email}</p>
@@ -243,7 +243,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div ref={mobileMenuRef} className="md:hidden border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#0B0F17] px-4 pt-2 pb-4 space-y-2 text-sm font-medium">
+        <div ref={mobileMenuRef} className="md:hidden border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#171717] px-4 pt-2 pb-4 space-y-2 text-sm font-medium">
           <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Home</Link>
           <Link to="/features" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Features</Link>
           <Link to="/pricing" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Pricing</Link>
