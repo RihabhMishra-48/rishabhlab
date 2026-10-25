@@ -653,14 +653,25 @@ export const LessonDetailPage: React.FC = () => {
             }`}>
             {leftSidebarOpen ? (
               <div className="relative p-5 rounded-3xl bg-card border border-border/50 shadow-xs space-y-3">
-                {/* Floating Dock Collapse Button on border — full visibility without clipping */}
-                <button
+                {/* Clickable Separator Edge with Docked Toggle Button */}
+                <div
                   onClick={toggleLeftSidebar}
-                  className="absolute -right-3.5 top-5 w-7 h-7 rounded-full bg-card border border-border shadow-xs flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all cursor-pointer z-20 group"
-                  title="Collapse module navigation"
+                  className="absolute -right-3.5 top-0 bottom-0 w-7 cursor-pointer group/edge z-20 flex items-start justify-center pt-5 select-none"
+                  title="Click anywhere on edge to collapse module navigation"
                 >
-                  <PanelLeftClose className="w-3.5 h-3.5 transition-transform" />
-                </button>
+                  <div className="absolute left-1/2 -translate-x-1/2 top-3 bottom-3 w-[2px] bg-transparent group-hover/edge:bg-primary/40 rounded-full transition-colors" />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleLeftSidebar();
+                    }}
+                    className="w-7 h-7 rounded-full bg-card border border-border shadow-xs flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all cursor-pointer z-30 group-hover/edge:border-primary group-hover/edge:text-primary"
+                    title="Collapse module navigation"
+                  >
+                    <PanelLeftClose className="w-3.5 h-3.5 transition-transform" />
+                  </button>
+                </div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     Module Navigation
@@ -884,14 +895,25 @@ export const LessonDetailPage: React.FC = () => {
               <div className="space-y-6">
                 {lesson.quiz && lesson.quiz.length > 0 && (
                   <div className="relative p-5 rounded-3xl bg-card text-card-foreground border border-border/40 shadow-xs space-y-4">
-                    {/* Floating Dock Collapse Button on left border — full visibility without clipping */}
-                    <button
+                    {/* Clickable Separator Edge with Docked Toggle Button */}
+                    <div
                       onClick={toggleRightSidebar}
-                      className="absolute -left-3.5 top-5 w-7 h-7 rounded-full bg-card border border-border shadow-xs flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all cursor-pointer z-20 group"
-                      title="Collapse quiz panel"
+                      className="absolute -left-3.5 top-0 bottom-0 w-7 cursor-pointer group/edge z-20 flex items-start justify-center pt-5 select-none"
+                      title="Click anywhere on edge to collapse quiz panel"
                     >
-                      <PanelRightClose className="w-3.5 h-3.5 group-hover:scale-105 transition-transform" />
-                    </button>
+                      <div className="absolute left-1/2 -translate-x-1/2 top-3 bottom-3 w-[2px] bg-transparent group-hover/edge:bg-primary/40 rounded-full transition-colors" />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleRightSidebar();
+                        }}
+                        className="w-7 h-7 rounded-full bg-card border border-border shadow-xs flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all cursor-pointer z-30 group-hover/edge:border-primary group-hover/edge:text-primary"
+                        title="Collapse quiz panel"
+                      >
+                        <PanelRightClose className="w-3.5 h-3.5 transition-transform" />
+                      </button>
+                    </div>
                     <div className="flex items-center justify-between gap-2">
                       <div>
                         <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-mono">

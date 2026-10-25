@@ -113,7 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       ref={sidebarRef}
-      className={`hidden lg:flex flex-col shrink-0 h-full bg-white dark:bg-[#171717] text-neutral-800 dark:text-neutral-300 border-r border-neutral-200/80 dark:border-neutral-800/80 select-none justify-between transition-colors duration-200 z-30 ${isCollapsed ? 'w-[72px] px-2 py-3 overflow-visible' : 'w-64 px-3 py-4'
+      className={`hidden lg:flex flex-col shrink-0 h-full relative bg-white dark:bg-[#171717] text-neutral-800 dark:text-neutral-300 border-r border-neutral-200/80 dark:border-neutral-800/80 select-none justify-between transition-all duration-300 ease-in-out z-30 overflow-visible ${isCollapsed ? 'w-[72px] px-2 py-3' : 'w-64 px-3 py-4'
         }`}
     >
       {/* Scrollable / Visible Nav Area */}
@@ -121,59 +121,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
         className={`flex-1 space-y-4 pr-0.5 ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto overflow-x-hidden'
           }`}
       >
-        {/* Top Header / Toggle */}
+        {/* Top Header */}
         <div
-          className={`flex items-center pb-2.5 border-b border-neutral-200/60 dark:border-neutral-800/60 ${isCollapsed ? 'justify-center' : 'justify-between px-2'
+          className={`flex items-center pb-2.5 border-b border-neutral-200/60 dark:border-neutral-800/60 h-8 ${isCollapsed ? 'justify-center' : 'justify-start px-2'
             }`}
         >
-          {!isCollapsed && (
+          {!isCollapsed ? (
             <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
               Workspace
             </span>
-          )}
-          {onToggleCollapse && (
-            <div className="relative flex items-center justify-center">
-              <button
-                onClick={(e) => {
-                  e.currentTarget.blur();
-                  setHoveredItem(null);
-                  setActiveItem(null);
-                  setIsDismissed(true);
-                  onToggleCollapse();
-                }}
-                onMouseEnter={() => {
-                  setHoveredItem('toggle');
-                  setIsDismissed(false);
-                }}
-                onMouseLeave={() => {
-                  setHoveredItem(null);
-                  setActiveItem(null);
-                }}
-                className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/80 transition-colors focus:outline-none"
-                aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              >
-                {isCollapsed ? (
-                  <PanelLeftOpen className="w-4 h-4" />
-                ) : (
-                  <PanelLeftClose className="w-4 h-4" />
-                )}
-              </button>
-
-              {/* Collapsed Toggle Button Info Tag - Centered strictly with the button */}
-              {isCollapsed && (
-                <div
-                  className={`absolute left-full ml-3 top-1/2 -translate-y-1/2 z-50 pointer-events-none transition-all duration-150 ${isInfoBarOpen('toggle')
-                    ? 'opacity-100 visible'
-                    : 'opacity-0 invisible'
-                    }`}
-                >
-                  <div className="relative px-3 py-1.5 rounded-lg bg-neutral-900 dark:bg-[#262626] border border-neutral-800 dark:border-neutral-700 shadow-xl text-left whitespace-nowrap flex items-center">
-                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 h-2 w-2 bg-neutral-900 dark:bg-[#262626] border-l border-b border-neutral-800 dark:border-neutral-700 rotate-45" />
-                    <span className="font-medium text-white text-xs select-none">Expand Sidebar</span>
-                  </div>
-                </div>
-              )}
-            </div>
+          ) : (
+            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+              WS
+            </span>
           )}
         </div>
 
@@ -477,6 +437,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Interactive Full-Height Separator Line & Docked Toggle Button */}
+      {onToggleCollapse && (
+        <div
+          onClick={onToggleCollapse}
+          className="hidden lg:flex absolute -right-3 top-0 bottom-0 w-6 cursor-pointer group/rail z-40 select-none items-center justify-center"
+          title={isCollapsed ? 'Click anywhere on separator line to expand sidebar (Ctrl+B)' : 'Click anywhere on separator line to collapse sidebar (Ctrl+B)'}
+        >
+          {/* Subtle separator highlight line on hover */}
+          <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[2px] bg-transparent group-hover/rail:bg-blue-500/60 dark:group-hover/rail:bg-blue-400/60 transition-colors duration-150" />
+
+          {/* Floating Dock Toggle Button sitting directly on the separator line */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleCollapse();
+            }}
+            className="absolute left-1/2 -translate-x-1/2 top-5 w-6 h-6 rounded-full bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:border-neutral-400 dark:hover:border-neutral-500 transition-all cursor-pointer z-50 group-hover/rail:border-blue-500 group-hover/rail:text-blue-500"
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isCollapsed ? (
+              <PanelLeftOpen className="w-3.5 h-3.5" />
+            ) : (
+              <PanelLeftClose className="w-3.5 h-3.5" />
+            )}
+          </button>
         </div>
       )}
     </aside>
