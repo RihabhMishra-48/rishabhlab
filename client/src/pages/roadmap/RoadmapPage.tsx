@@ -107,18 +107,37 @@ export const RoadmapPage: React.FC = () => {
   // Enrolled tracks system (Same as Courses/Learn catalog)
   const [enrolledTracks, setEnrolledTracks] = useState<string[]>(() => {
     try {
-      const stored = localStorage.getItem(`rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`);
+      const storageKey = `rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`;
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
           const normalized = parsed.map(normalizeTrackName);
-          if (!normalized.includes(primaryTrack)) return [primaryTrack, ...normalized];
-          return normalized;
+          const unique = Array.from(new Set([primaryTrack, ...normalized]));
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(unique));
+          } catch { }
+          return unique;
         }
       }
     } catch { }
     return [primaryTrack];
   });
+
+  useEffect(() => {
+    // Ensure clean deduplicated tracks in state and localStorage on mount
+    const storageKey = `rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`;
+    setEnrolledTracks((prev) => {
+      const unique = Array.from(new Set([primaryTrack, ...prev.map(normalizeTrackName)]));
+      if (unique.length !== prev.length || unique.some((t, i) => t !== prev[i])) {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(unique));
+        } catch { }
+        return unique;
+      }
+      return prev;
+    });
+  }, [primaryTrack, user?.id]);
 
   const [activeTrack, setActiveTrack] = useState<string>(() => {
     if (queryTrack) return normalizeTrackName(queryTrack);
@@ -222,11 +241,11 @@ export const RoadmapPage: React.FC = () => {
 
   const handleEnrollSecondary = (chosenTrack: string) => {
     const normalized = normalizeTrackName(chosenTrack);
-    if (!enrolledTracks.includes(normalized)) {
-      const updated = [...enrolledTracks, normalized];
-      setEnrolledTracks(updated);
+    const updated = Array.from(new Set([...enrolledTracks, normalized]));
+    setEnrolledTracks(updated);
+    try {
       localStorage.setItem(`rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`, JSON.stringify(updated));
-    }
+    } catch { }
     handleTrackChange(normalized);
     setShowExploreModal(false);
   };
@@ -350,7 +369,7 @@ export const RoadmapPage: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {enrolledTracks.map((trk) => {
+          {Array.from(new Set(enrolledTracks)).map((trk) => {
             const isSelected = activeTrack === trk;
             const isPrimary = trk === primaryTrack;
 
@@ -364,7 +383,7 @@ export const RoadmapPage: React.FC = () => {
                   }`}
               >
                 <span>{trk}</span>
-                {isPrimary ? (
+                {isPrimary && (
                   <span
                     className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold uppercase ${isSelected
                       ? 'bg-white/20 text-white dark:bg-neutral-900/20 dark:text-neutral-900'
@@ -373,36 +392,19 @@ export const RoadmapPage: React.FC = () => {
                   >
                     Primary
                   </span>
-                ) : (
-                  <button
-                    onClick={(e) => handleRemoveSecondaryTrack(trk, e)}
-                    className="p-0.5 rounded-full hover:bg-red-500/20 hover:text-red-500 transition-colors"
-                    title="Remove secondary track"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
                 )}
               </div>
             );
           })}
 
-          {/* Add 2nd Track / Manage Tracks Button */}
-          {enrolledTracks.length < 2 ? (
+          {/* Add Track Button — Unlimited tracks (removed 2-track max limit) */}
+          {enrolledTracks.length < TRACK_CONFIGS.length && (
             <button
               onClick={() => setShowExploreModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 text-xs font-semibold transition-colors bg-neutral-50/50 dark:bg-transparent"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 text-xs font-semibold transition-colors bg-neutral-50/50 dark:bg-transparent cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Track</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowExploreModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white text-xs font-semibold transition-colors bg-neutral-50/50 dark:bg-transparent"
-              title="Manage your dual track enrollments"
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>Manage Tracks</span>
             </button>
           )}
         </div>
@@ -745,10 +747,10 @@ export const RoadmapPage: React.FC = () => {
             <div className="p-5 sm:p-6 pb-4 border-b border-neutral-100 dark:border-neutral-800 flex items-start justify-between gap-4 shrink-0 bg-white dark:bg-[#1a1a1a]">
               <div className="space-y-1">
                 <h2 className="text-xl sm:text-2xl font-black tracking-tight text-neutral-900 dark:text-white">
-                  Engineering Tracks & Dual Specialization
+                  Engineering Tracks & Specializations
                 </h2>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-xl">
-                  Focus deeply on your primary track, or enroll in a second track to cross-train skills. Your interactive roadmap and lesson pipeline update instantly.
+                  Focus deeply on your primary track, or enroll in other tracks to cross-train skills. Your interactive roadmap and lesson pipeline update instantly.
                 </p>
               </div>
 
@@ -767,7 +769,7 @@ export const RoadmapPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-neutral-700 dark:text-neutral-300">Active Enrollments:</span>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    {enrolledTracks.map((trk) => {
+                    {Array.from(new Set(enrolledTracks)).map((trk) => {
                       const isPrim = trk === primaryTrack;
                       return (
                         <span
@@ -777,7 +779,7 @@ export const RoadmapPage: React.FC = () => {
                             : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                             }`}
                         >
-                          {trk} {isPrim ? '(Primary)' : '(2nd Track)'}
+                          {trk} {isPrim ? '(Primary)' : '✓'}
                         </span>
                       );
                     })}
@@ -785,7 +787,7 @@ export const RoadmapPage: React.FC = () => {
                 </div>
 
                 <span className="text-[11px] font-mono font-semibold text-neutral-500 shrink-0">
-                  {enrolledTracks.length}/2 Slots Utilized {enrolledTracks.length < 2 ? '• 1 Slot Open' : '• Limit Reached'}
+                  {enrolledTracks.length} of {TRACK_CONFIGS.length} Tracks Enrolled
                 </span>
               </div>
 
@@ -867,7 +869,7 @@ export const RoadmapPage: React.FC = () => {
                           </span>
                         ) : isEnrolled ? (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                            Enrolled (2nd) ✓
+                            Enrolled ✓
                           </span>
                         ) : null}
                       </div>
@@ -896,38 +898,23 @@ export const RoadmapPage: React.FC = () => {
                               Active Roadmap ✓
                             </span>
                           ) : isEnrolled ? (
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                onClick={() => {
-                                  handleTrackChange(normalizedId);
-                                  setShowExploreModal(false);
-                                }}
-                                className="text-xs font-bold px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 transition-colors"
-                              >
-                                Switch
-                              </button>
-                              {!isPrimary && (
-                                <button
-                                  onClick={(e) => handleRemoveSecondaryTrack(normalizedId, e)}
-                                  className="text-xs font-semibold px-2 py-1.5 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-colors"
-                                  title="Drop secondary track"
-                                >
-                                  Remove
-                                </button>
-                              )}
-                            </div>
-                          ) : enrolledTracks.length < 2 ? (
+                            <button
+                              onClick={() => {
+                                handleTrackChange(normalizedId);
+                                setShowExploreModal(false);
+                              }}
+                              className="text-xs font-bold px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 transition-colors"
+                            >
+                              Switch
+                            </button>
+                          ) : (
                             <button
                               onClick={() => handleEnrollSecondary(normalizedId)}
                               className="text-xs font-bold inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 transition-colors shadow-2xs"
                             >
                               <Plus className="w-3.5 h-3.5" />
-                              <span>Enroll</span>
+                              <span>Enroll Track</span>
                             </button>
-                          ) : (
-                            <span className="text-[10px] font-semibold text-neutral-400">
-                              Max 2 Tracks
-                            </span>
                           )}
                         </div>
                       </div>

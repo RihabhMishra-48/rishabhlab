@@ -232,7 +232,6 @@ export const ProblemWorkspacePage: React.FC = () => {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 overflow-hidden">
-      {/* Top Workspace Header Bar */}
       <header className="h-12 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#171717] px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <Link
@@ -245,13 +244,12 @@ export const ProblemWorkspacePage: React.FC = () => {
             {problem.title}
           </span>
           <span
-            className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-              problem.difficulty === 'Easy'
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${problem.difficulty === 'Easy'
                 ? 'bg-emerald-500/10 text-emerald-500'
                 : problem.difficulty === 'Medium'
-                ? 'bg-amber-500/10 text-amber-500'
-                : 'bg-rose-500/10 text-rose-500'
-            }`}
+                  ? 'bg-amber-500/10 text-amber-500'
+                  : 'bg-rose-500/10 text-rose-500'
+              }`}
           >
             {problem.difficulty}
           </span>
@@ -393,22 +391,20 @@ export const ProblemWorkspacePage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setActiveBottomTab('testcases')}
-                  className={`px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1.5 ${
-                    activeBottomTab === 'testcases'
+                  className={`px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1.5 ${activeBottomTab === 'testcases'
                       ? 'bg-neutral-800 text-white shadow-xs'
                       : 'text-neutral-400 hover:text-neutral-200'
-                  }`}
+                    }`}
                 >
                   <Terminal className="w-3.5 h-3.5" />
                   <span>Testcase</span>
                 </button>
                 <button
                   onClick={() => setActiveBottomTab('output')}
-                  className={`px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1.5 ${
-                    activeBottomTab === 'output'
+                  className={`px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1.5 ${activeBottomTab === 'output'
                       ? 'bg-neutral-800 text-white shadow-xs'
                       : 'text-neutral-400 hover:text-neutral-200'
-                  }`}
+                    }`}
                 >
                   <span>Test Result</span>
                   {testResults.length > 0 && (
@@ -421,11 +417,10 @@ export const ProblemWorkspacePage: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`font-bold font-mono text-xs px-2.5 py-0.5 rounded-md ${
-                        executionStatus === 'Accepted'
+                      className={`font-bold font-mono text-xs px-2.5 py-0.5 rounded-md ${executionStatus === 'Accepted'
                           ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                           : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                      }`}
+                        }`}
                     >
                       {executionStatus}
                     </span>
@@ -447,11 +442,10 @@ export const ProblemWorkspacePage: React.FC = () => {
                       <button
                         key={tc.testCaseId || idx}
                         onClick={() => setSelectedTestCaseIdx(idx)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-sans transition-colors ${
-                          selectedTestCaseIdx === idx
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-sans transition-colors ${selectedTestCaseIdx === idx
                             ? 'bg-neutral-800 text-white border border-neutral-700'
                             : 'bg-neutral-900/60 text-neutral-400 hover:text-white'
-                        }`}
+                          }`}
                       >
                         Case {idx + 1}
                       </button>
@@ -501,11 +495,10 @@ export const ProblemWorkspacePage: React.FC = () => {
                           <button
                             key={idx}
                             onClick={() => setSelectedTestCaseIdx(idx)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-sans transition-colors flex items-center gap-1.5 ${
-                              selectedTestCaseIdx === idx
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold font-sans transition-colors flex items-center gap-1.5 ${selectedTestCaseIdx === idx
                                 ? 'bg-neutral-800 text-white border border-neutral-700'
                                 : 'bg-neutral-900/60 text-neutral-400 hover:text-white'
-                            }`}
+                              }`}
                           >
                             <span className={`w-2 h-2 rounded-full ${tc.passed ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
                             <span>Case {idx + 1}</span>
@@ -610,11 +603,10 @@ export const ProblemWorkspacePage: React.FC = () => {
                 <button
                   key={lvl}
                   onClick={() => handleFetchHint(lvl as any)}
-                  className={`py-2 rounded-xl border text-center transition-all ${
-                    currentHintLevel === lvl
+                  className={`py-2 rounded-xl border text-center transition-all ${currentHintLevel === lvl
                       ? 'border-neutral-950 dark:border-white bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 font-bold'
                       : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50'
-                  }`}
+                    }`}
                 >
                   Level {lvl}
                 </button>

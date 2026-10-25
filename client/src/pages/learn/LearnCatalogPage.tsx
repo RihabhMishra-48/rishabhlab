@@ -48,17 +48,37 @@ export const LearnCatalogPage: React.FC = () => {
 
   const [enrolledTracks, setEnrolledTracks] = useState<string[]>(() => {
     try {
-      const stored = localStorage.getItem(`rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`);
+      const storageKey = `rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`;
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          if (!parsed.includes(primaryTrack)) return [primaryTrack, ...parsed];
-          return parsed;
+          const normalized = parsed.map(normalizeToTrackId);
+          const unique = Array.from(new Set([primaryTrack, ...normalized]));
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(unique));
+          } catch { }
+          return unique;
         }
       }
     } catch { }
     return [primaryTrack];
   });
+
+  useEffect(() => {
+    // Ensure clean deduplicated tracks in state and localStorage on mount
+    const storageKey = `rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`;
+    setEnrolledTracks((prev) => {
+      const unique = Array.from(new Set([primaryTrack, ...prev.map(normalizeToTrackId)]));
+      if (unique.length !== prev.length || unique.some((t, i) => t !== prev[i])) {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(unique));
+        } catch { }
+        return unique;
+      }
+      return prev;
+    });
+  }, [primaryTrack, user?.id]);
 
   const [selectedTrack, setSelectedTrack] = useState<string>(() => {
     if (queryTrack) return normalizeToTrackId(queryTrack);
@@ -89,10 +109,12 @@ export const LearnCatalogPage: React.FC = () => {
     if (queryTrack) {
       const norm = normalizeToTrackId(queryTrack);
       setSelectedTrack(norm);
-      if (!enrolledTracks.includes(norm)) {
-        const updated = [...enrolledTracks, norm];
+      const updated = Array.from(new Set([...enrolledTracks, norm]));
+      if (updated.length !== enrolledTracks.length) {
         setEnrolledTracks(updated);
-        localStorage.setItem(`rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`, JSON.stringify(updated));
+        try {
+          localStorage.setItem(`rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`, JSON.stringify(updated));
+        } catch { }
       }
     }
   }, [queryTrack]);
@@ -151,12 +173,13 @@ export const LearnCatalogPage: React.FC = () => {
   };
 
   const handleEnrollSecondary = (trackId: string) => {
-    if (!enrolledTracks.includes(trackId)) {
-      const updated = [...enrolledTracks, trackId];
-      setEnrolledTracks(updated);
+    const norm = normalizeToTrackId(trackId);
+    const updated = Array.from(new Set([...enrolledTracks, norm]));
+    setEnrolledTracks(updated);
+    try {
       localStorage.setItem(`rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`, JSON.stringify(updated));
-    }
-    handleTrackChange(trackId);
+    } catch { }
+    handleTrackChange(norm);
     setShowExploreModal(false);
   };
 
@@ -251,7 +274,7 @@ export const LearnCatalogPage: React.FC = () => {
           <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 pl-2 shrink-0">
             Active Track:
           </span>
-          {enrolledTracks.map((trackId) => {
+          {Array.from(new Set(enrolledTracks)).map((trackId) => {
             const trackObj = tracks.find((t) => t.id === trackId);
             if (!trackObj) return null;
             const Icon = trackObj.icon;
@@ -282,28 +305,20 @@ export const LearnCatalogPage: React.FC = () => {
                     Primary
                   </span>
                 )}
-
-                {!isPrimary && (
-                  <button
-                    onClick={() => handleRemoveSecondaryTrack(trackId)}
-                    title="Remove secondary track"
-                    className="ml-1 text-neutral-400 hover:text-rose-500 dark:hover:text-rose-400 font-bold text-xs"
-                  >
-                    ×
-                  </button>
-                )}
               </div>
             );
           })}
         </div>
 
-        <button
-          onClick={() => setShowExploreModal(true)}
-          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:text-blue-600 dark:hover:text-blue-400 border border-neutral-200/80 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-700 transition-colors shadow-2xs shrink-0"
-        >
-          <Plus className="w-3.5 h-3.5 text-blue-500" />
-          <span>{enrolledTracks.length > 1 ? 'Manage Tracks' : 'Explore'}</span>
-        </button>
+        {enrolledTracks.length < tracks.length && (
+          <button
+            onClick={() => setShowExploreModal(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:text-blue-600 dark:hover:text-blue-400 border border-neutral-200/80 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-700 transition-colors shadow-2xs shrink-0 cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5 text-blue-500" />
+            <span>Add Track</span>
+          </button>
+        )}
       </div>
 
       {/* Explore & Add Track Modal */}
@@ -342,7 +357,7 @@ export const LearnCatalogPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-neutral-700 dark:text-neutral-300">Active Learning Tracks:</span>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    {enrolledTracks.map((trk) => {
+                    {Array.from(new Set(enrolledTracks)).map((trk) => {
                       const isPrim = trk === primaryTrack;
                       const trackObj = tracks.find((t) => t.id === trk);
                       const displayTitle = trackObj?.label || trk;
@@ -354,7 +369,7 @@ export const LearnCatalogPage: React.FC = () => {
                             : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                             }`}
                         >
-                          {displayTitle} {isPrim ? '(Primary)' : '(2nd Track)'}
+                          {displayTitle} {isPrim ? '(Primary)' : '✓'}
                         </span>
                       );
                     })}
@@ -362,7 +377,7 @@ export const LearnCatalogPage: React.FC = () => {
                 </div>
 
                 <span className="text-[11px] font-mono font-semibold text-neutral-500 shrink-0">
-                  {enrolledTracks.length}/2 Slots Utilized {enrolledTracks.length < 2 ? '• 1 Slot Open' : '• Limit Reached'}
+                  {enrolledTracks.length} of {tracks.length} Tracks Enrolled
                 </span>
               </div>
 
@@ -443,7 +458,7 @@ export const LearnCatalogPage: React.FC = () => {
                           </span>
                         ) : isEnrolled ? (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                            Enrolled (2nd) ✓
+                            Enrolled ✓
                           </span>
                         ) : null}
                       </div>
@@ -472,30 +487,16 @@ export const LearnCatalogPage: React.FC = () => {
                               Active Lessons ✓
                             </span>
                           ) : isEnrolled ? (
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                onClick={() => {
-                                  handleTrackChange(t.id);
-                                  setShowExploreModal(false);
-                                }}
-                                className="text-xs font-bold px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 transition-colors"
-                              >
-                                View Lessons
-                              </button>
-                              {!isPrimary && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveSecondaryTrack(t.id);
-                                  }}
-                                  className="text-xs font-semibold px-2 py-1.5 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-colors"
-                                  title="Drop secondary track"
-                                >
-                                  Remove
-                                </button>
-                              )}
-                            </div>
-                          ) : enrolledTracks.length < 2 ? (
+                            <button
+                              onClick={() => {
+                                handleTrackChange(t.id);
+                                setShowExploreModal(false);
+                              }}
+                              className="text-xs font-bold px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 transition-colors"
+                            >
+                              View Lessons
+                            </button>
+                          ) : (
                             <button
                               onClick={() => handleEnrollSecondary(t.id)}
                               className="text-xs font-bold inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 transition-colors shadow-2xs"
@@ -503,10 +504,6 @@ export const LearnCatalogPage: React.FC = () => {
                               <Plus className="w-3.5 h-3.5" />
                               <span>Enroll Track</span>
                             </button>
-                          ) : (
-                            <span className="text-[10px] font-semibold text-neutral-400">
-                              Max 2 Tracks
-                            </span>
                           )}
                         </div>
                       </div>
