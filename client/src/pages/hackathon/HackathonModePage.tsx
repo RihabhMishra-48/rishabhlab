@@ -57,35 +57,44 @@ export const HackathonModePage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
       {/* Header matching Screen 7 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-            Sprint Execution Environment
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
-            Hackathon Mode
-          </h1>
-          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
-            Turn your idea into a working product.
-          </p>
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center p-2.5 shrink-0 shadow-2xs">
+            <img src="/graphics/troph-cap.svg" alt="Hackathon" className="w-full h-full object-contain dark:invert" />
+          </div>
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+              Sprint Execution Environment
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
+              Hackathon Mode
+            </h1>
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+              Turn your idea into a working product.
+            </p>
+          </div>
         </div>
 
-        {/* Team Members Avatars */}
+        {/* Team Squad */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-neutral-400 mr-2">Sprint Team:</span>
           <div className="flex -space-x-2">
-            {hackathon?.teamMembers?.map((m, idx) => (
-              <img
-                key={idx}
-                src={m.avatar}
-                alt={m.name}
-                title={`${m.name} (${m.role})`}
-                className="w-8 h-8 rounded-full border-2 border-white dark:border-neutral-900 object-cover"
-                onError={(e: any) => {
-                  e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop';
-                }}
-              />
+            {['RS', 'AK', 'PK', 'MN'].map((m) => (
+              <span
+                key={m}
+                className="w-7 h-7 rounded-full bg-neutral-800 dark:bg-neutral-700 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white dark:border-[#0B0F17]"
+              >
+                {m}
+              </span>
             ))}
           </div>
+          <button
+            onClick={() => {
+              const email = prompt('Enter teammate email:');
+              if (email) alert(`Invitation sent to ${email}`);
+            }}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 hover:bg-neutral-800 transition-colors shadow-2xs"
+          >
+            + Invite
+          </button>
         </div>
       </div>
 
@@ -95,16 +104,9 @@ export const HackathonModePage: React.FC = () => {
         <div className="lg:col-span-7 space-y-6">
           {/* Countdown Card matching Screen 7 */}
           <div className="relative p-6 sm:p-7 rounded-3xl bg-neutral-900 dark:bg-[#111722] text-white border border-neutral-800 shadow-xl overflow-hidden space-y-4">
-            {/* Background 3D Low-Poly Mountain Peak & Flag Graphic */}
-            <div className="absolute right-4 bottom-2 opacity-35 pointer-events-none select-none">
-              <svg width="180" height="140" viewBox="0 0 180 140" fill="none">
-                <polygon points="90,15 160,135 20,135" fill="currentColor" className="text-neutral-700" />
-                <polygon points="90,15 50,135 20,135" fill="currentColor" className="text-neutral-600" />
-                <polygon points="90,15 130,135 160,135" fill="currentColor" className="text-neutral-800" />
-                {/* Summit Flag */}
-                <line x1="90" y1="15" x2="90" y2="2" stroke="#EF4444" strokeWidth="2" />
-                <polygon points="90,2 105,6 90,10" fill="#EF4444" />
-              </svg>
+            {/* Background Mountain Peak Graphic */}
+            <div className="absolute right-4 bottom-2 opacity-20 pointer-events-none select-none w-36 h-28 flex items-end justify-end">
+              <img src="/graphics/mountain.svg" alt="Summit Mountain" className="w-28 h-28 object-contain invert" />
             </div>
 
             <div className="relative z-10 space-y-3">
@@ -187,11 +189,7 @@ export const HackathonModePage: React.FC = () => {
         <div className="lg:col-span-5 space-y-6">
           <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-5">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-500 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" />
-                AI Assistant
-              </span>
-              <h2 className="text-base font-bold text-neutral-900 dark:text-white mt-0.5">
+              <h2 className="text-base font-bold text-neutral-900 dark:text-white">
                 Hackathon Tool Suite
               </h2>
             </div>

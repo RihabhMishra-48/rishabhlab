@@ -78,7 +78,7 @@ export const LoginPage: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-neutral-900 dark:focus:border-neutral-500"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0 focus:border-neutral-900 dark:focus:border-neutral-500"
               placeholder="you@college.edu"
             />
           </div>
@@ -97,7 +97,7 @@ export const LoginPage: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-neutral-900 dark:focus:border-neutral-500"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0 focus:border-neutral-900 dark:focus:border-neutral-500"
               placeholder="••••••••"
             />
           </div>
@@ -126,11 +126,7 @@ export const LoginPage: React.FC = () => {
               try {
                 await loginWithGoogle();
               } catch (err: any) {
-                if (err.message?.includes('provider is not enabled') || err.error_code === 'validation_failed') {
-                  setError('Google Provider is not enabled in your Supabase Dashboard yet. You can sign in instantly using Email & Password above, or enable Google under Supabase -> Authentication -> Providers.');
-                } else {
-                  setError(err.message || 'Google authentication failed.');
-                }
+                setError(err.message || 'Google authentication failed.');
               }
             }}
             className="w-full py-2.5 px-4 rounded-full border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-neutral-700 dark:text-neutral-300 font-medium text-xs transition-colors flex items-center justify-center gap-2.5"
@@ -144,6 +140,45 @@ export const LoginPage: React.FC = () => {
             Continue with Google (Supabase Auth)
           </button>
         </form>
+
+        {/* 1-Click Fast Demo Credentials */}
+        <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800/80">
+          <p className="text-[11px] font-medium text-neutral-500 text-center mb-2.5">
+            Instant 1-Click Demo Access
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('rishabh@rishabhlabs.com');
+                setPassword('password123');
+              }}
+              className="px-2.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 text-center transition-colors"
+            >
+              🎓 Student
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('mentor@rishabhlabs.com');
+                setPassword('password123');
+              }}
+              className="px-2.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 text-center transition-colors"
+            >
+              💼 Mentor
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('admin@gla.ac.in');
+                setPassword('password123');
+              }}
+              className="px-2.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 text-center transition-colors"
+            >
+              🏛️ College
+            </button>
+          </div>
+        </div>
 
         <p className="text-center text-xs text-neutral-500 pt-2 border-t border-neutral-100 dark:border-neutral-800">
           Don't have an account?{' '}

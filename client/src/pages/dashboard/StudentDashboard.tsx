@@ -127,13 +127,18 @@ export const StudentDashboard: React.FC = () => {
         <div className="lg:col-span-8 p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col justify-between space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                  Today's Mission
-                </span>
-                <h2 className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">
-                  Day {mission?.dayNumber || 1} • {currentTrack}
-                </h2>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 p-2 flex items-center justify-center shrink-0">
+                  <img src="/graphics/daily-calendar.svg" alt="Daily Mission" className="w-full h-full object-contain dark:invert" />
+                </div>
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                    Today's Mission
+                  </span>
+                  <h2 className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">
+                    Day {mission?.dayNumber || 1} • {currentTrack}
+                  </h2>
+                </div>
               </div>
               <span className="text-xs text-neutral-400 font-mono">
                 {mission?.dateString || todayDateFormatted}
@@ -149,7 +154,7 @@ export const StudentDashboard: React.FC = () => {
                   className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between cursor-pointer group ${
                     t.isCompleted
                       ? 'bg-neutral-50 dark:bg-neutral-900/60 border-neutral-200 dark:border-neutral-800/80 text-neutral-400 dark:text-neutral-500'
-                      : 'bg-white dark:bg-[#0D121B] border-neutral-200 dark:border-neutral-700/80 hover:border-neutral-400 dark:hover:border-neutral-600 text-neutral-900 dark:text-white shadow-2xs'
+                      : 'bg-white dark:bg-[#0D121B] border-neutral-200 dark:border-neutral-700/80 hover:bg-neutral-50 dark:hover:bg-[#151c28] text-neutral-900 dark:text-white shadow-2xs'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -281,10 +286,10 @@ export const StudentDashboard: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link
             to="/roadmap"
-            className="p-5 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-md transition-all group"
+            className="p-5 rounded-2xl bg-white dark:bg-[#111722] hover:bg-neutral-50 dark:hover:bg-[#161e2c] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs transition-colors group"
           >
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-              <Compass className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-xl bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20 p-2 flex items-center justify-center mb-3">
+              <img src="/graphics/roadmap.png" alt="Roadmap" className="w-6 h-6 object-contain dark:invert" />
             </div>
             <h3 className="text-xs font-bold text-neutral-900 dark:text-white">View Roadmap</h3>
             <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">See your path</p>
@@ -292,10 +297,10 @@ export const StudentDashboard: React.FC = () => {
 
           <Link
             to="/projects"
-            className="p-5 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-md transition-all group"
+            className="p-5 rounded-2xl bg-white dark:bg-[#111722] hover:bg-neutral-50 dark:hover:bg-[#161e2c] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs transition-colors group"
           >
-            <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-              <FolderGit2 className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-xl bg-purple-500/10 dark:bg-purple-500/15 border border-purple-500/20 p-2 flex items-center justify-center mb-3">
+              <img src="/graphics/support.png" alt="Projects & Support" className="w-6 h-6 object-contain dark:invert" />
             </div>
             <h3 className="text-xs font-bold text-neutral-900 dark:text-white">Browse Projects</h3>
             <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">Build & showcase</p>
@@ -303,10 +308,10 @@ export const StudentDashboard: React.FC = () => {
 
           <Link
             to="/hackathon"
-            className="p-5 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-md transition-all group"
+            className="p-5 rounded-2xl bg-white dark:bg-[#111722] hover:bg-neutral-50 dark:hover:bg-[#161e2c] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs transition-colors group"
           >
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-              <Trophy className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 p-2 flex items-center justify-center mb-3">
+              <img src="/graphics/troph-cap.svg" alt="Hackathon Mode" className="w-6 h-6 object-contain dark:invert" />
             </div>
             <h3 className="text-xs font-bold text-neutral-900 dark:text-white">Hackathon Mode</h3>
             <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">Prepare for events</p>
@@ -314,13 +319,13 @@ export const StudentDashboard: React.FC = () => {
 
           <Link
             to="/mentorship"
-            className="p-5 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-md transition-all group"
+            className="p-5 rounded-2xl bg-white dark:bg-[#111722] hover:bg-neutral-50 dark:hover:bg-[#161e2c] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs transition-colors group"
           >
-            <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-              <Users className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 border border-rose-500/20 p-2 flex items-center justify-center mb-3">
+              <img src="/graphics/online-meet.svg" alt="Book 1:1 Meeting" className="w-6 h-6 object-contain dark:invert" />
             </div>
             <h3 className="text-xs font-bold text-neutral-900 dark:text-white">Find a Mentor</h3>
-            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">Get expert guidance</p>
+            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">Book 1:1 session</p>
           </Link>
         </div>
       </div>

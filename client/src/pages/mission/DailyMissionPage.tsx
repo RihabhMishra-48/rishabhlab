@@ -51,6 +51,16 @@ export const DailyMissionPage: React.FC = () => {
     fetchMission();
   }, [user?.targetGoal]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && shipModalOpen) {
+        setShipModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [shipModalOpen]);
+
   const handleToggleTask = async (taskId: string) => {
     if (!mission) return;
     const updatedTasks = mission.tasks.map((t) =>
@@ -141,13 +151,18 @@ export const DailyMissionPage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
       {/* Header matching Screen 5 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-            Daily Mission Execution
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
-            Day {mission?.dayNumber || 1} • {mission?.trackTitle || 'Your Mission'}
-          </h1>
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center p-2.5 shrink-0 shadow-2xs">
+            <img src="/graphics/daily-calendar.svg" alt="Daily Mission" className="w-full h-full object-contain dark:invert" />
+          </div>
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+              Daily Mission Execution
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
+              Day {mission?.dayNumber || 1} • {mission?.trackTitle || 'Your Mission'}
+            </h1>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -177,7 +192,7 @@ export const DailyMissionPage: React.FC = () => {
                   className={`p-4 rounded-2xl border transition-all ${
                     task.isCompleted
                       ? 'bg-neutral-50/70 dark:bg-neutral-900/60 border-neutral-200 dark:border-neutral-800/80'
-                      : 'bg-white dark:bg-[#0D121B] border-neutral-200 dark:border-neutral-700/80 shadow-2xs'
+                      : 'bg-white dark:bg-[#0D121B] border-neutral-200 dark:border-neutral-700/80 shadow-2xs hover:bg-neutral-50 dark:hover:bg-[#151c28]'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -281,27 +296,17 @@ export const DailyMissionPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: 3D Minimal Desk / Clock / Plant Illustration (Matching Screen 5) */}
+        {/* Right Column: Daily Mission Focus Mode with Daily Calendar Graphic */}
         <div className="lg:col-span-5 flex flex-col items-center justify-center p-8 rounded-3xl bg-neutral-50 dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 space-y-6">
-          <div className="relative w-48 h-48 flex items-center justify-center">
-            {/* Clock 3D minimalist ring */}
-            <div className="w-40 h-40 rounded-full bg-white dark:bg-neutral-800 shadow-podium dark:shadow-podium-dark border-4 border-neutral-100 dark:border-neutral-700 flex items-center justify-center relative">
-              <div className="w-2 h-2 rounded-full bg-neutral-900 dark:bg-white z-10"></div>
-              {/* Minute & Hour Hands */}
-              <div className="absolute w-1 h-12 bg-neutral-900 dark:bg-white rounded-full -top-1 origin-bottom transform rotate-45"></div>
-              <div className="absolute w-1.5 h-8 bg-neutral-600 dark:text-neutral-400 rounded-full top-3 origin-bottom transform -rotate-45"></div>
-            </div>
-
-            {/* Potted desk plant illustration next to clock */}
-            <div className="absolute -bottom-2 -right-2 flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/30 flex items-center justify-center">
-                <div className="w-6 h-6 rounded-full bg-emerald-600 shadow-inner"></div>
-              </div>
-              <div className="w-8 h-8 bg-neutral-300 dark:bg-neutral-700 rounded-b-xl shadow-xs"></div>
-            </div>
+          <div className="relative w-44 h-44 flex items-center justify-center rounded-3xl bg-white dark:bg-neutral-800/90 shadow-md border border-neutral-200/70 dark:border-neutral-700/70 p-8">
+            <img
+              src="/graphics/daily-calendar.svg"
+              alt="Daily Mission Focus Mode Calendar"
+              className="w-full h-full object-contain dark:invert"
+            />
           </div>
 
-          <div className="text-center space-y-1">
+          <div className="text-center space-y-1.5">
             <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
               Daily Mission Focus Mode
             </h3>
@@ -314,8 +319,14 @@ export const DailyMissionPage: React.FC = () => {
 
       {/* Ship Task Proof Modal */}
       {shipModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 space-y-5 shadow-2xl">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          onClick={() => setShipModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-md bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 space-y-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">
                 Ship Task Verification
@@ -339,7 +350,7 @@ export const DailyMissionPage: React.FC = () => {
                   onChange={(e) => setGithubProofUrl(e.target.value)}
                   required
                   placeholder="https://github.com/..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0"
                 />
               </div>
 
@@ -352,25 +363,28 @@ export const DailyMissionPage: React.FC = () => {
                   value={commitMessage}
                   onChange={(e) => setCommitMessage(e.target.value)}
                   placeholder="feat: add filtering pills"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0"
                 />
               </div>
 
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShipModalOpen(false)}
-                  className="w-1/2 py-2.5 rounded-full border border-neutral-200 dark:border-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-full border border-neutral-200 dark:border-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800"
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={isShipping}
-                  className="w-1/2 py-2.5 rounded-full bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-semibold hover:bg-neutral-800 shadow-sm"
-                >
-                  {isShipping ? 'Verifying...' : 'Verify & Complete'}
-                </button>
+                <div className="w-full sm:w-auto flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isShipping}
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>{isShipping ? 'Shipping...' : 'Submit & Ship Proof'}</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>

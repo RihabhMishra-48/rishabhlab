@@ -152,6 +152,16 @@ export const RoadmapPage: React.FC = () => {
   };
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showInterestModal) {
+        setShowInterestModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showInterestModal]);
+
+  useEffect(() => {
     const savedGoal =
       user?.targetGoal ||
       (user?.id ? localStorage.getItem(`rishabhlabs_goal_${user.id}`) : null) ||
@@ -232,19 +242,20 @@ export const RoadmapPage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
       {/* Header matching Screen 4 of Reference UI */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
-              Your 90-Day Roadmap
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              Gemini Powered
-            </span>
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center p-2.5 shrink-0 shadow-2xs">
+            <img src="/graphics/roadmap.png" alt="Roadmap" className="w-full h-full object-contain dark:invert" />
           </div>
-          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-            <strong className="text-neutral-900 dark:text-white font-semibold">{activeTrack} Track</strong> • {roadmap?.targetLevel || 'Beginner to Production'} • {roadmap?.estimatedDailyTime || '2 hr/day'} • {roadmap?.totalDurationDays || 90} Days Focus
-          </p>
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
+                Your 90-Day Roadmap
+              </h1>
+            </div>
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+              <strong className="text-neutral-900 dark:text-white font-semibold">{activeTrack} Track</strong> • {roadmap?.targetLevel || 'Beginner to Production'} • {roadmap?.estimatedDailyTime || '2 hr/day'} • {roadmap?.totalDurationDays || 90} Days Focus
+            </p>
+          </div>
         </div>
 
         {/* Action Controls: Active Specialization Badge, Change Track, Regenerate */}
@@ -263,7 +274,7 @@ export const RoadmapPage: React.FC = () => {
           <button
             onClick={() => fetchRoadmap(activeTrack, true)}
             disabled={regenerating}
-            title="Regenerate dynamic roadmap using Google Gemini"
+            title="Regenerate dynamic roadmap"
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 text-xs font-bold hover:opacity-90 transition-opacity shadow-xs disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? 'animate-spin' : ''}`} />
@@ -289,7 +300,7 @@ export const RoadmapPage: React.FC = () => {
           <div className="py-16 text-center space-y-3">
             <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
             <p className="text-sm font-bold text-neutral-900 dark:text-white">
-              Synthesizing your personalized {activeTrack} roadmap with Gemini...
+              Synthesizing your personalized {activeTrack} roadmap...
             </p>
             <p className="text-xs text-neutral-500">
               Adapting milestones, project scopes, and lesson hours to your timeline.
@@ -316,13 +327,13 @@ export const RoadmapPage: React.FC = () => {
                   >
                     {/* Floating Node Badge */}
                     <div
-                      className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-md group-hover:scale-110 ${
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-md ${
                         isCompleted
                           ? 'bg-emerald-500 text-white ring-4 ring-emerald-500/20'
                           : isInProgress
                           ? 'bg-blue-600 text-white ring-4 ring-blue-600/30 shadow-blue-500/20'
                           : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
-                      } ${isSelected ? 'scale-110 ring-4 ring-offset-2 ring-neutral-950 dark:ring-white dark:ring-offset-neutral-950' : ''}`}
+                      } ${isSelected ? 'ring-4 ring-offset-2 ring-neutral-950 dark:ring-white dark:ring-offset-neutral-950' : ''}`}
                     >
                       {isCompleted ? (
                         <Check className="w-5 h-5 stroke-[2.5]" />
@@ -516,8 +527,14 @@ export const RoadmapPage: React.FC = () => {
 
       {/* Interest Pop-up / Specialization Selection Screen */}
       {showInterestModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-2xl bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => setShowInterestModal(false)}
+        >
+          <div
+            className="w-full max-w-2xl bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">
@@ -558,7 +575,7 @@ export const RoadmapPage: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
-                      <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                         <Icon className="w-5 h-5" />
                       </div>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">

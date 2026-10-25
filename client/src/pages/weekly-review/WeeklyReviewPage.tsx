@@ -104,16 +104,21 @@ export const WeeklyReviewPage: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-4xl mx-auto">
       {/* Header matching Screen 10 */}
-      <div>
-        <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-          Continuous Calibration Loop
-        </span>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
-          Weekly Review
-        </h1>
-        <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
-          {review?.weekLabel || 'Week 1'} • {review?.dateRange || 'Current Week'}
-        </p>
+      <div className="flex items-center gap-3.5">
+        <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center p-2.5 shrink-0 shadow-2xs">
+          <img src="/graphics/rectangle-history-circle-plus.svg" alt="Weekly Review" className="w-full h-full object-contain dark:invert" />
+        </div>
+        <div>
+          <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+            Continuous Calibration Loop
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
+            Weekly Review
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+            {review?.weekLabel || 'Week 1'} • {review?.dateRange || 'Current Week'}
+          </p>
+        </div>
       </div>
 
       {/* Planned vs Completed Hours Card matching Screen 10 */}
@@ -159,9 +164,15 @@ export const WeeklyReviewPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Column 1: What you completed */}
         <div className="p-6 rounded-3xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-            What you completed
-          </h2>
+          <div className="flex items-center justify-between pb-1 border-b border-neutral-100 dark:border-neutral-800/80">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+              What you completed
+            </h2>
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+              <img src="/graphics/thumbs-up-trust.svg" alt="Verified Review" className="w-3.5 h-3.5 object-contain dark:invert" />
+              <span>Verified Progress</span>
+            </div>
+          </div>
           <div className="space-y-2.5">
             {review?.completedItems && review.completedItems.length > 0 ? (
               review.completedItems.map((item, idx) => (
@@ -215,7 +226,7 @@ export const WeeklyReviewPage: React.FC = () => {
             value={reflectionText}
             onChange={(e) => setReflectionText(e.target.value)}
             required
-            className="w-full p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden resize-none"
+            className="w-full p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0 resize-none"
             placeholder="Write your thoughts..."
           />
 
@@ -232,8 +243,8 @@ export const WeeklyReviewPage: React.FC = () => {
 
         {feedbackResponse && (
           <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-xs leading-relaxed space-y-1 animate-in fade-in">
-            <div className="flex items-center gap-1.5 font-bold">
-              <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+            <div className="flex items-center gap-2 font-bold">
+              <img src="/graphics/thumbs-up-trust.svg" alt="Adaptive Calibration" className="w-4 h-4 object-contain dark:invert" />
               <span>Adaptive Roadmap Calibration Active</span>
             </div>
             <p>{feedbackResponse}</p>

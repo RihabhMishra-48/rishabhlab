@@ -76,7 +76,7 @@ body {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
 }
 .podium-step:hover {
-  transform: perspective(1000px) rotateX(12deg) rotateY(-5deg) translateY(-4px);
+  transform: perspective(1000px) rotateX(12deg) rotateY(-5deg);
 }
 
 /* Subtle card borders matching reference image */
@@ -85,4 +85,32 @@ body {
 }
 .dark .subtle-border {
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Universal removal of unnecessary browser focus outlines and rings */
+input,
+textarea,
+select,
+button,
+a {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+button:focus,
+button:focus-visible,
+button:hover,
+a:focus,
+a:focus-visible,
+a:hover,
+[tabindex]:focus,
+[tabindex]:focus-visible {
+  outline: none !important;
+  outline-style: none !important;
 }

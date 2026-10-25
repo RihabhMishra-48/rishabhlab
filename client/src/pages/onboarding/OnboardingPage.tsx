@@ -502,7 +502,7 @@ export const OnboardingPage: React.FC = () => {
                     <select
                       value={targetDate}
                       onChange={(e) => setTargetDate(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0"
                     >
                       <option value="60 days">60 Days (Sprint Pace)</option>
                       <option value="90 days">90 Days (Standard 1 Quarter)</option>
@@ -519,7 +519,7 @@ export const OnboardingPage: React.FC = () => {
                       value={githubProfile}
                       onChange={(e) => setGithubProfile(e.target.value)}
                       placeholder="e.g. rishabh-labs"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0"
                     />
                     <p className="text-[11px] text-neutral-400">
                       Your public repositories and daily commits will sync into your developer profile.
@@ -533,12 +533,46 @@ export const OnboardingPage: React.FC = () => {
                     <select
                       value={preferredLearningStyle}
                       onChange={(e) => setPreferredLearningStyle(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0"
                     >
                       <option value="Hands-on Building">Hands-on Building (Build features immediately)</option>
                       <option value="Algorithmic First">Algorithmic First (Deep computer science & data structures)</option>
                       <option value="Visual Project Sprints">Visual Project Sprints (UI/UX + Full-stack)</option>
                     </select>
+                  </div>
+
+                  {/* Campus / Partner Institution Pass Code */}
+                  <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800/80 space-y-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-bold text-neutral-900 dark:text-white">College / Campus Pass</p>
+                        <p className="text-[11px] text-neutral-500">Have a partner code? (Demo code: 123456)</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="Enter 6-digit code"
+                          maxLength={6}
+                          className="w-32 px-3 py-1.5 rounded-lg text-xs bg-neutral-100 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white font-mono text-center outline-none focus:outline-none"
+                          id="campus-pass-input"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const input = document.getElementById('campus-pass-input') as HTMLInputElement;
+                            if (input && input.value.trim() === '123456') {
+                              localStorage.setItem('rishabhlabs_college_verified', 'GLA University');
+                              alert('Campus pass verified: GLA University');
+                            } else {
+                              alert('Invalid code. Try 123456');
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 hover:bg-neutral-800 transition-colors"
+                        >
+                          Verify
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -127,10 +127,10 @@ export const FeaturesPage: React.FC = () => {
             return (
               <div
                 key={f.title}
-                className="p-6 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group"
+                className="p-6 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-sm transition-colors flex flex-col justify-between group"
               >
                 <div className="space-y-4">
-                  <div className={`w-10 h-10 rounded-xl ${f.bgColor} ${f.color} flex items-center justify-center group-hover:scale-105 transition-transform`}>
+                  <div className={`w-10 h-10 rounded-xl ${f.bgColor} ${f.color} flex items-center justify-center`}>
                     <Icon className="w-5 h-5" />
                   </div>
                   <div>

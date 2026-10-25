@@ -120,9 +120,9 @@ export const HomePage: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <Link
               to="/roadmap"
-              className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:-translate-y-0.5 group"
+              className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
             >
-              <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
                 <Compass className="w-4 h-4" />
               </div>
               <h3 className="text-xs font-bold text-neutral-900 dark:text-white">AI Roadmaps</h3>
@@ -131,9 +131,9 @@ export const HomePage: React.FC = () => {
 
             <Link
               to="/missions"
-              className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:-translate-y-0.5 group"
+              className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
             >
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3">
                 <CheckCircle2 className="w-4 h-4" />
               </div>
               <h3 className="text-xs font-bold text-neutral-900 dark:text-white">Daily Missions</h3>
@@ -142,9 +142,9 @@ export const HomePage: React.FC = () => {
 
             <Link
               to="/projects"
-              className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:-translate-y-0.5 group"
+              className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
             >
-              <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+              <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3">
                 <FolderGit2 className="w-4 h-4" />
               </div>
               <h3 className="text-xs font-bold text-neutral-900 dark:text-white">Projects</h3>
@@ -153,9 +153,9 @@ export const HomePage: React.FC = () => {
 
             <Link
               to="/hackathon"
-              className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:-translate-y-0.5 group"
+              className="p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
             >
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
                 <Trophy className="w-4 h-4" />
               </div>
               <h3 className="text-xs font-bold text-neutral-900 dark:text-white">Hackathon Mode</h3>
@@ -164,9 +164,9 @@ export const HomePage: React.FC = () => {
 
             <Link
               to="/mentorship"
-              className="col-span-2 md:col-span-1 p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:-translate-y-0.5 group"
+              className="col-span-2 md:col-span-1 p-4 rounded-2xl bg-white dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
             >
-              <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+              <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3">
                 <Users className="w-4 h-4" />
               </div>
               <h3 className="text-xs font-bold text-neutral-900 dark:text-white">Mentorship</h3>

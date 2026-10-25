@@ -363,7 +363,7 @@ export const ProjectWorkspacePage: React.FC = () => {
                   onChange={(e) => setGithubRepoUrl(e.target.value)}
                   required
                   placeholder="https://github.com/..."
-                  className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0"
                 />
               </div>
 
@@ -376,7 +376,7 @@ export const ProjectWorkspacePage: React.FC = () => {
                   value={liveDeployUrl}
                   onChange={(e) => setLiveDeployUrl(e.target.value)}
                   placeholder="https://my-app.vercel.app"
-                  className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0"
                 />
               </div>
 
@@ -389,7 +389,7 @@ export const ProjectWorkspacePage: React.FC = () => {
                   value={demoVideoUrl}
                   onChange={(e) => setDemoVideoUrl(e.target.value)}
                   placeholder="https://loom.com/share/..."
-                  className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0"
                 />
               </div>
 
@@ -406,7 +406,9 @@ export const ProjectWorkspacePage: React.FC = () => {
           {/* Mentor Review Card */}
           <div className="p-6 rounded-3xl bg-neutral-50 dark:bg-[#111722] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
             <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-blue-500" />
+              <div className="w-5 h-5 rounded-md bg-blue-500/10 dark:bg-blue-500/20 p-1 flex items-center justify-center shrink-0">
+                <img src="/graphics/thumbs-up-trust.svg" alt="Code Review" className="w-full h-full object-contain dark:invert" />
+              </div>
               <h3 className="text-xs font-bold text-neutral-900 dark:text-white">
                 Mentor Code Review
               </h3>

@@ -5,6 +5,7 @@ import { PricingPlan } from '../../types';
 import { Navbar } from '../../components/layout/Navbar';
 import { Footer } from '../../components/layout/Footer';
 import { Check, Sparkles, Zap, ArrowRight, ShieldCheck } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 export const PricingPage: React.FC = () => {
   const [plans, setPlans] = useState<PricingPlan[]>([]);
@@ -164,17 +165,26 @@ export const PricingPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-8">
-                  <Link
-                    to="/onboarding"
-                    className={`w-full py-3 rounded-full text-xs font-bold text-center block transition-all ${
-                      p.isPopular
-                        ? 'bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 shadow-md'
-                        : 'bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white'
-                    }`}
-                  >
-                    {p.priceMonthly === 0 ? 'Get Started Free' : `Choose ${p.name}`}
-                  </Link>
+                <div className="pt-8 flex flex-col items-center w-full">
+                  {p.priceMonthly > 0 ? (
+                    <button
+                      onClick={() => {
+                        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+                        localStorage.setItem('rishabhlabs_tier', p.name);
+                        alert(`Subscribed to ${p.name} tier!`);
+                      }}
+                      className="w-full py-2.5 rounded-full text-xs font-bold text-center block transition-colors bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 shadow-xs"
+                    >
+                      Subscribe {billingAnnual ? `₹${p.priceAnnual}/yr` : `₹${p.priceMonthly}/mo`}
+                    </button>
+                  ) : (
+                    <Link
+                      to="/onboarding"
+                      className="w-full py-2.5 rounded-full text-xs font-bold text-center block transition-colors bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white"
+                    >
+                      Get Started Free
+                    </Link>
+                  )}
                 </div>
               </div>
             );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
@@ -7,15 +7,48 @@ import { Home, Compass, CheckCircle2, User as UserIcon } from 'lucide-react';
 
 export const AppLayout: React.FC = () => {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('rishabhlabs_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('rishabhlabs_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        handleToggleSidebar();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAFA] dark:bg-[#070A0F] text-neutral-900 dark:text-neutral-100 transition-colors">
-      <Navbar onOpenCommandPalette={() => setCommandPaletteOpen(true)} />
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#FAFAFA] dark:bg-[#070A0F] text-neutral-900 dark:text-neutral-100 transition-colors">
+      <Navbar
+        onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+      />
 
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar />
+      <div className="flex-1 flex overflow-hidden relative">
+        <Sidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebar}
+        />
 
-        <main className="flex-1 overflow-y-auto pb-20 lg:pb-8">
+        <main className="flex-1 h-full overflow-y-auto overscroll-y-contain pb-20 lg:pb-8">
           <Outlet />
         </main>
       </div>

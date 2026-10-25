@@ -97,16 +97,21 @@ export const ProjectsCatalogPage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
       {/* Header matching Screen 6 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-            Portfolio Proof-of-Work
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
-            Projects
-          </h1>
-          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
-            Build real software projects from scratch. Check off milestones and submit verifiable proof of work.
-          </p>
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-800/40 flex items-center justify-center p-2.5 shrink-0 shadow-2xs">
+            <img src="/graphics/support.png" alt="Projects & Launch" className="w-full h-full object-contain dark:invert" />
+          </div>
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+              Portfolio Proof-of-Work
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
+              Projects & Engineering Launch
+            </h1>
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+              Build real software projects from scratch. Check off milestones and submit verifiable proof of work.
+            </p>
+          </div>
         </div>
 
         <Link
@@ -176,7 +181,7 @@ export const ProjectsCatalogPage: React.FC = () => {
               >
                 <div className="flex items-start gap-4 min-w-0">
                   {/* 3D project thumbnail icon */}
-                  <div className="w-12 h-12 rounded-2xl bg-neutral-950 dark:bg-neutral-900 border border-neutral-800 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-xs">
+                  <div className="w-12 h-12 rounded-2xl bg-neutral-950 dark:bg-neutral-900 border border-neutral-800 text-white flex items-center justify-center shrink-0 shadow-xs">
                     {isCyber ? (
                       <Shield className="w-6 h-6 text-emerald-400" />
                     ) : isAi ? (

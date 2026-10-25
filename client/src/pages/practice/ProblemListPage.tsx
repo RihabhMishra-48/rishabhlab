@@ -157,7 +157,7 @@ export const ProblemListPage: React.FC = () => {
             placeholder="Search questions by title or keyword..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-3.5 py-1.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden"
+            className="w-full px-3.5 py-1.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0"
           />
         </div>
       </div>
@@ -198,7 +198,7 @@ export const ProblemListPage: React.FC = () => {
                   className="p-4 sm:p-5 flex items-center justify-between hover:bg-neutral-50 dark:hover:bg-neutral-850/60 transition-colors group"
                 >
                   <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-neutral-300 shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="w-9 h-9 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-neutral-300 shrink-0">
                       {prob.isDebuggingChallenge ? (
                         <Bug className="w-4 h-4 text-rose-500" />
                       ) : prob.category.includes('AI') ? (

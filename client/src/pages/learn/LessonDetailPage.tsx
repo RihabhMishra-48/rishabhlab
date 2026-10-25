@@ -322,7 +322,7 @@ export const LessonDetailPage: React.FC = () => {
               rows={7}
               value={sandboxCode}
               onChange={(e) => setSandboxCode(e.target.value)}
-              className="w-full p-4 rounded-2xl bg-neutral-950 text-neutral-200 font-mono text-xs focus:outline-hidden resize-none border border-neutral-800"
+              className="w-full p-4 rounded-2xl bg-neutral-950 text-neutral-200 font-mono text-xs outline-none focus:outline-none focus:ring-0 resize-none border border-neutral-800"
             />
 
             <div className="flex items-center justify-between">

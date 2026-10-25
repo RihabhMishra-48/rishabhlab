@@ -60,6 +60,16 @@ export const ProfilePage: React.FC = () => {
   });
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isEditModalOpen) {
+        setIsEditModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isEditModalOpen]);
+
+  useEffect(() => {
     if (user) {
       setFormData({
         name: user.name || '',
@@ -705,8 +715,14 @@ export const ProfilePage: React.FC = () => {
 
       {/* Edit Profile Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-[#111722] border border-neutral-200 dark:border-neutral-800 rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-8 space-y-6">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => setIsEditModalOpen(false)}
+        >
+          <div
+            className="bg-white dark:bg-[#111722] border border-neutral-200 dark:border-neutral-800 rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-8 space-y-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between pb-4 border-b border-neutral-100 dark:border-neutral-800">
               <div>
                 <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Edit Profile Details</h2>
@@ -799,7 +815,7 @@ export const ProfilePage: React.FC = () => {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
                     placeholder="e.g. Shravan Rathore"
                   />
                 </div>
@@ -812,7 +828,7 @@ export const ProfilePage: React.FC = () => {
                     type="text"
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().trim() })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white font-mono"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white font-mono"
                     placeholder="e.g. shravan"
                   />
                   <p className="text-[10px] text-neutral-400 font-mono">
@@ -834,7 +850,7 @@ export const ProfilePage: React.FC = () => {
                   maxLength={250}
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white resize-none leading-relaxed"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white resize-none leading-relaxed"
                   placeholder="Write what you are currently building, learning, or interested in..."
                 />
               </div>
@@ -849,7 +865,7 @@ export const ProfilePage: React.FC = () => {
                     type="text"
                     value={formData.college}
                     onChange={(e) => setFormData({ ...formData, college: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
                     placeholder="e.g. GLA University"
                   />
                 </div>
@@ -862,7 +878,7 @@ export const ProfilePage: React.FC = () => {
                     type="text"
                     value={formData.degree}
                     onChange={(e) => setFormData({ ...formData, degree: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
                     placeholder="e.g. B.Tech Computer Science"
                   />
                 </div>
@@ -877,7 +893,7 @@ export const ProfilePage: React.FC = () => {
                   <select
                     value={formData.year}
                     onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
                   >
                     <option value="1st Year">1st Year</option>
                     <option value="2nd Year">2nd Year</option>
@@ -895,7 +911,7 @@ export const ProfilePage: React.FC = () => {
                   <select
                     value={formData.targetGoal}
                     onChange={(e) => setFormData({ ...formData, targetGoal: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
                   >
                     <option value="Web Development">Web Development</option>
                     <option value="AI / ML">AI / ML</option>

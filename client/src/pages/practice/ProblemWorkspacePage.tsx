@@ -46,6 +46,16 @@ export const ProblemWorkspacePage: React.FC = () => {
   const [loadingHint, setLoadingHint] = useState(false);
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && hintModalOpen) {
+        setHintModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hintModalOpen]);
+
+  useEffect(() => {
     const fetchProblem = async () => {
       const targetSlug = slug || 'tensor-reshape-normalization';
       try {
@@ -244,7 +254,7 @@ export const ProblemWorkspacePage: React.FC = () => {
           <select
             value={selectedLanguage}
             onChange={(e: any) => handleLanguageChange(e.target.value)}
-            className="px-2.5 py-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 text-xs font-mono text-neutral-800 dark:text-neutral-200 focus:outline-hidden"
+            className="px-2.5 py-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 text-xs font-mono text-neutral-800 dark:text-neutral-200 outline-none focus:outline-none focus:ring-0"
           >
             <option value="javascript">JavaScript (Node 20)</option>
             <option value="python">Python 3.11</option>
@@ -562,13 +572,15 @@ export const ProblemWorkspacePage: React.FC = () => {
 
       {/* Progressive AI "I'm Stuck" Hint Modal (Matching Section 15) */}
       {hintModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-lg bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 space-y-5 shadow-2xl">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          onClick={() => setHintModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 space-y-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" />
-                Progressive AI Learning Assistant
-              </span>
               <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
                 "I'm Stuck" — Step-by-Step Guidance
               </h3>

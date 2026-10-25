@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -27,22 +27,70 @@ interface NavbarProps {
   onOpenCommandPalette?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenCommandPalette }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  onOpenCommandPalette
+}) => {
   const { user, isDarkMode, toggleDarkMode, switchRole, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
 
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const mobileButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Close bars on route change
+  useEffect(() => {
+    setRoleDropdownOpen(false);
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Close active dropdowns or mobile menu when user clicks outside or presses Escape
+  useEffect(() => {
+    const handleOutsideClick = (e: Event) => {
+      const target = e.target as Node;
+      if (roleDropdownOpen && dropdownRef.current && !dropdownRef.current.contains(target)) {
+        setRoleDropdownOpen(false);
+      }
+      if (
+        mobileMenuOpen &&
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(target) &&
+        mobileButtonRef.current &&
+        !mobileButtonRef.current.contains(target)
+      ) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (roleDropdownOpen) setRoleDropdownOpen(false);
+        if (mobileMenuOpen) setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleOutsideClick, true);
+    document.addEventListener('mousedown', handleOutsideClick, true);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handleOutsideClick, true);
+      document.removeEventListener('mousedown', handleOutsideClick, true);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [roleDropdownOpen, mobileMenuOpen]);
+
   const isPublicPage = ['/', '/features', '/pricing', '/about', '/login', '/register'].includes(location.pathname);
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/80 dark:bg-[#0B0F17]/85 border-b border-neutral-200/80 dark:border-neutral-800/80 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 w-full shrink-0 backdrop-blur-md bg-white/80 dark:bg-[#0B0F17]/85 border-b border-neutral-200/80 dark:border-neutral-800/80 transition-colors">
+      <div className={`${isPublicPage ? 'max-w-7xl mx-auto' : 'w-full'} px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4`}>
         {/* Left: Brand Logo */}
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-4 sm:gap-6">
           <Link to={user ? '/dashboard' : '/'} className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-neutral-950 dark:bg-white flex items-center justify-center text-white dark:text-neutral-950 shadow-sm group-hover:scale-105 transition-transform">
+            <div className="w-8 h-8 rounded-lg bg-neutral-950 dark:bg-white flex items-center justify-center text-white dark:text-neutral-950 shadow-xs">
               {/* Geometric Diamond Emblem matching reference */}
               <div className="w-3.5 h-3.5 border-2 border-current rotate-45 transform"></div>
             </div>
@@ -101,7 +149,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCommandPalette }) => {
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               )}
-              <div className="relative">
+              <div ref={dropdownRef} className="relative">
               <button
                 onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
                 className="flex items-center gap-2 p-1 pr-2.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 transition-colors"
@@ -184,6 +232,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCommandPalette }) => {
 
           {/* Mobile Menu Button */}
           <button
+            ref={mobileButtonRef}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 rounded-lg text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
           >
@@ -194,7 +243,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCommandPalette }) => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#0B0F17] px-4 pt-2 pb-4 space-y-2 text-sm font-medium">
+        <div ref={mobileMenuRef} className="md:hidden border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#0B0F17] px-4 pt-2 pb-4 space-y-2 text-sm font-medium">
           <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Home</Link>
           <Link to="/features" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Features</Link>
           <Link to="/pricing" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Pricing</Link>

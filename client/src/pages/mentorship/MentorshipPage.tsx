@@ -68,9 +68,9 @@ export const MentorshipPage: React.FC = () => {
 
   const commonTopics = [
     { id: 'Career Direction', label: 'Career Direction', icon: Compass, desc: 'Align your goals with hiring markets' },
-    { id: 'Roadmap', label: 'Roadmap', icon: Compass, desc: 'Review your personalized learning milestones' },
-    { id: 'Project Review', label: 'Project Review', icon: FolderGit2, desc: 'Codebase architecture & refactoring critique' },
-    { id: 'Hackathon Strategy', label: 'Hackathon Strategy', icon: Trophy, desc: 'Winning 48h MVP scoping & pitch prep' },
+    { id: 'Roadmap', label: 'Roadmap', icon: Compass, customGraphic: '/graphics/roadmap.png', desc: 'Review your personalized learning milestones' },
+    { id: 'Project Review', label: 'Project Review', icon: FolderGit2, customGraphic: '/graphics/thumbs-up-trust.svg', desc: 'Codebase architecture & refactoring critique' },
+    { id: 'Hackathon Strategy', label: 'Hackathon Strategy', icon: Trophy, customGraphic: '/graphics/troph-cap.svg', desc: 'Winning 48h MVP scoping & pitch prep' },
     { id: 'Portfolio Building', label: 'Portfolio Building', icon: ShieldCheck, desc: 'Polish your verified Proof of Work' },
     { id: 'Internship Prep', label: 'Internship Prep', icon: Briefcase, desc: 'Mock interviews & technical questions' },
   ];
@@ -94,6 +94,16 @@ export const MentorshipPage: React.FC = () => {
     };
     fetchMentors();
   }, [selectedDomain]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && bookingModalOpen) {
+        setBookingModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [bookingModalOpen]);
 
   const handleBookSession = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,54 +151,52 @@ export const MentorshipPage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
       {/* Header matching Screen 8 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
-            Expert Human Layer
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
-            Mentorship
-          </h1>
-          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
-            Get guidance when you need it.
-          </p>
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-800/40 flex items-center justify-center p-2.5 shrink-0 shadow-2xs">
+            <img src="/graphics/mountain.svg" alt="Mentorship & Summit" className="w-full h-full object-contain dark:invert" />
+          </div>
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
+              Expert Human Layer
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
+              Mentorship
+            </h1>
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+              Get guidance when you need it.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Hero Book a 1:1 Session Card (Matching Screen 8 with armchair graphic) */}
+      {/* Hero Book a 1:1 Session Card (Matching Screen 8 with mentor climbing graphic) */}
       <div className="relative p-6 sm:p-8 rounded-3xl bg-neutral-950 text-white border border-neutral-800 shadow-xl overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="space-y-3 z-10 max-w-lg">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-semibold bg-neutral-800 border border-neutral-700 text-neutral-200">
-            <Sparkles className="w-3.5 h-3.5 text-rose-400" />
-            <span>Direct 1:1 Video Calls</span>
-          </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             Book a 1:1 Session
           </h2>
           <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed">
             Get personalized guidance from industry experts at Stripe, Razorpay, and Microsoft. Overcome blockers in code, hackathons, and career planning.
           </p>
-          <div className="pt-2">
+          <div className="pt-3">
             <button
-              onClick={() => setBookingModalOpen(true)}
-              className="px-6 py-3 rounded-full bg-white text-neutral-950 hover:bg-neutral-200 font-bold text-xs transition-colors shadow-sm"
+              onClick={() => {
+                if (mentors.length > 0 && !selectedMentor) {
+                  setSelectedMentor(mentors[0]);
+                }
+                setBookingModalOpen(true);
+              }}
+              className="px-5 py-2.5 rounded-xl bg-white hover:bg-neutral-100 text-neutral-950 font-bold text-xs inline-flex items-center gap-2 transition-colors shadow-sm"
             >
-              Book Now →
+              <img src="/graphics/online-meet.svg" alt="Meet" className="w-4 h-4 object-contain invert" />
+              <span>Schedule Mentorship Session</span>
             </button>
           </div>
         </div>
 
-        {/* 3D Modern Armchair SVG Illustration (Matching Screen 8) */}
-        <div className="relative z-10 shrink-0 select-none">
-          <svg width="140" height="120" viewBox="0 0 140 120" fill="none">
-            {/* Minimalist Armchair */}
-            <rect x="35" y="30" width="70" height="45" rx="14" fill="#38BDF8" opacity="0.9" />
-            <rect x="25" y="50" width="90" height="30" rx="10" fill="#0284C7" />
-            <rect x="20" y="55" width="16" height="28" rx="8" fill="#0369A1" />
-            <rect x="104" y="55" width="16" height="28" rx="8" fill="#0369A1" />
-            {/* Wooden angled legs */}
-            <line x1="38" y1="80" x2="30" y2="110" stroke="#78350F" strokeWidth="4" strokeLinecap="round" />
-            <line x1="102" y1="80" x2="110" y2="110" stroke="#78350F" strokeWidth="4" strokeLinecap="round" />
-          </svg>
+        {/* Book Meeting Graphic */}
+        <div className="relative z-10 shrink-0 select-none w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 p-5 flex items-center justify-center shadow-lg">
+          <img src="/graphics/online-meet.svg" alt="Book 1:1 Meeting" className="w-full h-full object-contain invert" />
         </div>
       </div>
 
@@ -209,14 +217,18 @@ export const MentorshipPage: React.FC = () => {
                   setSelectedTopic(topic.id);
                   setBookingModalOpen(true);
                 }}
-                className={`p-4 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-2 group ${
+                className={`p-4 rounded-2xl border text-center transition-colors flex flex-col items-center justify-center gap-2 group ${
                   isSelected
                     ? 'border-neutral-950 dark:border-white bg-white dark:bg-[#111722] shadow-sm'
                     : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-[#0D121B] hover:border-neutral-300'
                 }`}
               >
-                <div className="w-8 h-8 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <Icon className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center p-1.5">
+                  {(topic as any).customGraphic ? (
+                    <img src={(topic as any).customGraphic} alt={topic.label} className="w-4 h-4 object-contain dark:invert" />
+                  ) : (
+                    <Icon className="w-4 h-4" />
+                  )}
                 </div>
                 <span className="text-xs font-bold text-neutral-900 dark:text-white leading-tight">
                   {topic.label}
@@ -283,10 +295,14 @@ export const MentorshipPage: React.FC = () => {
                       )}
                     </div>
                     <p className="text-xs text-neutral-500">{mentor.title} @ <strong className="text-neutral-800 dark:text-neutral-200">{mentor.company}</strong></p>
-                    <div className="flex items-center gap-1 text-[11px] text-amber-500 font-bold mt-0.5">
+                    <div className="flex items-center gap-1.5 text-[11px] text-amber-500 font-bold mt-0.5">
                       <Star className="w-3.5 h-3.5 fill-amber-500" />
                       <span>{mentor.rating}</span>
                       <span className="text-neutral-400 font-normal">({mentor.reviewsCount} reviews)</span>
+                      <span className="inline-flex items-center gap-0.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium ml-1">
+                        <img src="/graphics/thumbs-up-trust.svg" alt="Trust" className="w-3 h-3 object-contain dark:invert" />
+                        <span>Trust Verified</span>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -325,16 +341,27 @@ export const MentorshipPage: React.FC = () => {
 
       {/* Booking Modal */}
       {bookingModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 space-y-5 shadow-2xl">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          onClick={() => setBookingModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-md bg-white dark:bg-[#111722] rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 space-y-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800">
-              <div>
-                <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-                  Confirm 1:1 Mentorship Session
-                </h3>
-                <p className="text-xs text-neutral-500">
-                  With {selectedMentor?.name || 'Dr. Arpit Khare'}
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 p-2 flex items-center justify-center shrink-0">
+                  <img src="/graphics/online-meet.svg" alt="Online Meeting" className="w-full h-full object-contain dark:invert" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-neutral-900 dark:text-white">
+                    Confirm 1:1 Mentorship Session
+                  </h3>
+                  <p className="text-xs text-neutral-500">
+                    With {selectedMentor?.name || 'Dr. Arpit Khare'}
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => setBookingModalOpen(false)}
@@ -398,7 +425,7 @@ export const MentorshipPage: React.FC = () => {
                     value={bookingMessage}
                     onChange={(e) => setBookingMessage(e.target.value)}
                     required
-                    className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden resize-none"
+                    className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0 resize-none"
                     placeholder="Describe your current blocker or goals..."
                   />
                 </div>

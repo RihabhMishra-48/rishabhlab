@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
+import { getCleanProjects } from './seedData';
 
 dotenv.config();
 
@@ -237,9 +238,31 @@ export async function seedSupabase() {
     ];
 
     for (const mentor of mentors) {
-      await supabase.from('mentors').upsert(mentor, { onConflict: 'name' });
+      const { data: existing } = await supabase.from('mentors').select('id').eq('name', mentor.name).maybeSingle();
+      if (existing) {
+        await supabase.from('mentors').update(mentor).eq('id', existing.id);
+      } else {
+        await supabase.from('mentors').insert(mentor);
+      }
     }
     console.log('✅ [Supabase Seed] Mentors seeded.');
+
+    // 4. Industry Projects
+    const rawProjects = getCleanProjects();
+    for (const p of rawProjects) {
+      await supabase.from('projects').upsert({
+        slug: p.slug,
+        title: p.title,
+        description: p.description,
+        category: p.category,
+        difficulty: p.difficulty,
+        estimated_hours: p.estimatedHours || 25,
+        tech_stack: p.techStack || [],
+        requirements: p.requirements || [],
+        milestones: p.milestones || [],
+      }, { onConflict: 'slug' });
+    }
+    console.log('✅ [Supabase Seed] Projects seeded.');
 
     console.log('🎉 [Supabase Seed] All initial records seeded to Supabase successfully!');
   } catch (err: any) {

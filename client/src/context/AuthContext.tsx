@@ -242,52 +242,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (credentials: { email: string; password: string }) => {
+    let supabaseLoggedIn = false;
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
-        password: credentials.password,
-      });
-      if (error) throw error;
-      if (data.session?.access_token) {
-        localStorage.setItem('rishabhlabs_token', data.session.access_token);
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: credentials.email,
+          password: credentials.password,
+        });
+        if (!error && data.session?.access_token) {
+          localStorage.setItem('rishabhlabs_token', data.session.access_token);
+          await fetchCurrentUser();
+          supabaseLoggedIn = true;
+          return;
+        }
+      } catch {
+        // Fall back to backend database
       }
-      await fetchCurrentUser();
-      return;
     }
 
-    const res = await api.login(credentials);
-    localStorage.setItem('rishabhlabs_token', res.token);
-    const userOnboardedKey = `rishabhlabs_onboarded_${res.user.id}`;
-    const userGoalKey = `rishabhlabs_goal_${res.user.id}`;
-    const localOnboarded = localStorage.getItem(userOnboardedKey) === 'true' || localStorage.getItem('rishabhlabs_onboarded') === 'true';
-    const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
-    setUser({
-      ...res.user,
-      targetGoal: res.user.targetGoal || localGoal,
-      isOnboarded: Boolean(res.user.isOnboarded || localOnboarded),
-    });
+    if (!supabaseLoggedIn) {
+      const res = await api.login(credentials);
+      localStorage.setItem('rishabhlabs_token', res.token);
+      const userOnboardedKey = `rishabhlabs_onboarded_${res.user.id}`;
+      const userGoalKey = `rishabhlabs_goal_${res.user.id}`;
+      const localOnboarded = localStorage.getItem(userOnboardedKey) === 'true' || localStorage.getItem('rishabhlabs_onboarded') === 'true';
+      const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
+      setUser({
+        ...res.user,
+        targetGoal: res.user.targetGoal || localGoal,
+        isOnboarded: Boolean(res.user.isOnboarded || localOnboarded),
+      });
+    }
   };
 
   const register = async (userData: any) => {
     localStorage.removeItem('rishabhlabs_onboarded');
     localStorage.removeItem('rishabhlabs_goal');
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          data: {
-            full_name: userData.name,
-            role: userData.role || 'student',
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email: userData.email,
+          password: userData.password,
+          options: {
+            data: {
+              full_name: userData.name,
+              role: userData.role || 'student',
+            },
           },
-        },
-      });
-      if (error) throw error;
-      if (data.session?.access_token) {
-        localStorage.setItem('rishabhlabs_token', data.session.access_token);
+        });
+        if (!error && data.session?.access_token) {
+          localStorage.setItem('rishabhlabs_token', data.session.access_token);
+          await fetchCurrentUser();
+          return;
+        }
+      } catch (sbErr) {
+        console.warn('Supabase auth signup fallback:', sbErr);
       }
-      await fetchCurrentUser();
-      return;
     }
 
     const res = await api.register(userData);
@@ -303,7 +313,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           redirectTo: `${window.location.origin}/dashboard`,
         },
       });
-      if (error) throw error;
+      if (error) {
+        if (
+          error.message?.includes('provider is not enabled') ||
+          (error as any).code === 'validation_failed' ||
+          (error as any).error_code === 'validation_failed'
+        ) {
+          throw new Error(
+            'Google OAuth provider is not enabled in your Supabase Dashboard yet. You can sign in instantly using Email & Password or 1-Click Demo Login, or enable Google under: Supabase Dashboard > Authentication > Providers > Google.'
+          );
+        }
+        throw error;
+      }
     } else {
       throw new Error(
         'Supabase is not configured yet. Please verify your Supabase Project URL (https://<project-ref>.supabase.co) and Anon Key in your environment variables.'
