@@ -395,38 +395,41 @@ export const StudentDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Live Contest & Leaderboard Banner */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border border-amber-300/60 dark:border-amber-700/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
-        <div className="flex items-center gap-3.5">
+      {/* Live Contest & Leaderboard Banner matching Screen Reference */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-neutral-900/95 dark:bg-[#141417]/95 border border-amber-500/35 dark:border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-amber-500/5 relative overflow-hidden">
+        {/* Subtle Ambient Radial Glow */}
+        <div className="absolute -top-10 -left-10 w-44 h-44 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="flex items-center gap-3.5 relative z-10">
           <div className="w-10 h-10 rounded-2xl bg-amber-500 text-neutral-950 flex items-center justify-center font-extrabold text-sm shadow-xs shrink-0">
             <Trophy className="w-5 h-5 fill-current" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 font-mono">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400 font-mono">
                 LIVE ARENA CONTEST
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
             </div>
-            <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+            <h3 className="text-sm font-bold text-white">
               Weekly Code Sprint #18 is Live • GLA University Rank #14
             </h3>
-            <p className="text-[11px] text-neutral-500">
+            <p className="text-[11px] text-neutral-400">
               3h 42m left to submit. Top 10 GLA coders unlock industry mentor credits.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 relative z-10">
           <Link
             to="/hackathon?tab=competitions"
-            className="px-4 py-2 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-600 text-neutral-950 transition-colors shadow-2xs"
+            className="px-4 py-2 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 transition-colors shadow-2xs"
           >
             Enter Contest
           </Link>
           <Link
             to="/hackathon?tab=leaderboard"
-            className="px-3.5 py-2 rounded-full text-xs font-semibold bg-white dark:bg-[#262626] border border-neutral-200 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-50 transition-colors"
+            className="px-3.5 py-2 rounded-full text-xs font-semibold bg-neutral-800/80 hover:bg-neutral-700/80 text-neutral-200 border border-neutral-700/60 dark:bg-[#27272a] dark:hover:bg-[#323238] dark:border-neutral-700/60 dark:text-neutral-200 transition-colors"
           >
             Leaderboard
           </Link>

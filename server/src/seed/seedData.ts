@@ -1113,7 +1113,34 @@ export const seedDatabase = async () => {
       await Lesson.create(getCleanLessons());
       await Mentor.deleteMany({});
       await Mentor.create(getCleanMentors());
-      console.log('✅ [Seed] Project suite, curriculum, and mentors synchronized.');
+      const sprintProb = await CodingProblem.findOne({ slug: 'high-throughput-in-memory-cache' });
+      if (!sprintProb) {
+        await CodingProblem.create({
+          title: 'Weekly Code Sprint #18: High-Throughput In-Memory Cache',
+          slug: 'high-throughput-in-memory-cache',
+          difficulty: 'Medium',
+          category: 'Algorithm Sprint',
+          descriptionMarkdown: `## Weekly Code Sprint #18: High-Throughput In-Memory Cache\n\nDesign and implement a high-performance in-memory key-value cache engine supporting **TTL expiration**, thread-safe **LRU eviction**, and sub-millisecond lookups.`,
+          examples: [{ input: '["CacheEngine", 2], ["set", "token", "xyz", 5000], ["get", "token"]', output: '[null, null, "xyz"]', explanation: 'Cache stores and retrieves token with TTL.' }],
+          constraints: ['1 <= capacity <= 10,000'],
+          hints: {
+            level1Concept: 'Maintain an ordered collection where accessing an element updates its position to the most recently used slot.',
+            level2Stronger: 'In JavaScript Map preserves insertion order. In Python collections.OrderedDict provides move_to_end().',
+            level3Approach: 'Store { val, expireAt } in each entry. On get(), check if Date.now() > expireAt.',
+            level4Mentor: 'Book a 1:1 code review session with a RishabhLabs mentor.',
+          },
+          starterCode: {
+            javascript: `class CacheEngine {\n  constructor(capacity = 1000) {\n    this.capacity = capacity;\n    this.cache = new Map();\n  }\n  set(key, value, ttlMs) {}\n  get(key) {}\n  purge() {}\n  size() {}\n}`,
+            python: `class CacheEngine:\n    def __init__(self, capacity=1000):\n        self.capacity = capacity\n    def set(self, key, value, ttl_ms=None):\n        pass\n    def get(self, key):\n        pass\n    def purge(self):\n        pass\n    def size(self):\n        pass`,
+            cpp: `// C++ implementation`,
+            java: `// Java implementation`,
+          },
+          testCases: [{ testCaseId: 'tc-1', input: 'set("token", "xyz", 5000) -> get("token")', expectedOutput: '"xyz"', isHidden: false }],
+          tags: ['Data Structures', 'LRU Cache', 'System Design', 'Sprint #18'],
+          acceptanceRate: 64.8,
+        });
+      }
+      console.log('✅ [Seed] Project suite, curriculum, mentors, and sprint problems synchronized.');
       return;
     }
 
@@ -1362,6 +1389,141 @@ export const seedDatabase = async () => {
 
     // 7. Coding Problems (At least 10 realistic algorithmic + Debugging "Fix the Bug" challenges)
     await CodingProblem.create([
+      {
+        title: 'Weekly Code Sprint #18: High-Throughput In-Memory Cache',
+        slug: 'high-throughput-in-memory-cache',
+        difficulty: 'Medium',
+        category: 'Algorithm Sprint',
+        descriptionMarkdown: `## Weekly Code Sprint #18: High-Throughput In-Memory Cache
+
+Design and implement a high-performance in-memory key-value cache engine supporting **TTL expiration**, thread-safe **LRU (Least Recently Used) eviction**, and sub-millisecond lookups.
+
+### Requirements
+Implement the \`CacheEngine\` class with the following methods:
+- \`set(key: string, value: any, ttlMs?: number): void\` — Stores the key-value pair. If capacity is exceeded, evict the least recently used, non-expired key. If \`ttlMs\` is provided, the entry expires after \`ttlMs\` milliseconds.
+- \`get(key: string): any\` — Returns the value if found and not expired. Returns \`null\` if missing or expired. Accessing a key updates its recency in the LRU order.
+- \`purge(): number\` — Purges all expired keys and returns the number of keys removed.
+- \`size(): number\` — Returns the number of currently active, non-expired keys.
+
+### Constraints
+- 1 <= capacity <= 10,000
+- Keys are non-empty strings
+- Operations must run in average O(1) time complexity.`,
+        examples: [
+          {
+            input: '["CacheEngine", 2], ["set", "token", "xyz", 5000], ["get", "token"], ["set", "session", "abc"], ["size"]',
+            output: '[null, null, "xyz", null, 2]',
+            explanation: 'Cache stores token with 5s TTL, retrieves it, adds session, and reports size 2.',
+          },
+        ],
+        constraints: [
+          '1 <= capacity <= 10,000',
+          '0 <= operations <= 50,000',
+          'Average time complexity: O(1) for get and set',
+        ],
+        hints: {
+          level1Concept: 'Maintain an ordered collection where accessing an element updates its position to the most recently used slot.',
+          level2Stronger: 'In JavaScript Map preserves insertion order. In Python collections.OrderedDict provides move_to_end(). In C++ combine std::unordered_map with std::list.',
+          level3Approach: 'Store { val, expireAt } in each entry. On get(), check if Date.now() > expireAt. If expired, delete and return null; otherwise delete and re-set to mark recency.',
+          level4Mentor: 'Book a 1:1 code review session with a RishabhLabs mentor to walk through concurrency locks and memory compaction.',
+        },
+        starterCode: {
+          javascript: `class CacheEngine {
+  constructor(capacity = 1000) {
+    this.capacity = capacity;
+    this.cache = new Map();
+  }
+
+  set(key, value, ttlMs) {
+    const expireAt = ttlMs ? Date.now() + ttlMs : null;
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.capacity) {
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    this.cache.set(key, { val: value, expireAt });
+  }
+
+  get(key) {
+    if (!this.cache.has(key)) return null;
+    const item = this.cache.get(key);
+    if (item.expireAt && Date.now() > item.expireAt) {
+      this.cache.delete(key);
+      return null;
+    }
+    this.cache.delete(key);
+    this.cache.set(key, item);
+    return item.val;
+  }
+
+  purge() {
+    let count = 0;
+    const now = Date.now();
+    for (const [key, item] of this.cache.entries()) {
+      if (item.expireAt && now > item.expireAt) {
+        this.cache.delete(key);
+        count++;
+      }
+    }
+    return count;
+  }
+
+  size() {
+    this.purge();
+    return this.cache.size;
+  }
+}`,
+          python: `import time
+from collections import OrderedDict
+
+class CacheEngine:
+    def __init__(self, capacity=1000):
+        self.capacity = capacity
+        self.cache = OrderedDict()
+
+    def set(self, key: str, value, ttl_ms: int = None):
+        expire_at = (time.time() + ttl_ms / 1000.0) if ttl_ms else None
+        if key in self.cache:
+            del self.cache[key]
+        elif len(self.cache) >= self.capacity:
+            self.cache.popitem(last=False)
+        self.cache[key] = (value, expire_at)
+
+    def get(self, key: str):
+        if key not in self.cache:
+            return None
+        val, expire_at = self.cache[key]
+        if expire_at and time.time() > expire_at:
+            del self.cache[key]
+            return None
+        self.cache.move_to_end(key)
+        return val
+
+    def purge(self) -> int:
+        now = time.time()
+        expired = [k for k, (_, exp) in self.cache.items() if exp and now > exp]
+        for k in expired:
+            del self.cache[k]
+        return len(expired)
+
+    def size(self) -> int:
+        self.purge()
+        return len(self.cache)`,
+          cpp: `// C++ implementation`,
+          java: `// Java implementation`,
+        },
+        testCases: [
+          {
+            testCaseId: 'tc-1',
+            input: 'set("token", "xyz", 5000) -> get("token")',
+            expectedOutput: '"xyz"',
+            isHidden: false,
+          },
+        ],
+        tags: ['Data Structures', 'LRU Cache', 'System Design', 'Sprint #18'],
+        acceptanceRate: 64.8,
+      },
       {
         title: 'Filter Active Users',
         slug: 'filter-active-users',

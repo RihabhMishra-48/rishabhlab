@@ -164,8 +164,13 @@ export const ProblemWorkspacePage: React.FC = () => {
         expectedOutput: ex.output,
         actualOutput: ex.output,
       }));
+      const isSprint18 = targetSlug === 'high-throughput-in-memory-cache';
       setExecutionStatus('Accepted');
-      setExecutionSummary('Official Submission Accepted! Runtime: 42ms (Faster than 94.2% of submissions)');
+      setExecutionSummary(
+        isSprint18
+          ? '🏆 Weekly Code Sprint #18 Solved! +150 XP Awarded! Runtime: 38ms (Faster than 96.4%). You climbed into the Top 10 on the GLA Cohort Leaderboard!'
+          : 'Official Submission Accepted! Runtime: 42ms (Faster than 94.2% of submissions)'
+      );
       setTestResults(mockResults);
       setConsoleOutput(mockResults.map((t) => `Test ${t.testCaseId}: PASSED -> Output: ${t.actualOutput}`).join('\n'));
       confetti({ particleCount: 140, spread: 90, origin: { y: 0.6 } });
@@ -235,8 +240,9 @@ export const ProblemWorkspacePage: React.FC = () => {
       <header className="h-12 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#171717] px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <Link
-            to="/practice"
+            to={targetSlug === 'high-throughput-in-memory-cache' ? '/hackathon' : '/practice'}
             className="p-1 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+            title={targetSlug === 'high-throughput-in-memory-cache' ? 'Back to Arena' : 'Back to Problems'}
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
@@ -253,6 +259,12 @@ export const ProblemWorkspacePage: React.FC = () => {
           >
             {problem.difficulty}
           </span>
+          {targetSlug === 'high-throughput-in-memory-cache' && (
+            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>LIVE SPRINT</span>
+            </span>
+          )}
         </div>
 
         {/* Action Controls */}
@@ -296,6 +308,25 @@ export const ProblemWorkspacePage: React.FC = () => {
           </button>
         </div>
       </header>
+
+      {targetSlug === 'high-throughput-in-memory-cache' && (
+        <div className="bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-b border-amber-500/25 px-4 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="font-bold text-amber-500 font-mono text-[11px] uppercase tracking-wider shrink-0">
+              Weekly Code Sprint #18
+            </span>
+            <span className="text-neutral-400 hidden sm:inline">•</span>
+            <span className="text-neutral-700 dark:text-neutral-300 text-xs">
+              GLA Cohort Rank #14 • Passing 100% test cases awards <strong className="text-emerald-600 dark:text-emerald-400 font-bold">+150 XP</strong> towards Top 10
+            </span>
+          </div>
+          <div className="flex items-center gap-2 font-mono text-xs text-amber-600 dark:text-amber-400 font-bold shrink-0">
+            <Clock className="w-3.5 h-3.5" />
+            <span>3h 42m Left to Submit</span>
+          </div>
+        </div>
+      )}
 
       {/* Main Split Layout: Left Problem Spec (5 cols), Right Monaco Editor + Test Cases (7 cols) */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">

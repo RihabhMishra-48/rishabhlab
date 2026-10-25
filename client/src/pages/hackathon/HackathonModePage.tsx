@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { Hackathon } from '../../types';
 import {
@@ -272,13 +272,13 @@ export const HackathonModePage: React.FC = () => {
 
                 {/* Actions */}
                 <div className="pt-2 flex flex-wrap items-center gap-3">
-                  <button
-                    onClick={() => alert('Launching Weekly Sprint Workspace... Opening problem IDE.')}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-neutral-950 font-extrabold text-xs shadow-md shadow-amber-500/20 flex items-center gap-2 cursor-pointer transition-all"
+                  <Link
+                    to="/practice/high-throughput-in-memory-cache"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-neutral-950 font-extrabold text-xs shadow-md shadow-amber-500/20 flex items-center gap-2 cursor-pointer transition-colors"
                   >
                     <Code className="w-4 h-4" />
                     <span>Enter Code Arena & Submit</span>
-                  </button>
+                  </Link>
                   <button
                     onClick={() => handleTabChange('leaderboard')}
                     className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-semibold text-xs border border-white/10 transition-colors cursor-pointer flex items-center gap-1.5"
@@ -291,9 +291,13 @@ export const HackathonModePage: React.FC = () => {
 
               {/* Right Column: Live Leaderboard Snapshot Card (5 cols) */}
               <div className="lg:col-span-5">
-                <div className="p-4 sm:p-5 rounded-2xl bg-neutral-900/80 dark:bg-black/40 border border-neutral-800 backdrop-blur-md space-y-3">
+                <div
+                  onClick={() => handleTabChange('leaderboard')}
+                  className="p-4 sm:p-5 rounded-2xl bg-neutral-900/80 dark:bg-black/40 border border-neutral-800 backdrop-blur-md space-y-3 cursor-pointer hover:border-amber-500/40 transition-colors group"
+                  title="Click to view full GLA & Global Leaderboards"
+                >
                   <div className="flex items-center justify-between pb-2 border-b border-neutral-800">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5 font-mono">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 group-hover:text-amber-400 flex items-center gap-1.5 font-mono transition-colors">
                       <Trophy className="w-3.5 h-3.5 text-amber-400" />
                       Live Sprint Standings
                     </span>
@@ -440,16 +444,36 @@ export const HackathonModePage: React.FC = () => {
                         </span>
                       </div>
 
-                      <button
-                        onClick={() => handleToggleRegister(comp.id)}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                          isReg
-                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                            : 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 hover:opacity-90 shadow-xs'
-                        }`}
-                      >
-                        {isReg ? 'Registered ✓' : 'Register Now'}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {comp.status === 'live' && (
+                          <Link
+                            to="/practice/high-throughput-in-memory-cache"
+                            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 flex items-center gap-1.5 transition-colors shadow-2xs"
+                          >
+                            <Code className="w-3.5 h-3.5" />
+                            <span>Enter Arena</span>
+                          </Link>
+                        )}
+                        {comp.id === 'comp-2' && (
+                          <button
+                            onClick={() => handleTabChange('builder')}
+                            className="px-3 py-2 rounded-xl text-xs font-bold bg-purple-500/15 hover:bg-purple-500/25 text-purple-600 dark:text-purple-400 border border-purple-500/30 flex items-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>AI Engine</span>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleToggleRegister(comp.id)}
+                          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            isReg
+                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                              : 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 hover:opacity-90 shadow-xs'
+                          }`}
+                        >
+                          {isReg ? 'Registered ✓' : 'Register Now'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
