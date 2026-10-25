@@ -70,7 +70,7 @@ JWT_SECRET=rishabhlabs_jwt_secret_production_2026
   1. Go to Supabase Dashboard ➔ **Authentication** ➔ **Providers**.
   2. Enable **Google**.
   3. Add your Google Cloud OAuth Client ID & Secret.
-  4. Students can now click **"Continue with Google (Supabase Auth)"** on the Login/Register screens.
+  4. Students can now click **"Continue with Google"** on the Login/Register screens.
 * **Role-Based Security:** Students, Mentors, College Admins, and Super Admins have granular permissions.
 
 ---
