@@ -33,7 +33,7 @@ const UserSchema = new Schema<IUser>(
     college: { type: String, default: '' },
     degree: { type: String, default: '' },
     year: { type: String, default: '' },
-    avatar: { type: String, default: '/avatars/rishabh.png' },
+    avatar: { type: String, default: '/avatars/rishabh.webp' },
     bio: { type: String, default: '' },
     githubUsername: { type: String, default: '' },
     targetGoal: { type: String, default: '' },

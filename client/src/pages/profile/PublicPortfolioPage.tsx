@@ -42,7 +42,7 @@ export const PublicPortfolioPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
               <img
-                src={profile?.user?.avatar || '/avatars/rishabh.png'}
+                src={profile?.user?.avatar || '/avatars/rishabh.webp'}
                 alt={profile?.user?.name}
                 className="w-20 h-20 rounded-3xl object-cover border-2 border-neutral-200 dark:border-neutral-700"
                 onError={(e: any) => {

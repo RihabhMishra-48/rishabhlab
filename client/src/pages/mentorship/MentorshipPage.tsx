@@ -360,7 +360,7 @@ export const MentorshipPage: React.FC = () => {
                     Confirm 1:1 Mentorship Session
                   </h3>
                   <p className="text-xs text-neutral-500">
-                    With {selectedMentor?.name || 'Dr. Arpit Khare'}
+                    With {selectedMentor?.name || 'Rishabh Mishra'}
                   </p>
                 </div>
               </div>

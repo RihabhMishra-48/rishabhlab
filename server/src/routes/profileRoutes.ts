@@ -46,7 +46,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
         college: user.college || '',
         degree: user.degree || '',
         year: user.year || '',
-        avatar: user.avatar || '/avatars/rishabh.png',
+        avatar: user.avatar || '/avatars/rishabh.webp',
         bio: user.bio || '',
         githubUsername: user.githubUsername,
       },

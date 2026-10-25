@@ -355,7 +355,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="flex items-center gap-3 p-2 rounded-xl bg-neutral-50 hover:bg-neutral-100/80 dark:bg-neutral-900/60 dark:hover:bg-neutral-850 border border-neutral-200/80 dark:border-neutral-800/60 transition-colors outline-none focus:outline-none"
             >
               <img
-                src={user.avatar || '/avatars/rishabh.png'}
+                src={user.avatar || '/avatars/rishabh.webp'}
                 alt={user.name}
                 className="w-9 h-9 rounded-lg object-cover border border-neutral-200 dark:border-neutral-700 shrink-0"
                 onError={(e: any) => {
@@ -394,7 +394,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 className="relative cursor-pointer block"
               >
                 <img
-                  src={user.avatar || '/avatars/rishabh.png'}
+                  src={user.avatar || '/avatars/rishabh.webp'}
                   alt={user.name}
                   className="w-10 h-10 rounded-xl object-cover border border-neutral-200 dark:border-neutral-700 group-hover:border-neutral-400 dark:group-hover:border-neutral-500 transition-colors"
                   onError={(e: any) => {
