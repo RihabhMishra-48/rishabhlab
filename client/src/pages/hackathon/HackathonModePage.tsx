@@ -123,9 +123,9 @@ export const HackathonModePage: React.FC = () => {
               <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 font-mono">
                 Competitions & Leaderboards
               </span>
-              <span className="w-1 h-1 rounded-full bg-amber-500" />
-              <span className="text-[10px] font-semibold text-neutral-400 font-mono">
-                Season 4
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Season 4 Active
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
@@ -137,67 +137,86 @@ export const HackathonModePage: React.FC = () => {
           </div>
         </div>
 
-        {/* User Rank Card Pill */}
-        <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-white dark:bg-[#1f1f23] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-neutral-950 font-black text-xs font-mono flex items-center justify-center shadow-xs">
-            #14
+        {/* User Rank Card Pill — Sleek Telemetry Badge */}
+        <div className="flex items-center gap-3.5 px-4 py-2.5 rounded-2xl bg-white dark:bg-[#1f1f23] border border-neutral-200/80 dark:border-neutral-800 shadow-sm backdrop-blur-md self-start sm:self-auto">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400/20 to-amber-500/10 border border-amber-500/30 text-amber-500 flex flex-col items-center justify-center font-mono font-black text-sm shrink-0 shadow-2xs">
+            <span>#14</span>
           </div>
           <div className="text-left space-y-0.5">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-bold text-neutral-900 dark:text-white">GLA Cohort</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-md font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 Top 4%
               </span>
             </div>
-            <div className="text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center gap-1 font-mono">
-              <Flame className="w-3 h-3 text-amber-500 fill-current" />
-              <span>17d Streak • 1,450 XP</span>
+            <div className="text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 font-mono">
+              <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+              <span>17d Streak</span>
+              <span className="text-neutral-300 dark:text-neutral-700">•</span>
+              <span className="text-neutral-700 dark:text-neutral-300 font-semibold">1,450 XP</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Primary Section Switcher Tabs */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1e] border border-neutral-200/80 dark:border-neutral-800/80">
-        <button
-          onClick={() => handleTabChange('competitions')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeMainTab === 'competitions'
-              ? 'bg-white dark:bg-[#26262c] text-neutral-950 dark:text-white shadow-xs border border-neutral-200/60 dark:border-neutral-700/60'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-          }`}
-        >
-          <Trophy className="w-4 h-4 text-amber-500" />
-          <span>Live Sprints & Contests</span>
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>1 LIVE</span>
+      {/* Primary Section Switcher Tabs & Live Arena Telemetry Toolbar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-1.5 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1e] border border-neutral-200/80 dark:border-neutral-800/80 shadow-2xs">
+        <div className="flex flex-wrap items-center gap-1">
+          <button
+            onClick={() => handleTabChange('competitions')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeMainTab === 'competitions'
+                ? 'bg-white dark:bg-[#26262c] text-neutral-950 dark:text-white shadow-xs border border-neutral-200/60 dark:border-neutral-700/60'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/[0.03]'
+            }`}
+          >
+            <Trophy className="w-4 h-4 text-amber-500" />
+            <span>Live Sprints & Contests</span>
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>1 LIVE</span>
+            </span>
+          </button>
+
+          <button
+            onClick={() => handleTabChange('leaderboard')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeMainTab === 'leaderboard'
+                ? 'bg-white dark:bg-[#26262c] text-neutral-950 dark:text-white shadow-xs border border-neutral-200/60 dark:border-neutral-700/60'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/[0.03]'
+            }`}
+          >
+            <Award className="w-4 h-4 text-blue-500" />
+            <span>Campus & Global Leaderboards</span>
+          </button>
+
+          <button
+            onClick={() => handleTabChange('builder')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeMainTab === 'builder'
+                ? 'bg-white dark:bg-[#26262c] text-neutral-950 dark:text-white shadow-xs border border-neutral-200/60 dark:border-neutral-700/60'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/[0.03]'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-purple-500" />
+            <span>48-Hour Hackathon AI Engine</span>
+          </button>
+        </div>
+
+        {/* Live Arena Telemetry Pill — Fills the previous empty space with real-time status */}
+        <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/70 dark:bg-[#222228] border border-neutral-200/70 dark:border-neutral-800 text-[11px] font-mono text-neutral-600 dark:text-neutral-400 self-center mr-1">
+          <span className="flex items-center gap-1.5 font-semibold text-neutral-800 dark:text-neutral-200">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            <span>428 GLA Coders Active</span>
           </span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange('leaderboard')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeMainTab === 'leaderboard'
-              ? 'bg-white dark:bg-[#26262c] text-neutral-950 dark:text-white shadow-xs border border-neutral-200/60 dark:border-neutral-700/60'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-          }`}
-        >
-          <Award className="w-4 h-4 text-blue-500" />
-          <span>Campus & Global Leaderboards</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange('builder')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeMainTab === 'builder'
-              ? 'bg-white dark:bg-[#26262c] text-neutral-950 dark:text-white shadow-xs border border-neutral-200/60 dark:border-neutral-700/60'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-          }`}
-        >
-          <Sparkles className="w-4 h-4 text-purple-500" />
-          <span>48-Hour Hackathon AI Engine</span>
-        </button>
+          <span className="text-neutral-300 dark:text-neutral-700">•</span>
+          <span className="text-amber-600 dark:text-amber-400 font-bold">Sprint #18</span>
+          <span className="text-neutral-300 dark:text-neutral-700">•</span>
+          <span className="text-neutral-500 dark:text-neutral-400">3h 42m Left</span>
+        </div>
       </div>
 
       {/* ========================================================
