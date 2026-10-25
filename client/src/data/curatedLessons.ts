@@ -475,6 +475,27 @@ console.log(sanitizeStorageKey('Auth-Service', 'User Token#1'));`,
   | ----- [ACK, Ack=501] ------> | (ESTABLISHED state)
 `,
           codeLanguage: "text"
+        },
+        {
+          heading: "2. Deconstructing the IPv4 Header: Packet Traversal & The TTL Mechanism",
+          bodyMarkdown: `An IPv4 packet begins with a standard 20-byte base header containing crucial metadata that intermediate routers inspect at wire speed:
+
++---------------------------------------------------------------+
+| Version (4b) | IHL (4b) | Type of Service / DSCP (8b) | Total Length (16b) |
++---------------------------------------------------------------+
+| Identification (16b) | Flags: [DF, MF] (3b) | Fragment Offset (13b)      |
++---------------------------------------------------------------+
+| Time to Live (TTL) (8b) | Protocol ID (8b) | Header Checksum (16b)      |
++---------------------------------------------------------------+
+| Source IP Address (32 bits)                                   |
++---------------------------------------------------------------+
+| Destination IP Address (32 bits)                              |
++---------------------------------------------------------------+
+
+Crucial Fields for Security Engineers:
+• Time-To-Live (TTL): An 8-bit integer initialized by the operating system (e.g. 64 on Linux, 128 on Windows). Every single router hop decrements TTL by exactly 1. When TTL hits 0, the router discards the packet and transmits an ICMP Time Exceeded (Type 11) message back to the source.
+• Protocol Number: Identifies the transport protocol inside the payload (0x06 for TCP, 0x11 for UDP, 0x01 for ICMP).
+• Don't Fragment (DF) Flag: Tells routers not to split packets exceeding Maximum Transmission Unit (MTU = 1500 bytes). If a packet exceeds Path MTU with DF=1, routers drop it and send ICMP Destination Unreachable (Fragmentation Needed).`
         }
       ],
       interactiveSandbox: {

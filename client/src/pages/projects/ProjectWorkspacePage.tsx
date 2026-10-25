@@ -44,7 +44,7 @@ export const ProjectWorkspacePage: React.FC = () => {
           if (parsed.liveDeployUrl) setLiveDeployUrl(parsed.liveDeployUrl);
           if (parsed.demoVideoUrl) setDemoVideoUrl(parsed.demoVideoUrl);
           setProofSubmittedSuccess(true);
-        } catch {}
+        } catch { }
       }
 
       try {
@@ -127,7 +127,7 @@ export const ProjectWorkspacePage: React.FC = () => {
         taskMap[t.id || (t as any)._id] = Boolean(t.isCompleted ?? (t as any).completed);
       });
       localStorage.setItem(`rishabhlabs_project_${project.slug}`, JSON.stringify(taskMap));
-    } catch {}
+    } catch { }
 
     if (progress === 100) {
       confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
@@ -202,11 +202,10 @@ export const ProjectWorkspacePage: React.FC = () => {
                 {project.title}
               </h1>
               <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                  project.status === 'Completed'
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${project.status === 'Completed'
                     ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
                     : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                }`}
+                  }`}
               >
                 {project.status}
               </span>
@@ -254,7 +253,7 @@ export const ProjectWorkspacePage: React.FC = () => {
             {currentPercent === 100 ? (
               <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                 <CheckCircle2 className="w-2.5 h-2.5" />
-                <span>All Milestones Mastered 🎉</span>
+                <span>All Milestones Mastered</span>
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">
@@ -289,11 +288,10 @@ export const ProjectWorkspacePage: React.FC = () => {
             {currentPercent > 0 && (
               <div
                 style={{ flex: currentPercent > 0 ? Math.max(currentPercent, 6) : 0 }}
-                className={`h-full rounded-full transition-all duration-500 ${
-                  currentPercent === 100
+                className={`h-full rounded-full transition-all duration-500 ${currentPercent === 100
                     ? 'bg-emerald-500'
                     : 'bg-blue-600 dark:bg-blue-500'
-                }`}
+                  }`}
                 title={`Current Progress: ${currentPercent}% (${completedTasks} tasks)`}
               />
             )}
@@ -337,18 +335,16 @@ export const ProjectWorkspacePage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-2">
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            mPercent === 100 ? 'bg-emerald-500' : mCompleted > 0 ? 'bg-blue-500' : 'bg-neutral-400'
-                          }`}
+                          className={`w-1.5 h-1.5 rounded-full ${mPercent === 100 ? 'bg-emerald-500' : mCompleted > 0 ? 'bg-blue-500' : 'bg-neutral-400'
+                            }`}
                         />
                         <span>{milestone.title}</span>
                       </h3>
                       <div className="flex items-center gap-2.5">
                         <div className="w-16 h-1 rounded-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden hidden sm:block">
                           <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              mPercent === 100 ? 'bg-emerald-500' : 'bg-blue-500'
-                            }`}
+                            className={`h-full rounded-full transition-all duration-300 ${mPercent === 100 ? 'bg-emerald-500' : 'bg-blue-500'
+                              }`}
                             style={{ width: `${mPercent}%` }}
                           />
                         </div>
@@ -358,30 +354,29 @@ export const ProjectWorkspacePage: React.FC = () => {
                       </div>
                     </div>
 
-                  <div className="space-y-2 pl-3">
-                    {milestone.tasks.map((task) => (
-                      <div
-                        key={task.id}
-                        onClick={() => handleToggleTask(milestone.id, task.id)}
-                        className={`p-3 rounded-xl border text-xs font-medium flex items-center gap-3 cursor-pointer transition-colors ${
-                          task.isCompleted
-                            ? 'bg-neutral-50 dark:bg-neutral-900/60 border-neutral-200 dark:border-neutral-800/80 text-neutral-400 line-through'
-                            : 'bg-white dark:bg-[#262626] border-neutral-200 dark:border-neutral-700/80 text-neutral-800 dark:text-neutral-200 hover:border-neutral-400'
-                        }`}
-                      >
-                        {task.isCompleted ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                        ) : (
-                          <Circle className="w-4 h-4 text-neutral-400 shrink-0" />
-                        )}
-                        <span>{task.title}</span>
-                      </div>
-                    ))}
+                    <div className="space-y-2 pl-3">
+                      {milestone.tasks.map((task) => (
+                        <div
+                          key={task.id}
+                          onClick={() => handleToggleTask(milestone.id, task.id)}
+                          className={`p-3 rounded-xl border text-xs font-medium flex items-center gap-3 cursor-pointer transition-colors ${task.isCompleted
+                              ? 'bg-neutral-50 dark:bg-neutral-900/60 border-neutral-200 dark:border-neutral-800/80 text-neutral-400 line-through'
+                              : 'bg-white dark:bg-[#262626] border-neutral-200 dark:border-neutral-700/80 text-neutral-800 dark:text-neutral-200 hover:border-neutral-400'
+                            }`}
+                        >
+                          {task.isCompleted ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          ) : (
+                            <Circle className="w-4 h-4 text-neutral-400 shrink-0" />
+                          )}
+                          <span>{task.title}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Technical Requirements Spec */}

@@ -501,7 +501,7 @@ export const LearnCatalogPage: React.FC = () => {
                               className="text-xs font-bold inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 transition-colors shadow-2xs"
                             >
                               <Plus className="w-3.5 h-3.5" />
-                              <span>Enroll as 2nd Track</span>
+                              <span>Enroll Track</span>
                             </button>
                           ) : (
                             <span className="text-[10px] font-semibold text-neutral-400">

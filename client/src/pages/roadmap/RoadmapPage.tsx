@@ -322,9 +322,8 @@ export const RoadmapPage: React.FC = () => {
               {progressPercent > 0 && (
                 <div
                   style={{ flex: Math.max(progressPercent, 10) }}
-                  className={`h-full rounded-full transition-all duration-300 ${
-                    progressPercent === 100 ? 'bg-emerald-500' : 'bg-blue-600 dark:bg-blue-500'
-                  }`}
+                  className={`h-full rounded-full transition-all duration-300 ${progressPercent === 100 ? 'bg-emerald-500' : 'bg-blue-600 dark:bg-blue-500'
+                    }`}
                 />
               )}
               {progressPercent < 100 && (
@@ -422,7 +421,7 @@ export const RoadmapPage: React.FC = () => {
                 PIPELINE STATUS
               </span>
               <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
-                {completedCount === nodes.length ? 'All Milestones Mastered 🎉' : `Currently at Stage ${activeNode?.stepNumber || 1}`}
+                {completedCount === nodes.length ? 'All Milestones Mastered' : `Currently at Stage ${activeNode?.stepNumber || 1}`}
               </span>
             </div>
             <h2 className="text-lg sm:text-xl font-extrabold text-neutral-900 dark:text-white mt-1">
