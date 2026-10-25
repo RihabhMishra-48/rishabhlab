@@ -121,22 +121,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         className={`flex-1 space-y-4 pr-0.5 ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto overflow-x-hidden'
           }`}
       >
-        {/* Top Header */}
-        <div
-          className={`flex items-center pb-2.5 border-b border-neutral-200/60 dark:border-neutral-800/60 h-8 ${isCollapsed ? 'justify-center' : 'justify-start px-2'
-            }`}
-        >
-          {!isCollapsed ? (
-            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-              Workspace
-            </span>
-          ) : (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-              WS
-            </span>
-          )}
-        </div>
-
         {/* Main Navigation Links with Info Tags on Collapsed Hover */}
         <div className="space-y-1">
           {mainNavItems.map((item) => {
@@ -447,17 +431,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="hidden lg:flex absolute -right-3 top-0 bottom-0 w-6 cursor-pointer group/rail z-40 select-none items-center justify-center"
           title={isCollapsed ? 'Click anywhere on separator line to expand sidebar (Ctrl+B)' : 'Click anywhere on separator line to collapse sidebar (Ctrl+B)'}
         >
-          {/* Subtle separator highlight line on hover */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[2px] bg-transparent group-hover/rail:bg-blue-500/60 dark:group-hover/rail:bg-blue-400/60 transition-colors duration-150" />
+          {/* Subtle separator highlight line on hover — neutral tone, no blue */}
+          <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[2px] bg-transparent group-hover/rail:bg-neutral-400/50 dark:group-hover/rail:bg-neutral-500/50 transition-colors duration-150" />
 
-          {/* Floating Dock Toggle Button sitting directly on the separator line */}
+          {/* Floating Dock Toggle Button sitting directly in the vertical center of the separator line */}
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onToggleCollapse();
             }}
-            className="absolute left-1/2 -translate-x-1/2 top-5 w-6 h-6 rounded-full bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:border-neutral-400 dark:hover:border-neutral-500 transition-all cursor-pointer z-50 group-hover/rail:border-blue-500 group-hover/rail:text-blue-500"
+            className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-700 shadow-sm flex items-center justify-center text-neutral-400 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:border-neutral-400 dark:hover:border-neutral-500 transition-all cursor-pointer z-50 group-hover/rail:border-neutral-400 dark:group-hover/rail:border-neutral-500 group-hover/rail:text-neutral-900 dark:group-hover/rail:text-white"
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {isCollapsed ? (
