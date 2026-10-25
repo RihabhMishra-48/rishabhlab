@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -65,6 +66,24 @@ export const LearnCatalogPage: React.FC = () => {
   });
 
   const [showExploreModal, setShowExploreModal] = useState<boolean>(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showExploreModal) {
+      document.body.style.overflow = 'hidden';
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = 0;
+      }
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setShowExploreModal(false);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [showExploreModal]);
 
   useEffect(() => {
     if (queryTrack) {
@@ -150,36 +169,51 @@ export const LearnCatalogPage: React.FC = () => {
       id: 'web-dev',
       label: 'Web Development',
       icon: DisplayCodeIcon,
-      badge: 'Full-Stack',
-      desc: 'HTML, CSS, Modern JS, React 18, Node.js & REST APIs'
+      badge: 'Full Stack',
+      accentColor: 'blue' as const,
+      desc: 'React 19, TypeScript, Next.js 15, Node.js, REST APIs & Distributed Web Systems',
+      skills: ['React 19', 'TypeScript', 'Node.js', 'Next.js'],
+      hours: '120 hrs',
     },
     {
       id: 'ai-ml',
       label: 'AI & Machine Learning',
       icon: ChipBrainIcon,
       badge: 'GenAI & Deep Learning',
-      desc: 'Python, NumPy, PyTorch, Neural Networks, Embeddings & LLMs'
+      accentColor: 'purple' as const,
+      desc: 'Python, PyTorch, Neural Networks, Embeddings, LLMs & Production AI Serving',
+      skills: ['Python', 'PyTorch', 'Vector DBs', 'LLMs'],
+      hours: '140 hrs',
     },
     {
       id: 'app-dev',
       label: 'Mobile App Development',
       icon: MobileNotchIcon,
       badge: 'Cross-Platform',
-      desc: 'React Native, Flutter, Device APIs, Offline State & UX'
+      accentColor: 'cyan' as const,
+      desc: 'React Native / Flutter, Mobile UI Architecture, State Machines & Device APIs',
+      skills: ['React Native', 'Flutter', 'State Machines', 'Native Bridges'],
+      hours: '110 hrs',
     },
     {
       id: 'cybersecurity',
       label: 'Cybersecurity',
       icon: ShieldCheckIcon,
-      badge: 'Defense & Pentesting',
-      desc: 'Network Packet Analysis, Linux Hardening, Web Pentesting & Cryptography'
+      badge: 'Infosec & Defense',
+      accentColor: 'emerald' as const,
+      desc: 'Network Packet Analysis, Penetration Testing, Linux Hardening & Cryptography',
+      skills: ['Wireshark', 'Kali Linux', 'Burp Suite', 'OWASP'],
+      hours: '130 hrs',
     },
     {
       id: 'data-analytics',
       label: 'Data & Analytics',
       icon: ArrowTrendUpIcon,
       badge: 'Data Engineering',
-      desc: 'SQL Mastery, Pandas DataFrames, ETL Pipelines & BI Dashboards'
+      accentColor: 'amber' as const,
+      desc: 'SQL Mastery, Pandas, Distributed ETL Pipelines & Executive Visualizations',
+      skills: ['SQL', 'Pandas', 'Apache Spark', 'ETL Pipelines'],
+      hours: '115 hrs',
     },
   ];
 
@@ -222,8 +256,8 @@ export const LearnCatalogPage: React.FC = () => {
               <div
                 key={trackId}
                 className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all ${isSelected
-                    ? 'bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 shadow-xs'
-                    : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white border border-neutral-200/80 dark:border-neutral-700'
+                  ? 'bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 shadow-xs'
+                  : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white border border-neutral-200/80 dark:border-neutral-700'
                   }`}
               >
                 <button
@@ -236,8 +270,8 @@ export const LearnCatalogPage: React.FC = () => {
 
                 {isPrimary && (
                   <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${isSelected
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
                     }`}>
                     Primary
                   </span>
@@ -267,88 +301,224 @@ export const LearnCatalogPage: React.FC = () => {
       </div>
 
       {/* Explore & Add Track Modal */}
-      {showExploreModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-6 max-w-2xl w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
-              <div className="space-y-0.5">
-                <h3 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-blue-500" />
+      {showExploreModal && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3 sm:p-5 animate-in fade-in duration-150"
+          onClick={() => setShowExploreModal(false)}
+        >
+          <div
+            className="w-full max-w-4xl bg-white dark:bg-[#1a1a1a] rounded-3xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Fixed Sticky Modal Header (Solid background, no blur) */}
+            <div className="p-5 sm:p-6 pb-4 border-b border-neutral-100 dark:border-neutral-800 flex items-start justify-between gap-4 shrink-0 bg-white dark:bg-[#1a1a1a]">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/50 font-mono">
+                  <Sparkles className="w-3 h-3" />
+                  <span>LEARNING SPECIALIZATION • MAX 2 TRACKS</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-neutral-900 dark:text-white">
                   Explore & Enroll in Learning Tracks
-                </h3>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                  Choose a secondary track to study alongside your primary curriculum.
+                </h2>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-xl">
+                  Focus deeply on your primary track, or enroll in a second track to cross-train skills. Your interactive lessons and exercises update instantly.
                 </p>
               </div>
+
               <button
                 onClick={() => setShowExploreModal(false)}
-                className="p-1.5 rounded-xl text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                className="p-2 rounded-xl text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3">
-              {tracks.map((t) => {
-                const Icon = t.icon;
-                const isEnrolled = enrolledTracks.includes(t.id);
-                const isPrimary = t.id === primaryTrack;
-
-                return (
-                  <div
-                    key={t.id}
-                    className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isEnrolled
-                        ? 'bg-blue-50/60 dark:bg-blue-950/20 border-blue-200/80 dark:border-blue-900/40'
-                        : 'bg-neutral-50/70 dark:bg-neutral-900/60 border-neutral-200/60 dark:border-neutral-800'
-                      }`}
-                  >
-                    <div className="flex items-start gap-3.5">
-                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200/60 dark:border-neutral-700 flex items-center justify-center shrink-0 shadow-2xs">
-                        <Icon className="w-5 h-5 text-neutral-800 dark:text-neutral-200" />
-                      </div>
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-bold text-neutral-900 dark:text-white">{t.label}</h4>
-                          <span className="text-[10px] px-2 py-0.2 rounded-full font-semibold bg-neutral-200/60 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
-                            {t.badge}
-                          </span>
-                        </div>
-                        <p className="text-xs text-neutral-500 dark:text-neutral-400">{t.desc}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0">
-                      {isPrimary ? (
-                        <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white">
-                          Primary Track
-                        </span>
-                      ) : isEnrolled ? (
-                        <div className="flex items-center gap-2">
-                          <span className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5" /> Enrolled
-                          </span>
-                          <button
-                            onClick={() => handleRemoveSecondaryTrack(t.id)}
-                            className="px-2.5 py-1.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleEnrollSecondary(t.id)}
-                          className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 transition-colors shadow-2xs"
+            {/* Scrollable Track Cards Body */}
+            <div ref={scrollContainerRef} className="p-4 sm:p-6 overflow-y-auto space-y-3.5">
+              {/* Enrollment Slots Tracker Banner */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3.5 py-2.5 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/70 dark:border-neutral-800/70 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-neutral-700 dark:text-neutral-300">Active Learning Tracks:</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {enrolledTracks.map((trk) => {
+                      const isPrim = trk === primaryTrack;
+                      const trackObj = tracks.find((t) => t.id === trk);
+                      const displayTitle = trackObj?.label || trk;
+                      return (
+                        <span
+                          key={trk}
+                          className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold ${
+                            isPrim
+                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                          }`}
                         >
-                          Enroll as 2nd Track
-                        </button>
-                      )}
-                    </div>
+                          {displayTitle} {isPrim ? '(Primary)' : '(2nd Track)'}
+                        </span>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+
+                <span className="text-[11px] font-mono font-semibold text-neutral-500 shrink-0">
+                  {enrolledTracks.length}/2 Slots Utilized {enrolledTracks.length < 2 ? '• 1 Slot Open' : '• Limit Reached'}
+                </span>
+              </div>
+
+              {/* 5 Tracks Grid: 2 columns, with 5th track spanning full width (2 columns) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {tracks.map((t, idx) => {
+                  const Icon = t.icon;
+                  const isEnrolled = enrolledTracks.includes(t.id);
+                  const isPrimary = t.id === primaryTrack;
+                  const isCurrentView = t.id === selectedTrack;
+                  const isLastCard = idx === tracks.length - 1;
+
+                  // Theme accents per track
+                  const colorStyles = {
+                    blue: {
+                      iconBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+                      badge: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200/60 dark:border-blue-800/60',
+                      borderHover: 'hover:border-blue-500/50',
+                    },
+                    purple: {
+                      iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+                      badge: 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border-purple-200/60 dark:border-purple-800/60',
+                      borderHover: 'hover:border-purple-500/50',
+                    },
+                    cyan: {
+                      iconBg: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+                      badge: 'bg-cyan-50 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-200/60 dark:border-cyan-800/60',
+                      borderHover: 'hover:border-cyan-500/50',
+                    },
+                    emerald: {
+                      iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+                      badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/60',
+                      borderHover: 'hover:border-emerald-500/50',
+                    },
+                    amber: {
+                      iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+                      badge: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/60',
+                      borderHover: 'hover:border-amber-500/50',
+                    },
+                  }[t.accentColor || 'blue'];
+
+                  return (
+                    <div
+                      key={t.id}
+                      className={`p-4 rounded-2xl border transition-colors relative flex flex-col justify-between gap-3 ${
+                        isLastCard ? 'sm:col-span-2' : 'sm:col-span-1'
+                      } ${
+                        isCurrentView
+                          ? 'bg-neutral-50/90 dark:bg-neutral-900/80 border-blue-500/50 ring-1 ring-blue-500/30'
+                          : isEnrolled
+                            ? 'bg-neutral-50/50 dark:bg-neutral-900/40 border-emerald-500/30'
+                            : `bg-neutral-50/30 dark:bg-neutral-900/30 border-neutral-200/80 dark:border-neutral-800 ${colorStyles.borderHover}`
+                      }`}
+                    >
+                      {/* Top Row: Icon + Title + Badge + Sub-stats + Status Pill */}
+                      <div className="flex items-start justify-between gap-2.5">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${colorStyles.iconBg}`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-sm font-bold text-neutral-900 dark:text-white leading-tight">
+                                {t.label}
+                              </h3>
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${colorStyles.badge}`}>
+                                {t.badge}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-mono mt-0.5">
+                              ~{t.hours} • Structured Modules & Exercises
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Status Pill in Card Header */}
+                        {isPrimary ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
+                            Primary Track ★
+                          </span>
+                        ) : isEnrolled ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                            Enrolled (2nd) ✓
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {/* Middle: Concise Description */}
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-snug line-clamp-2">
+                        {t.desc}
+                      </p>
+
+                      {/* Bottom Row: Skills + Action Button */}
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-800/60">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {t.skills.slice(0, 3).map((sk) => (
+                            <span
+                              key={sk}
+                              className="text-[10px] px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800/90 text-neutral-600 dark:text-neutral-300 font-medium"
+                            >
+                              {sk}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="shrink-0">
+                          {isCurrentView ? (
+                            <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 inline-block">
+                              Active Lessons ✓
+                            </span>
+                          ) : isEnrolled ? (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => {
+                                  handleTrackChange(t.id);
+                                  setShowExploreModal(false);
+                                }}
+                                className="text-xs font-bold px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 transition-colors"
+                              >
+                                View Lessons
+                              </button>
+                              {!isPrimary && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveSecondaryTrack(t.id);
+                                  }}
+                                  className="text-xs font-semibold px-2 py-1.5 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-colors"
+                                  title="Drop secondary track"
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
+                          ) : enrolledTracks.length < 2 ? (
+                            <button
+                              onClick={() => handleEnrollSecondary(t.id)}
+                              className="text-xs font-bold inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 transition-colors shadow-2xs"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Enroll as 2nd Track</span>
+                            </button>
+                          ) : (
+                            <span className="text-[10px] font-semibold text-neutral-400">
+                              Max 2 Tracks
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modules and Lessons List */}
