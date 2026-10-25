@@ -118,10 +118,10 @@ export const ProblemListPage: React.FC = () => {
     return primaryTrack;
   });
 
-  const [problems, setProblems] = useState<CodingProblem[]>([]);
+  const [problems, setProblems] = useState<CodingProblem[]>(() => getCuratedProblems());
   const [difficultyFilter, setDifficultyFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showExploreModal, setShowExploreModal] = useState<boolean>(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -143,23 +143,26 @@ export const ProblemListPage: React.FC = () => {
   }, [showExploreModal]);
 
   useEffect(() => {
+    let isCancelled = false;
     const fetchProblems = async () => {
       try {
-        setLoading(true);
         const data = await api.getProblems();
+        if (isCancelled) return;
         if (data && data.length > 0) {
           setProblems(data);
-        } else {
-          setProblems(getCuratedProblems());
         }
       } catch (err) {
-        console.warn('API getProblems fallback to curated challenges:', err);
-        setProblems(getCuratedProblems());
+        // Silently handled by instant curated list
       } finally {
-        setLoading(false);
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     };
     fetchProblems();
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   const handleTrackChange = (trackName: string) => {
@@ -433,10 +436,10 @@ export const ProblemListPage: React.FC = () => {
             {/* Fixed Sticky Modal Header (Solid background, no blur) */}
             <div className="p-5 sm:p-6 pb-4 border-b border-neutral-100 dark:border-neutral-800 flex items-start justify-between gap-4 shrink-0 bg-white dark:bg-[#1a1a1a]">
               <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/50 font-mono">
+                {/* <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/50 font-mono">
                   <Sparkles className="w-3 h-3" />
                   <span>PRACTICE SPECIALIZATION • MAX 2 TRACKS</span>
-                </div>
+                </div> */}
                 <h2 className="text-xl sm:text-2xl font-black tracking-tight text-neutral-900 dark:text-white">
                   Add a Second Coding Track
                 </h2>
@@ -465,11 +468,10 @@ export const ProblemListPage: React.FC = () => {
                       return (
                         <span
                           key={trk}
-                          className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold ${
-                            isPrim
-                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                          }`}
+                          className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold ${isPrim
+                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                            }`}
                         >
                           {trk} {isPrim ? '(Primary)' : '(2nd Track)'}
                         </span>
@@ -525,15 +527,13 @@ export const ProblemListPage: React.FC = () => {
                   return (
                     <div
                       key={tc.id}
-                      className={`p-4 rounded-2xl border transition-colors relative flex flex-col justify-between gap-3 ${
-                        isLastCard ? 'sm:col-span-2' : 'sm:col-span-1'
-                      } ${
-                        isCurrentView
+                      className={`p-4 rounded-2xl border transition-colors relative flex flex-col justify-between gap-3 ${isLastCard ? 'sm:col-span-2' : 'sm:col-span-1'
+                        } ${isCurrentView
                           ? 'bg-neutral-50/90 dark:bg-neutral-900/80 border-blue-500/50 ring-1 ring-blue-500/30'
                           : isEnrolled
                             ? 'bg-neutral-50/50 dark:bg-neutral-900/40 border-emerald-500/30'
                             : `bg-neutral-50/30 dark:bg-neutral-900/30 border-neutral-200/80 dark:border-neutral-800 ${colorStyles.borderHover}`
-                      }`}
+                        }`}
                     >
                       {/* Top Row: Icon + Title + Badge + Sub-stats + Status Pill */}
                       <div className="flex items-start justify-between gap-2.5">
@@ -618,7 +618,7 @@ export const ProblemListPage: React.FC = () => {
                               className="text-xs font-bold inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 transition-colors shadow-2xs"
                             >
                               <Plus className="w-3.5 h-3.5" />
-                              <span>Unlock Problems</span>
+                              <span>Unlock</span>
                             </button>
                           ) : (
                             <span className="text-[10px] font-semibold text-neutral-400">

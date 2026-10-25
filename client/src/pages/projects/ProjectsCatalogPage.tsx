@@ -65,6 +65,7 @@ export const ProjectsCatalogPage: React.FC = () => {
 
   const [selectedCategory, setSelectedCategory] = useState<string>(getDefaultCategory);
   const [activeTab, setActiveTab] = useState<'All' | 'Not Started' | 'In Progress' | 'Completed'>('All');
+  const [viewMode, setViewMode] = useState<'compact' | 'detailed'>('compact');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -143,32 +144,61 @@ export const ProjectsCatalogPage: React.FC = () => {
         ))}
       </div>
 
-      {/* Status Filter Tabs matching Screen 6 */}
-      <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-2">
-        {(['All', 'Not Started', 'In Progress', 'Completed'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${activeTab === tab
-                ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-2xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2a2a2a]'
+      {/* Status Filter Tabs & View Toggle */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 dark:border-neutral-800 pb-2">
+        <div className="flex items-center gap-2">
+          {(['All', 'Not Started', 'In Progress', 'Completed'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                activeTab === tab
+                  ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-2xs'
+                  : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2a2a2a]'
               }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* View Mode Toggle */}
+        <div className="flex items-center gap-1.5 p-0.5 rounded-lg bg-neutral-100 dark:bg-[#262626] border border-neutral-200/60 dark:border-neutral-800">
+          <button
+            onClick={() => setViewMode('compact')}
+            className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+              viewMode === 'compact'
+                ? 'bg-white dark:bg-[#1a1a1a] text-neutral-900 dark:text-white shadow-2xs font-semibold'
+                : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300'
+            }`}
+            title="Compact View (clean & lightweight)"
           >
-            {tab}
+            Compact
           </button>
-        ))}
+          <button
+            onClick={() => setViewMode('detailed')}
+            className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+              viewMode === 'detailed'
+                ? 'bg-white dark:bg-[#1a1a1a] text-neutral-900 dark:text-white shadow-2xs font-semibold'
+                : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300'
+            }`}
+            title="Detailed View (with project summary)"
+          >
+            Detailed
+          </button>
+        </div>
       </div>
 
-      {/* Projects List matching Screen 6 */}
+      {/* Projects List */}
       {loading ? (
         <div className="p-8 text-center text-xs text-neutral-400">Loading projects...</div>
       ) : projects.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#212121] space-y-2">
+        <div className="p-12 text-center rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1a1a1a] space-y-2">
           <p className="text-sm font-semibold text-neutral-900 dark:text-white">No projects found</p>
           <p className="text-xs text-neutral-500">Try switching your category or status filter above.</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2.5 sm:space-y-3">
           {projects.map((proj) => {
             const isCompleted = proj.status === 'Completed';
             const isInProgress = proj.status === 'In Progress';
@@ -181,75 +211,125 @@ export const ProjectsCatalogPage: React.FC = () => {
               <Link
                 key={proj._id}
                 to={`/projects/${proj.slug}`}
-                className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-md transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
+                className="px-4 sm:px-5 py-3 sm:py-3.5 rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200/80 dark:border-neutral-800/80 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs transition-colors flex items-center justify-between gap-4 group"
               >
-                <div className="flex items-center gap-4 min-w-0">
-                  {/* 3D project thumbnail icon */}
-                  <div className="w-14 h-14 rounded-2xl bg-neutral-950 dark:bg-neutral-900 border border-neutral-800 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  {/* Lightweight Track Icon Container */}
+                  <div
+                    className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 border ${
+                      isCyber
+                        ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500/25 text-emerald-500 dark:text-emerald-400'
+                        : isAi
+                        ? 'bg-purple-500/10 dark:bg-purple-950/40 border-purple-500/25 text-purple-500 dark:text-purple-400'
+                        : isApp
+                        ? 'bg-indigo-500/10 dark:bg-indigo-950/40 border-indigo-500/25 text-indigo-500 dark:text-indigo-400'
+                        : isData
+                        ? 'bg-amber-500/10 dark:bg-amber-950/40 border-amber-500/25 text-amber-500 dark:text-amber-400'
+                        : 'bg-blue-500/10 dark:bg-blue-950/40 border-blue-500/25 text-blue-500 dark:text-blue-400'
+                    }`}
+                  >
                     {isCyber ? (
-                      <ShieldCheckIcon className="w-7 h-7 text-emerald-400" />
+                      <ShieldCheckIcon className="w-5 h-5" />
                     ) : isAi ? (
-                      <ChipBrainIcon className="w-7 h-7 text-purple-400" />
+                      <ChipBrainIcon className="w-5 h-5" />
                     ) : isApp ? (
-                      <MobileNotchIcon className="w-7 h-7 text-indigo-400" />
+                      <MobileNotchIcon className="w-5 h-5" />
                     ) : isData ? (
-                      <ArrowTrendUpIcon className="w-7 h-7 text-amber-400" />
+                      <ArrowTrendUpIcon className="w-5 h-5" />
                     ) : (
-                      <DisplayCodeIcon className="w-7 h-7 text-blue-400" />
+                      <DisplayCodeIcon className="w-5 h-5" />
                     )}
                   </div>
 
+                  {/* Core Information: Title & Clean Meta Chips */}
                   <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-sm font-bold text-neutral-900 dark:text-white truncate">
+                    {/* Line 1: Title + Status + Difficulty */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
                         {proj.title}
                       </h3>
+
+                      {/* Status Chip */}
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${isCompleted
-                            ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                        className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                          isCompleted
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                             : isInProgress
-                              ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                              : 'bg-neutral-500/10 text-neutral-400 border border-neutral-500/20'
-                          }`}
+                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border border-neutral-200/50 dark:border-neutral-700/50'
+                        }`}
                       >
-                        {proj.status}
+                        {isCompleted && <CheckCircle2 className="w-2.5 h-2.5" />}
+                        {isInProgress && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />}
+                        <span>{proj.status}</span>
                       </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 font-mono">
+
+                      {/* Difficulty Chip */}
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800/90 text-neutral-500 dark:text-neutral-400 shrink-0">
                         {proj.difficulty}
                       </span>
                     </div>
 
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate max-w-xl">
-                      {proj.description}
-                    </p>
+                    {/* Optional Detailed Summary (shown only when Detailed view is selected) */}
+                    {viewMode === 'detailed' && proj.description && (
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1 pt-0.5">
+                        {proj.description}
+                      </p>
+                    )}
 
-                    <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-neutral-400">
-                      <span className="font-semibold text-neutral-600 dark:text-neutral-300">{proj.category}</span>
-                      <span>•</span>
-                      <span>{proj.techStack.join(' • ')}</span>
-                      <span>•</span>
-                      <span>~{proj.estimatedHours} hrs</span>
+                    {/* Line 2: Curated Tech Stack Pills + Hours */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5 text-neutral-400">
+                      {proj.techStack.slice(0, 4).map((tech, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-[#282828] text-neutral-600 dark:text-neutral-300 text-[10px] font-medium border border-neutral-200/50 dark:border-neutral-800/60"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+
+                      {proj.techStack.length > 4 && (
+                        <span className="text-[10px] text-neutral-400 font-medium px-1">
+                          +{proj.techStack.length - 4}
+                        </span>
+                      )}
+
+                      <span className="text-neutral-300 dark:text-neutral-700 mx-0.5">•</span>
+
+                      <span className="inline-flex items-center gap-1 text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
+                        <Clock className="w-3 h-3 text-neutral-400" />
+                        <span>~{proj.estimatedHours} hrs</span>
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Side: Progress & Arrow */}
-                <div className="flex items-center gap-6 self-end sm:self-auto shrink-0">
+                {/* Right Side: Progress Bar & Action Arrow */}
+                <div className="flex items-center gap-4 sm:gap-5 shrink-0">
                   <div className="text-right hidden sm:block">
                     <span className="text-xs font-bold text-neutral-900 dark:text-white font-mono">
                       {proj.progressPercent}%
                     </span>
-                    <div className="w-24 h-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden mt-1">
-                      <div
-                        className={`h-full rounded-full ${isCompleted ? 'bg-emerald-500' : proj.progressPercent > 0 ? 'bg-blue-600' : 'bg-neutral-300 dark:bg-neutral-700'
+                    <div className="w-20 sm:w-28 h-2 flex items-center gap-1.5 mt-1">
+                      {proj.progressPercent > 0 && (
+                        <div
+                          style={{ flex: Math.max(proj.progressPercent, 8) }}
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            isCompleted ? 'bg-emerald-500' : 'bg-blue-600 dark:bg-blue-500'
                           }`}
-                        style={{ width: `${Math.max(proj.progressPercent, 4)}%` }}
-                      ></div>
+                        />
+                      )}
+                      {proj.progressPercent < 100 && (
+                        <div
+                          style={{ flex: Math.max(100 - proj.progressPercent, 8) }}
+                          className="h-full rounded-full bg-neutral-200 dark:bg-[#383d47] transition-all duration-300"
+                        />
+                      )}
                     </div>
                   </div>
 
-                  <div className="p-2 rounded-xl text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors">
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <div className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800/80 group-hover:bg-blue-600 group-hover:text-white text-neutral-400 flex items-center justify-center transition-colors shrink-0">
+                    <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
               </Link>

@@ -21,57 +21,95 @@ export const LessonDetailPage: React.FC = () => {
   const { track, slug } = useParams<{ track: string; slug: string }>();
   const navigate = useNavigate();
 
-  const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [nextLesson, setNextLesson] = useState<any>(null);
-  const [prevLesson, setPrevLesson] = useState<any>(null);
-  const [sandboxCode, setSandboxCode] = useState('');
+  const targetSlug = slug || 'js-event-loop-react-state';
+
+  // Fast synchronous initial cache check for zero-wait 0ms first render
+  const initialCurated = getCuratedLessonBySlug(targetSlug) || getCuratedLessons(track || 'web-dev')[0] || null;
+  const initialAllCurated = initialCurated
+    ? getCuratedLessons(initialCurated.track || track || 'web-dev')
+    : [];
+  const initialCurrIdx = initialCurated
+    ? initialAllCurated.findIndex((l) => l.slug === initialCurated.slug)
+    : -1;
+
+  const [lesson, setLesson] = useState<Lesson | null>(initialCurated);
+  const [nextLesson, setNextLesson] = useState<any>(
+    initialCurrIdx >= 0 && initialCurrIdx < initialAllCurated.length - 1
+      ? initialAllCurated[initialCurrIdx + 1]
+      : null
+  );
+  const [prevLesson, setPrevLesson] = useState<any>(
+    initialCurrIdx > 0 ? initialAllCurated[initialCurrIdx - 1] : null
+  );
+  const [moduleLessons, setModuleLessons] = useState<any[]>(initialAllCurated);
+  const [sandboxCode, setSandboxCode] = useState(
+    initialCurated?.interactiveSandbox?.initialCode || ''
+  );
   const [sandboxOutput, setSandboxOutput] = useState('');
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizScore, setQuizScore] = useState<number | null>(null);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [moduleLessons, setModuleLessons] = useState<any[]>([]);
+  const [isCompleted, setIsCompleted] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(`rishabhlabs_lesson_completed_${targetSlug}`) === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [loading, setLoading] = useState<boolean>(!initialCurated);
 
   useEffect(() => {
-    const fetchLesson = async () => {
-      const targetSlug = slug || 'javascript-array-methods';
-      const savedCompleted = localStorage.getItem(`rishabhlabs_lesson_completed_${targetSlug}`);
-      if (savedCompleted === 'true') {
-        setIsCompleted(true);
-      }
+    const currentSlug = slug || 'js-event-loop-react-state';
 
+    // Update completion state from storage
+    try {
+      const savedCompleted = localStorage.getItem(`rishabhlabs_lesson_completed_${currentSlug}`);
+      setIsCompleted(savedCompleted === 'true');
+    } catch {}
+
+    // 1. Immediately ensure client cache / curated data is displayed with 0ms latency
+    const curated = getCuratedLessonBySlug(currentSlug) || getCuratedLessons(track || 'web-dev')[0];
+    if (curated) {
+      setLesson(curated);
+      const allCurated = getCuratedLessons(curated.track || track || 'web-dev');
+      const currIdx = allCurated.findIndex((l) => l.slug === curated.slug);
+      setPrevLesson(currIdx > 0 ? allCurated[currIdx - 1] : null);
+      setNextLesson(currIdx < allCurated.length - 1 ? allCurated[currIdx + 1] : null);
+      setModuleLessons(allCurated);
+      if (curated.interactiveSandbox?.initialCode) {
+        setSandboxCode(curated.interactiveSandbox.initialCode);
+      }
+      setLoading(false);
+    }
+
+    // 2. Background sync with backend API (non-blocking)
+    let isCancelled = false;
+    const syncServerData = async () => {
       try {
-        const data = await api.getLessonBySlug(targetSlug);
+        const data = await api.getLessonBySlug(currentSlug);
+        if (isCancelled) return;
         if (data?.lesson) {
           setLesson(data.lesson);
-          setNextLesson(data.nextLesson);
-          setPrevLesson(data.prevLesson);
+          setNextLesson(data.nextLesson || null);
+          setPrevLesson(data.prevLesson || null);
           setModuleLessons(data.moduleLessons || []);
           if (data.lesson?.interactiveSandbox?.initialCode) {
             setSandboxCode(data.lesson.interactiveSandbox.initialCode);
           }
-          return;
         }
       } catch (err) {
         console.warn('Backend API lesson fetch fallback to curated catalogue:', err);
-      }
-
-      // Resilient curated fallback
-      const fallback = getCuratedLessonBySlug(targetSlug);
-      if (fallback) {
-        setLesson(fallback);
-        const allCurated = getCuratedLessons(fallback.track || track || 'web-dev');
-        const currIdx = allCurated.findIndex((l) => l.slug === fallback.slug);
-        setPrevLesson(currIdx > 0 ? allCurated[currIdx - 1] : null);
-        setNextLesson(currIdx < allCurated.length - 1 ? allCurated[currIdx + 1] : null);
-        setModuleLessons(allCurated);
-        if (fallback.interactiveSandbox?.initialCode) {
-          setSandboxCode(fallback.interactiveSandbox.initialCode);
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
         }
       }
-      setLoading(false);
     };
-    fetchLesson();
+
+    syncServerData();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [slug, track]);
 
   const handleRunSandbox = () => {
@@ -162,7 +200,23 @@ export const LessonDetailPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-neutral-400">Loading lesson workspace...</div>;
+    return (
+      <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto animate-pulse">
+        <div className="flex items-center justify-between pb-4 border-b border-neutral-200 dark:border-neutral-800">
+          <div className="h-4 w-28 bg-neutral-200 dark:bg-neutral-800 rounded-md"></div>
+          <div className="h-4 w-20 bg-neutral-200 dark:bg-neutral-800 rounded-md"></div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-3 h-80 bg-neutral-100 dark:bg-neutral-900 rounded-3xl border border-neutral-200/60 dark:border-neutral-800"></div>
+          <div className="lg:col-span-6 space-y-6">
+            <div className="h-9 w-3/4 bg-neutral-200 dark:bg-neutral-800 rounded-2xl"></div>
+            <div className="h-20 bg-neutral-100 dark:bg-neutral-900 rounded-2xl"></div>
+            <div className="h-64 bg-neutral-100 dark:bg-neutral-900 rounded-3xl"></div>
+          </div>
+          <div className="lg:col-span-3 h-72 bg-neutral-100 dark:bg-neutral-900 rounded-3xl border border-neutral-200/60 dark:border-neutral-800"></div>
+        </div>
+      </div>
+    );
   }
 
   if (!lesson) {

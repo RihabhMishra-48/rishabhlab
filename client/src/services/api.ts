@@ -93,18 +93,26 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...options.headers,
   };
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-  const data = await response.json().catch(() => ({}));
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+      signal: options.signal || controller.signal,
+    });
 
-  if (!response.ok) {
-    throw new Error(data.message || `Request failed with status ${response.status}`);
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.message || `Request failed with status ${response.status}`);
+    }
+
+    return data as T;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return data as T;
 }
 
 // Cached GET request with configurable TTL (default 2 mins) for snappy, lag-free mobile UX

@@ -97,46 +97,52 @@ export const LearnCatalogPage: React.FC = () => {
     }
   }, [queryTrack]);
 
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [groupedLessons, setGroupedLessons] = useState<Record<string, any[]>>({});
-  const [loading, setLoading] = useState(true);
+  const [lessons, setLessons] = useState<Lesson[]>(() => getCuratedLessons(selectedTrack));
+  const [groupedLessons, setGroupedLessons] = useState<Record<string, any[]>>(() => {
+    const curated = getCuratedLessons(selectedTrack);
+    const grouped: Record<string, any[]> = {};
+    curated.forEach((l) => {
+      const mod = l.moduleTitle || 'Core Engineering Lessons';
+      if (!grouped[mod]) grouped[mod] = [];
+      grouped[mod].push(l);
+    });
+    return grouped;
+  });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let isCancelled = false;
     const fetchLessons = async () => {
+      // Immediately set curated data for instant switch
+      const curated = getCuratedLessons(selectedTrack);
+      setLessons(curated);
+      const grouped: Record<string, any[]> = {};
+      curated.forEach((l) => {
+        const mod = l.moduleTitle || 'Core Engineering Lessons';
+        if (!grouped[mod]) grouped[mod] = [];
+        grouped[mod].push(l);
+      });
+      setGroupedLessons(grouped);
+
       try {
-        setLoading(true);
         const data = await api.getLessons(selectedTrack);
+        if (isCancelled) return;
         if (data?.lessons && data.lessons.length > 0) {
           setLessons(data.lessons);
           setGroupedLessons(data.grouped || {});
-        } else {
-          // Fallback to curated lessons for resilient offline & serverless UX
-          const curated = getCuratedLessons(selectedTrack);
-          setLessons(curated);
-          const grouped: Record<string, any[]> = {};
-          curated.forEach((l) => {
-            const mod = l.moduleTitle || 'Core Engineering Lessons';
-            if (!grouped[mod]) grouped[mod] = [];
-            grouped[mod].push(l);
-          });
-          setGroupedLessons(grouped);
         }
       } catch (err) {
-        console.warn('API lessons fetch fallback to curated catalog:', err);
-        const curated = getCuratedLessons(selectedTrack);
-        setLessons(curated);
-        const grouped: Record<string, any[]> = {};
-        curated.forEach((l) => {
-          const mod = l.moduleTitle || 'Core Engineering Lessons';
-          if (!grouped[mod]) grouped[mod] = [];
-          grouped[mod].push(l);
-        });
-        setGroupedLessons(grouped);
+        // Silently handled with instant curated fallback
       } finally {
-        setLoading(false);
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     };
     fetchLessons();
+    return () => {
+      isCancelled = true;
+    };
   }, [selectedTrack]);
 
   const handleTrackChange = (trackId: string) => {
@@ -313,10 +319,6 @@ export const LearnCatalogPage: React.FC = () => {
             {/* Fixed Sticky Modal Header (Solid background, no blur) */}
             <div className="p-5 sm:p-6 pb-4 border-b border-neutral-100 dark:border-neutral-800 flex items-start justify-between gap-4 shrink-0 bg-white dark:bg-[#1a1a1a]">
               <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/50 font-mono">
-                  <Sparkles className="w-3 h-3" />
-                  <span>LEARNING SPECIALIZATION • MAX 2 TRACKS</span>
-                </div>
                 <h2 className="text-xl sm:text-2xl font-black tracking-tight text-neutral-900 dark:text-white">
                   Explore & Enroll in Learning Tracks
                 </h2>
@@ -347,11 +349,10 @@ export const LearnCatalogPage: React.FC = () => {
                       return (
                         <span
                           key={trk}
-                          className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold ${
-                            isPrim
-                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                          }`}
+                          className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold ${isPrim
+                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                            }`}
                         >
                           {displayTitle} {isPrim ? '(Primary)' : '(2nd Track)'}
                         </span>
@@ -406,15 +407,13 @@ export const LearnCatalogPage: React.FC = () => {
                   return (
                     <div
                       key={t.id}
-                      className={`p-4 rounded-2xl border transition-colors relative flex flex-col justify-between gap-3 ${
-                        isLastCard ? 'sm:col-span-2' : 'sm:col-span-1'
-                      } ${
-                        isCurrentView
+                      className={`p-4 rounded-2xl border transition-colors relative flex flex-col justify-between gap-3 ${isLastCard ? 'sm:col-span-2' : 'sm:col-span-1'
+                        } ${isCurrentView
                           ? 'bg-neutral-50/90 dark:bg-neutral-900/80 border-blue-500/50 ring-1 ring-blue-500/30'
                           : isEnrolled
                             ? 'bg-neutral-50/50 dark:bg-neutral-900/40 border-emerald-500/30'
                             : `bg-neutral-50/30 dark:bg-neutral-900/30 border-neutral-200/80 dark:border-neutral-800 ${colorStyles.borderHover}`
-                      }`}
+                        }`}
                     >
                       {/* Top Row: Icon + Title + Badge + Sub-stats + Status Pill */}
                       <div className="flex items-start justify-between gap-2.5">

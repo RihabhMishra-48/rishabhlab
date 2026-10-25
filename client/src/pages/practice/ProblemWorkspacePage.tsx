@@ -24,10 +24,14 @@ export const ProblemWorkspacePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { isDarkMode } = useAuth();
 
-  const [problem, setProblem] = useState<CodingProblem | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python' | 'cpp' | 'java'>('javascript');
-  const [code, setCode] = useState('');
-  const [loading, setLoading] = useState(true);
+  const targetSlug = slug || 'tensor-reshape-normalization';
+  const initialCurated = getCuratedProblemBySlug(targetSlug) || getCuratedProblemBySlug('two-sum') || null;
+  const initialLang = initialCurated?.starterCode?.['python'] ? 'python' : 'javascript';
+
+  const [problem, setProblem] = useState<CodingProblem | null>(initialCurated);
+  const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python' | 'cpp' | 'java'>(initialLang);
+  const [code, setCode] = useState(initialCurated?.starterCode?.[initialLang] || '');
+  const [loading, setLoading] = useState(!initialCurated);
 
   // Execution state
   const [activeBottomTab, setActiveBottomTab] = useState<'testcases' | 'output'>('testcases');
@@ -56,33 +60,39 @@ export const ProblemWorkspacePage: React.FC = () => {
   }, [hintModalOpen]);
 
   useEffect(() => {
+    const currentSlug = slug || 'tensor-reshape-normalization';
+    const fallback = getCuratedProblemBySlug(currentSlug) || getCuratedProblemBySlug('two-sum');
+    if (fallback) {
+      setProblem(fallback);
+      const lang = fallback.starterCode?.['python'] ? 'python' : 'javascript';
+      setSelectedLanguage(lang);
+      setCode(fallback.starterCode?.[lang] || '');
+      setLoading(false);
+    }
+
+    let isCancelled = false;
     const fetchProblem = async () => {
-      const targetSlug = slug || 'tensor-reshape-normalization';
       try {
-        const data = await api.getProblemBySlug(targetSlug);
+        const data = await api.getProblemBySlug(currentSlug);
+        if (isCancelled) return;
         if (data && data.title) {
           setProblem(data);
           const lang = data.starterCode?.['python'] ? 'python' : 'javascript';
           setSelectedLanguage(lang);
           setCode(data.starterCode?.[lang] || '');
-          setLoading(false);
-          return;
         }
       } catch (err) {
-        console.warn('API getProblemBySlug fallback to curated problem:', err);
+        // Silently handled with instant curated fallback
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
-
-      // Curated fallback
-      const fallback = getCuratedProblemBySlug(targetSlug) || getCuratedProblemBySlug('two-sum');
-      if (fallback) {
-        setProblem(fallback);
-        const lang = fallback.starterCode?.['python'] ? 'python' : 'javascript';
-        setSelectedLanguage(lang);
-        setCode(fallback.starterCode?.[lang] || '');
-      }
-      setLoading(false);
     };
     fetchProblem();
+    return () => {
+      isCancelled = true;
+    };
   }, [slug]);
 
   // When language switches, update code if untouched

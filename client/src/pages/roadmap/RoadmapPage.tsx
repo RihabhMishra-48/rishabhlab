@@ -313,11 +313,27 @@ export const RoadmapPage: React.FC = () => {
           </button>
 
           {/* Progress summary badge */}
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-[#262626] text-xs font-semibold text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800">
-            <span className={`w-2 h-2 rounded-full ${completedCount > 0 ? 'bg-emerald-500' : 'bg-neutral-400'}`}></span>
+          <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-[#262626] text-xs font-semibold text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800">
+            <span className={`w-2 h-2 rounded-full ${completedCount > 0 ? 'bg-blue-500' : 'bg-neutral-400'}`}></span>
             <span>
               {completedCount} of {nodes.length || 6} Stages ({progressPercent}%)
             </span>
+            <div className="w-16 h-2 hidden sm:flex items-center gap-1 ml-1">
+              {progressPercent > 0 && (
+                <div
+                  style={{ flex: Math.max(progressPercent, 10) }}
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    progressPercent === 100 ? 'bg-emerald-500' : 'bg-blue-600 dark:bg-blue-500'
+                  }`}
+                />
+              )}
+              {progressPercent < 100 && (
+                <div
+                  style={{ flex: Math.max(100 - progressPercent, 10) }}
+                  className="h-full rounded-full bg-neutral-300 dark:bg-[#383d47] transition-all duration-300"
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -729,10 +745,6 @@ export const RoadmapPage: React.FC = () => {
             {/* Fixed Sticky Modal Header (Solid background, no blur) */}
             <div className="p-5 sm:p-6 pb-4 border-b border-neutral-100 dark:border-neutral-800 flex items-start justify-between gap-4 shrink-0 bg-white dark:bg-[#1a1a1a]">
               <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/50 font-mono">
-                  <Sparkles className="w-3 h-3" />
-                  <span>SPECIALIZATION HUB • MAX 2 TRACKS</span>
-                </div>
                 <h2 className="text-xl sm:text-2xl font-black tracking-tight text-neutral-900 dark:text-white">
                   Engineering Tracks & Dual Specialization
                 </h2>
@@ -762,8 +774,8 @@ export const RoadmapPage: React.FC = () => {
                         <span
                           key={trk}
                           className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold ${isPrim
-                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                             }`}
                         >
                           {trk} {isPrim ? '(Primary)' : '(2nd Track)'}

@@ -113,65 +113,73 @@ export const HackathonModePage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-stretch gap-4 sm:gap-5">
-          <div className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center p-3.5 sm:p-4 shrink-0 shadow-2xs">
-            <img src="/graphics/troph-cap.svg" alt="Competitions & Hackathons" className="w-full h-full object-contain dark:invert" />
+        <div className="flex items-center gap-4 sm:gap-5">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-amber-500/5 border border-amber-500/30 flex items-center justify-center text-amber-500 shadow-md shadow-amber-500/10 shrink-0 relative overflow-hidden">
+            <div className="absolute inset-0 bg-radial from-amber-400/20 via-transparent to-transparent pointer-events-none" />
+            <Trophy className="w-7 h-7 sm:w-8 sm:h-8 text-amber-500 relative z-10" />
           </div>
-          <div className="flex flex-col justify-between py-0.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 leading-none">
-              Competitions, Sprints & Rankings
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 font-mono">
+                Competitions & Leaderboards
+              </span>
+              <span className="w-1 h-1 rounded-full bg-amber-500" />
+              <span className="text-[10px] font-semibold text-neutral-400 font-mono">
+                Season 4
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
               Arena & Hackathons
             </h1>
-            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none">
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
               Compete in weekly algorithmic sprints, earn campus leaderboard ranks, and build 48-hr prototypes.
             </p>
           </div>
         </div>
 
         {/* User Rank Card Pill */}
-        <div className="flex items-center gap-3 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs">
-          <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs font-mono">
+        <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-white dark:bg-[#1f1f23] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-neutral-950 font-black text-xs font-mono flex items-center justify-center shadow-xs">
             #14
           </div>
-          <div className="text-left">
+          <div className="text-left space-y-0.5">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-bold text-neutral-900 dark:text-white">GLA Cohort</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+              <span className="text-[10px] px-1.5 py-0.2 rounded-md font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 Top 4%
               </span>
             </div>
-            <div className="text-[11px] text-neutral-500 flex items-center gap-1">
+            <div className="text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center gap-1 font-mono">
               <Flame className="w-3 h-3 text-amber-500 fill-current" />
-              <span>17 Days Streak • 1,450 XP</span>
+              <span>17d Streak • 1,450 XP</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Primary Section Switcher Tabs */}
-      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800">
+      <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1e] border border-neutral-200/80 dark:border-neutral-800/80">
         <button
           onClick={() => handleTabChange('competitions')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeMainTab === 'competitions'
-              ? 'bg-white dark:bg-[#262626] text-neutral-950 dark:text-white shadow-xs'
+              ? 'bg-white dark:bg-[#26262c] text-neutral-950 dark:text-white shadow-xs border border-neutral-200/60 dark:border-neutral-700/60'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
           }`}
         >
           <Trophy className="w-4 h-4 text-amber-500" />
           <span>Live Sprints & Contests</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-amber-500/15 text-amber-600 dark:text-amber-400">
-            1 LIVE
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>1 LIVE</span>
           </span>
         </button>
 
         <button
           onClick={() => handleTabChange('leaderboard')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeMainTab === 'leaderboard'
-              ? 'bg-white dark:bg-[#262626] text-neutral-950 dark:text-white shadow-xs'
+              ? 'bg-white dark:bg-[#26262c] text-neutral-950 dark:text-white shadow-xs border border-neutral-200/60 dark:border-neutral-700/60'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
           }`}
         >
@@ -181,9 +189,9 @@ export const HackathonModePage: React.FC = () => {
 
         <button
           onClick={() => handleTabChange('builder')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeMainTab === 'builder'
-              ? 'bg-white dark:bg-[#262626] text-neutral-950 dark:text-white shadow-xs'
+              ? 'bg-white dark:bg-[#26262c] text-neutral-950 dark:text-white shadow-xs border border-neutral-200/60 dark:border-neutral-700/60'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
           }`}
         >
@@ -198,54 +206,131 @@ export const HackathonModePage: React.FC = () => {
       {activeMainTab === 'competitions' && (
         <div className="space-y-6 animate-in fade-in duration-200">
           {/* Highlight Live Sprint Banner */}
-          <div className="relative p-6 sm:p-7 rounded-3xl bg-neutral-900 dark:bg-[#212121] text-white border border-neutral-800 shadow-xl overflow-hidden">
-            <div className="absolute right-0 bottom-0 opacity-15 pointer-events-none select-none w-48 h-48 flex items-end justify-end p-4">
-              <Trophy className="w-40 h-40 text-amber-400" />
-            </div>
+          <div className="relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#1a1b22] via-[#15161c] to-[#101115] text-white border border-neutral-800/80 shadow-xl overflow-hidden">
+            {/* Ambient Lighting Glows */}
+            <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 space-y-3 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                <span>COMPETITION HAPPENING NOW</span>
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              {/* Left Column: Sprint Details & CTAs (7 cols) */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold font-mono bg-amber-500/15 text-amber-400 border border-amber-500/30 backdrop-blur-xs">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  </span>
+                  <span>LIVE SPRINT HAPPENING NOW</span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-xs font-mono font-bold text-neutral-400 uppercase tracking-wider block">
+                    Weekly Sprint #18 • Algorithm Arena
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
+                    High-Throughput In-Memory Cache
+                  </h2>
+                </div>
+
+                <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed max-w-xl">
+                  Design an in-memory key-value cache engine supporting TTL expiration, thread-safe LRU eviction, and sub-millisecond lookups under high concurrent simulated workload.
+                </p>
+
+                {/* Sleek Glass Metric Capsules */}
+                <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-mono font-semibold">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>3h 42m Left</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/25 text-blue-400 text-xs font-mono font-semibold">
+                    <Users className="w-3.5 h-3.5" />
+                    <span>428 GLA Coders Active</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-mono font-semibold">
+                    <Trophy className="w-3.5 h-3.5" />
+                    <span>₹20,000 Prize Pool</span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="pt-2 flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={() => alert('Launching Weekly Sprint Workspace... Opening problem IDE.')}
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-neutral-950 font-extrabold text-xs shadow-md shadow-amber-500/20 flex items-center gap-2 cursor-pointer transition-all"
+                  >
+                    <Code className="w-4 h-4" />
+                    <span>Enter Code Arena & Submit</span>
+                  </button>
+                  <button
+                    onClick={() => handleTabChange('leaderboard')}
+                    className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-semibold text-xs border border-white/10 transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span>View Sprint Standings</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
+                  </button>
+                </div>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                Weekly Code Sprint #18: In-Memory Cache
-              </h2>
+              {/* Right Column: Live Leaderboard Snapshot Card (5 cols) */}
+              <div className="lg:col-span-5">
+                <div className="p-4 sm:p-5 rounded-2xl bg-neutral-900/80 dark:bg-black/40 border border-neutral-800 backdrop-blur-md space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-neutral-800">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5 font-mono">
+                      <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                      Live Sprint Standings
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 font-bold">
+                      GLA Cohort
+                    </span>
+                  </div>
 
-              <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
-                Design an in-memory key-value cache engine supporting TTL expiration, thread-safe LRU eviction, and sub-millisecond lookups under high concurrent simulated workload.
-              </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-5 h-5 rounded-md bg-amber-500 text-neutral-950 font-extrabold text-[10px] flex items-center justify-center font-mono">
+                          #1
+                        </span>
+                        <div>
+                          <span className="font-bold text-white block leading-tight">Sahil Kumar</span>
+                          <span className="text-[10px] text-neutral-400">44m solve • 0 fails</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-amber-400 text-xs">980 pts</span>
+                    </div>
 
-              <div className="flex flex-wrap items-center gap-4 pt-2 text-xs font-mono">
-                <div className="flex items-center gap-1.5 text-amber-400">
-                  <Clock className="w-4 h-4" />
-                  <span>3h 42m Left to Submit</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-neutral-300">
-                  <Users className="w-4 h-4" />
-                  <span>428 GLA Coders Active</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-emerald-400">
-                  <Trophy className="w-4 h-4" />
-                  <span>₹20,000 Prize Pool</span>
-                </div>
-              </div>
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-5 h-5 rounded-md bg-neutral-700 text-white font-extrabold text-[10px] flex items-center justify-center font-mono">
+                          #2
+                        </span>
+                        <div>
+                          <span className="font-bold text-white block leading-tight">Pooja Sharma</span>
+                          <span className="text-[10px] text-neutral-400">51m solve • 1 retry</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-neutral-300 text-xs">920 pts</span>
+                    </div>
 
-              <div className="pt-2 flex items-center gap-3">
-                <button
-                  onClick={() => alert('Launching Weekly Sprint Workspace... Opening problem IDE.')}
-                  className="px-5 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-neutral-950 font-extrabold text-xs transition-colors shadow-xs flex items-center gap-2"
-                >
-                  <Code className="w-4 h-4" />
-                  <span>Enter Code Arena & Submit</span>
-                </button>
-                <button
-                  onClick={() => handleTabChange('leaderboard')}
-                  className="px-4 py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-colors"
-                >
-                  View Sprint Standings
-                </button>
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-5 h-5 rounded-md bg-neutral-800 text-neutral-400 font-extrabold text-[10px] flex items-center justify-center font-mono">
+                          #3
+                        </span>
+                        <div>
+                          <span className="font-bold text-white block leading-tight">Vikas Dubey</span>
+                          <span className="text-[10px] text-neutral-400">58m solve • 1 retry</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-neutral-300 text-xs">870 pts</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-neutral-800/80 flex items-center justify-between text-[11px] text-neutral-400 font-mono">
+                    <span className="flex items-center gap-1">
+                      <span className="text-amber-400 font-bold">Your Rank: #14</span> (720 pts)
+                    </span>
+                    <span className="text-emerald-400 font-semibold">+150 pts to Top 10</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -253,39 +338,44 @@ export const HackathonModePage: React.FC = () => {
           {/* Competitions Grid */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-neutral-900 dark:text-white">
-                Upcoming Hackathons & Code Sprints
-              </h2>
-              <span className="text-xs text-neutral-500 font-medium">
+              <div>
+                <h2 className="text-base font-bold text-neutral-900 dark:text-white">
+                  Upcoming Hackathons & Code Sprints
+                </h2>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                  Join national hackathons, weekly sprints, and speed runs to boost campus rank.
+                </p>
+              </div>
+              <span className="text-xs text-neutral-400 font-mono font-medium hidden sm:block">
                 4 Active & Verified Contests
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {competitions.map((comp) => {
                 const isReg = registeredMap[comp.id];
 
                 return (
                   <div
                     key={comp.id}
-                    className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col justify-between space-y-4 transition-all"
+                    className="p-6 rounded-3xl bg-white dark:bg-[#1e1f24] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col justify-between space-y-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
                   >
-                    <div className="space-y-3">
+                    <div className="space-y-3.5">
                       <div className="flex items-center justify-between gap-2">
-                        <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold font-mono uppercase ${
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold font-mono uppercase border ${
                           comp.status === 'live'
-                            ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
-                            : 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                            : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
                         }`}>
                           {comp.status === 'live' ? '● LIVE CONTEST' : comp.remainingTime}
                         </span>
 
-                        <span className="text-[11px] font-semibold text-neutral-500">
+                        <span className="text-[11px] font-semibold text-neutral-400 dark:text-neutral-500 font-mono">
                           {comp.category}
                         </span>
                       </div>
 
-                      <h3 className="text-base font-bold text-neutral-900 dark:text-white leading-snug">
+                      <h3 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white leading-snug">
                         {comp.title}
                       </h3>
 
@@ -293,20 +383,28 @@ export const HackathonModePage: React.FC = () => {
                         {comp.description}
                       </p>
 
-                      <div className="p-3 rounded-2xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200/60 dark:border-neutral-800/60 text-xs space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
-                          Brief Statement
-                        </span>
-                        <p className="text-[11px] font-mono text-neutral-800 dark:text-neutral-200">
+                      {/* Specification Preview Box */}
+                      <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-[#15161a] border border-neutral-200/60 dark:border-neutral-800/80 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 font-mono flex items-center gap-1.5">
+                            <Code className="w-3 h-3 text-blue-500" />
+                            Challenge Specification
+                          </span>
+                          <span className="text-[10px] font-mono text-neutral-400">
+                            {comp.difficulty}
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-mono text-neutral-800 dark:text-neutral-200 leading-normal">
                           {comp.problemStatementBrief}
                         </p>
                       </div>
 
-                      <div className="flex flex-wrap gap-1.5 pt-1">
+                      {/* Tech Tags */}
+                      <div className="flex flex-wrap gap-1.5">
                         {comp.tags.map((tag) => (
                           <span
                             key={tag}
-                            className="px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-neutral-100 dark:bg-[#25262c] text-neutral-600 dark:text-neutral-300 border border-neutral-200/50 dark:border-neutral-700/50"
                           >
                             {tag}
                           </span>
@@ -314,20 +412,21 @@ export const HackathonModePage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between gap-3">
+                    <div className="pt-3.5 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between gap-3">
                       <div>
-                        <span className="text-[10px] text-neutral-400 block">Prize & Perks</span>
-                        <span className="text-xs font-bold text-neutral-900 dark:text-white font-mono">
-                          {comp.prizePool}
+                        <span className="text-[10px] text-neutral-400 block font-mono">Prize & Perks</span>
+                        <span className="text-xs font-bold text-neutral-900 dark:text-white font-mono flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                          <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                          <span>{comp.prizePool}</span>
                         </span>
                       </div>
 
                       <button
                         onClick={() => handleToggleRegister(comp.id)}
-                        className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                           isReg
-                            ? 'bg-emerald-500 text-white shadow-xs'
-                            : 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 hover:opacity-90'
+                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                            : 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 hover:opacity-90 shadow-xs'
                         }`}
                       >
                         {isReg ? 'Registered ✓' : 'Register Now'}

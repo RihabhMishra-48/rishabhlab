@@ -15,7 +15,9 @@ import {
   Sparkles,
   MessageSquare,
   ShieldCheck,
-  Check
+  Check,
+  Clock,
+  Activity
 } from 'lucide-react';
 
 export const ProjectWorkspacePage: React.FC = () => {
@@ -174,6 +176,13 @@ export const ProjectWorkspacePage: React.FC = () => {
     );
   }
 
+  const allTasks = project.milestones.flatMap((m) => m.tasks || []);
+  const totalTasks = allTasks.length;
+  const completedTasks = allTasks.filter((t) => t.isCompleted ?? (t as any).completed).length;
+  const remainedTasks = Math.max(0, totalTasks - completedTasks);
+  const currentPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : project.progressPercent;
+  const remainedPercent = totalTasks > 0 ? Math.max(0, 100 - currentPercent) : 0;
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
       {/* Back button & Title Header */}
@@ -234,30 +243,73 @@ export const ProjectWorkspacePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Progress Metric Banner */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
-        <div className="space-y-1 w-full sm:w-auto">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-            Milestone Completion
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-neutral-900 dark:text-white font-mono">
-              {project.progressPercent}%
+      {/* Progress Metric Banner with Dual Progress Lines (Current Progress & Remained) */}
+      <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        {/* Left Side: Completion Stats & Badges */}
+        <div className="space-y-2.5 w-full lg:w-auto">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 font-mono">
+              Milestone Completion
             </span>
-            <span className="text-xs text-neutral-500">
-              ({project.milestones.reduce((acc, m) => acc + m.tasks.filter((t) => t.isCompleted).length, 0)} of{' '}
-              {project.milestones.reduce((acc, m) => acc + m.tasks.length, 0)} tasks finished)
+            {currentPercent === 100 ? (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                <CheckCircle2 className="w-2.5 h-2.5" />
+                <span>All Milestones Mastered 🎉</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <span>In Progress</span>
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-baseline gap-3">
+            <span className="text-3xl sm:text-4xl font-extrabold text-neutral-900 dark:text-white font-mono tracking-tight">
+              {currentPercent}%
             </span>
           </div>
         </div>
 
-        <div className="w-full sm:w-64 h-2.5 rounded-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${
-              project.progressPercent === 100 ? 'bg-emerald-500' : 'bg-blue-600'
-            }`}
-            style={{ width: `${project.progressPercent}%` }}
-          ></div>
+        {/* Right Side: Straight Line Dual-Segment Progress (Active Progress & Remained) */}
+        <div className="w-full lg:w-96 space-y-2.5 shrink-0">
+          <div className="flex items-center justify-between text-xs font-semibold">
+            <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              <span>Current Progress ({currentPercent}%)</span>
+            </span>
+            <span className="flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400">
+              <span className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-[#383d47]" />
+              <span>Remained ({remainedPercent}%)</span>
+            </span>
+          </div>
+
+          {/* Straight line bar with two distinct rounded pill segments separated by a gap */}
+          <div className="w-full h-3 flex items-center gap-2">
+            {currentPercent > 0 && (
+              <div
+                style={{ flex: currentPercent > 0 ? Math.max(currentPercent, 6) : 0 }}
+                className={`h-full rounded-full transition-all duration-500 ${
+                  currentPercent === 100
+                    ? 'bg-emerald-500'
+                    : 'bg-blue-600 dark:bg-blue-500'
+                }`}
+                title={`Current Progress: ${currentPercent}% (${completedTasks} tasks)`}
+              />
+            )}
+            {remainedPercent > 0 && (
+              <div
+                style={{ flex: remainedPercent > 0 ? Math.max(remainedPercent, 6) : 0 }}
+                className="h-full rounded-full bg-neutral-200 dark:bg-[#383d47] transition-all duration-500"
+                title={`Remained: ${remainedPercent}% (${remainedTasks} tasks)`}
+              />
+            )}
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] text-neutral-400 font-mono">
+            <span>{completedTasks} of {totalTasks} tasks finished</span>
+            <span>{remainedTasks} {remainedTasks === 1 ? 'task' : 'tasks'} remaining</span>
+          </div>
         </div>
       </div>
 
@@ -275,17 +327,36 @@ export const ProjectWorkspacePage: React.FC = () => {
             </div>
 
             <div className="space-y-6">
-              {project.milestones.map((milestone) => (
-                <div key={milestone.id} className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                      <span>{milestone.title}</span>
-                    </h3>
-                    <span className="text-[10px] text-neutral-400 font-mono">
-                      {milestone.tasks.filter((t) => t.isCompleted).length}/{milestone.tasks.length}
-                    </span>
-                  </div>
+              {project.milestones.map((milestone) => {
+                const mCompleted = milestone.tasks.filter((t) => t.isCompleted ?? (t as any).completed).length;
+                const mTotal = milestone.tasks.length;
+                const mPercent = mTotal > 0 ? Math.round((mCompleted / mTotal) * 100) : 0;
+
+                return (
+                  <div key={milestone.id} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-2">
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            mPercent === 100 ? 'bg-emerald-500' : mCompleted > 0 ? 'bg-blue-500' : 'bg-neutral-400'
+                          }`}
+                        />
+                        <span>{milestone.title}</span>
+                      </h3>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-16 h-1 rounded-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden hidden sm:block">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              mPercent === 100 ? 'bg-emerald-500' : 'bg-blue-500'
+                            }`}
+                            style={{ width: `${mPercent}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-neutral-400 font-mono font-medium">
+                          {mCompleted}/{mTotal}
+                        </span>
+                      </div>
+                    </div>
 
                   <div className="space-y-2 pl-3">
                     {milestone.tasks.map((task) => (
@@ -308,8 +379,9 @@ export const ProjectWorkspacePage: React.FC = () => {
                     ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
+          </div>
           </div>
 
           {/* Technical Requirements Spec */}
