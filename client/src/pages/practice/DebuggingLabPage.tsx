@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { CodingProblem } from '../../types';
-import { Bug, CheckCircle2, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { CheckCircle2, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { BugIcon } from '../../components/icons/TrackIcons';
 
 export const DebuggingLabPage: React.FC = () => {
   const [debuggingProblems, setDebuggingProblems] = useState<CodingProblem[]>([]);
@@ -26,7 +27,7 @@ export const DebuggingLabPage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-5xl mx-auto">
       <div>
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 mb-3">
-          <Bug className="w-3.5 h-3.5" />
+          <BugIcon className="w-3.5 h-3.5" />
           <span>Interactive Debugging Lab</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">

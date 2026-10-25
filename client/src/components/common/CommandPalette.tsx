@@ -10,10 +10,10 @@ import {
   Users,
   BookOpen,
   CalendarDays,
-  Bug,
   Building2,
   X
 } from 'lucide-react';
+import { BugIcon } from '../icons/TrackIcons';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -25,18 +25,20 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
   const navigate = useNavigate();
 
   const items = [
+    { title: 'Home Dashboard Overview', category: 'Home', path: '/dashboard', icon: Compass, customGraphic: '/graphics/house-chimney.svg' },
     { title: "Today's Mission (Day 17)", category: 'Mission', path: '/missions', icon: CheckCircle2 },
     { title: 'Personalized Roadmap', category: 'Roadmap', path: '/roadmap', icon: Compass },
-    { title: 'Learn: JavaScript Array Methods', category: 'Learn', path: '/learn/web-dev/javascript-array-methods', icon: BookOpen },
-    { title: 'Learn: DOM Manipulation & Events', category: 'Learn', path: '/learn/web-dev/dom-manipulation-events', icon: BookOpen },
+    { title: 'Learn: JavaScript Array Methods', category: 'Learn', path: '/learn/web-dev/javascript-array-methods', icon: BookOpen, customGraphic: '/graphics/e-learning.svg' },
+    { title: 'Learn: DOM Manipulation & Events', category: 'Learn', path: '/learn/web-dev/dom-manipulation-events', icon: BookOpen, customGraphic: '/graphics/e-learning.svg' },
     { title: 'Practice: Filter Active Users', category: 'Coding', path: '/practice/filter-active-users', icon: Code2 },
     { title: 'Practice: Two Sum (Hash Map)', category: 'Coding', path: '/practice/two-sum', icon: Code2 },
-    { title: 'Fix the Bug: Off-by-One Accumulator', category: 'Debugging', path: '/practice/fix-the-bug-off-by-one', icon: Bug },
+    { title: 'Fix the Bug: Off-by-One Accumulator', category: 'Debugging', path: '/practice/fix-the-bug-off-by-one', icon: BugIcon },
     { title: 'Project: AI Resume Analyzer', category: 'Projects', path: '/projects/ai-resume-analyzer', icon: FolderGit2 },
     { title: 'Project: College Event Platform', category: 'Projects', path: '/projects/college-event-platform', icon: FolderGit2 },
     { title: 'Hackathon Mode (12 Days Countdown)', category: 'Hackathon', path: '/hackathon', icon: Trophy },
     { title: 'Book 1:1 Mentorship Session', category: 'Mentorship', path: '/mentorship', icon: Users, customGraphic: '/graphics/mentorship.png' },
     { title: 'Weekly Review (Week 3 Reflection)', category: 'Review', path: '/weekly-review', icon: CalendarDays },
+    { title: 'My Profile & Verified Work', category: 'Profile', path: '/profile', icon: Users, customGraphic: '/graphics/user.svg' },
     { title: 'GLA University College Dashboard', category: 'College', path: '/college', icon: Building2 },
   ];
 

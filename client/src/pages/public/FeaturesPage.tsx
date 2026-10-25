@@ -44,6 +44,7 @@ export const FeaturesPage: React.FC = () => {
       tagline: 'Interactive lessons with zero fluff',
       description: 'Full tracks for Web Development, AI/ML, and Data Analytics. Try syntax directly in the embedded sandbox and verify understanding with quizzes.',
       icon: BookOpen,
+      customGraphic: '/graphics/e-learning.svg',
       color: 'text-cyan-500',
       bgColor: 'bg-cyan-500/10',
       actionUrl: '/learn',

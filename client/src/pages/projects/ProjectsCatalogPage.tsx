@@ -133,11 +133,10 @@ export const ProjectsCatalogPage: React.FC = () => {
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-              selectedCategory === cat
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${selectedCategory === cat
                 ? 'bg-blue-600 text-white shadow-xs'
                 : 'bg-neutral-100 dark:bg-[#262626] text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200'
-            }`}
+              }`}
           >
             {cat}
           </button>
@@ -150,11 +149,10 @@ export const ProjectsCatalogPage: React.FC = () => {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              activeTab === tab
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${activeTab === tab
                 ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-2xs'
                 : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2a2a2a]'
-            }`}
+              }`}
           >
             {tab}
           </button>
@@ -207,13 +205,12 @@ export const ProjectsCatalogPage: React.FC = () => {
                         {proj.title}
                       </h3>
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                          isCompleted
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${isCompleted
                             ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
                             : isInProgress
-                            ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                            : 'bg-neutral-500/10 text-neutral-400 border border-neutral-500/20'
-                        }`}
+                              ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                              : 'bg-neutral-500/10 text-neutral-400 border border-neutral-500/20'
+                          }`}
                       >
                         {proj.status}
                       </span>
@@ -244,9 +241,8 @@ export const ProjectsCatalogPage: React.FC = () => {
                     </span>
                     <div className="w-24 h-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden mt-1">
                       <div
-                        className={`h-full rounded-full ${
-                          isCompleted ? 'bg-emerald-500' : proj.progressPercent > 0 ? 'bg-blue-600' : 'bg-neutral-300 dark:bg-neutral-700'
-                        }`}
+                        className={`h-full rounded-full ${isCompleted ? 'bg-emerald-500' : proj.progressPercent > 0 ? 'bg-blue-600' : 'bg-neutral-300 dark:bg-neutral-700'
+                          }`}
                         style={{ width: `${Math.max(proj.progressPercent, 4)}%` }}
                       ></div>
                     </div>

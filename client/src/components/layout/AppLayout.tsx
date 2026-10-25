@@ -3,7 +3,9 @@ import { Outlet, NavLink } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { CommandPalette } from '../common/CommandPalette';
-import { Home, Compass, CheckCircle2, User as UserIcon } from 'lucide-react';
+import { Compass, CheckCircle2 } from 'lucide-react';
+import { HomeChimneyIcon, UserProfileIcon } from '../icons/TrackIcons';
+import { MascotCompanion } from '../common/MascotCompanion';
 
 export const AppLayout: React.FC = () => {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -63,7 +65,7 @@ export const AppLayout: React.FC = () => {
             }`
           }
         >
-          <Home className="w-5 h-5" />
+          <HomeChimneyIcon className="w-5 h-5" />
           <span>Home</span>
         </NavLink>
 
@@ -99,11 +101,12 @@ export const AppLayout: React.FC = () => {
             }`
           }
         >
-          <UserIcon className="w-5 h-5" />
+          <UserProfileIcon className="w-5 h-5" />
           <span>Profile</span>
         </NavLink>
       </div>
 
+      <MascotCompanion />
       <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
     </div>
   );

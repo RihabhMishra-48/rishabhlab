@@ -11,6 +11,8 @@ export interface User {
   githubUsername?: string;
   targetGoal?: string;
   isOnboarded: boolean;
+  streakDays?: number;
+  streak_days?: number;
 }
 
 export interface MissionTask {

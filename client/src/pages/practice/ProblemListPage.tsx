@@ -1,48 +1,127 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { CodingProblem } from '../../types';
 import { getCuratedProblems } from '../../data/curatedProblems';
 import {
-  Bug,
   CheckCircle2,
   ArrowRight,
   Filter,
   Search,
   Sparkles,
-  Terminal
+  Terminal,
+  Target,
+  Plus,
+  X,
+  Code
 } from 'lucide-react';
 import {
   DisplayCodeIcon,
   ChipBrainIcon,
   ShieldCheckIcon,
   MobileNotchIcon,
-  ArrowTrendUpIcon
+  ArrowTrendUpIcon,
+  BugIcon
 } from '../../components/icons/TrackIcons';
+
+const TRACK_CONFIGS = [
+  {
+    id: 'Web Development',
+    title: 'Web Development',
+    icon: DisplayCodeIcon,
+    badge: 'Full Stack',
+    accentColor: 'blue' as const,
+    desc: 'JavaScript DOM, React 19 State, Debouncing, Polyfills & Async Workflows',
+    skills: ['DOM Trees', 'React State', 'Async Iterators', 'Event Loops'],
+  },
+  {
+    id: 'AI & Machine Learning',
+    title: 'AI & Machine Learning',
+    icon: ChipBrainIcon,
+    badge: 'GenAI & Math',
+    accentColor: 'purple' as const,
+    desc: 'NumPy Tensors, Min-Max Normalization, Embeddings & Vector Calculations',
+    skills: ['Tensors', 'Cosine Similarity', 'Tokenizers', 'Softmax'],
+  },
+  {
+    id: 'Mobile App Development',
+    title: 'Mobile App Development',
+    icon: MobileNotchIcon,
+    badge: 'Mobile Systems',
+    accentColor: 'cyan' as const,
+    desc: 'Safe Area Calculations, Responsive Viewports & Native Gesture Handlers',
+    skills: ['Safe Insets', 'Gesture Trees', 'Layout Engines', 'Async Queues'],
+  },
+  {
+    id: 'Cybersecurity',
+    title: 'Cybersecurity',
+    icon: ShieldCheckIcon,
+    badge: 'Security & Auth',
+    accentColor: 'emerald' as const,
+    desc: 'JWT Signature Verification, Base64URL Decoders & IDOR Exploit Mitigations',
+    skills: ['JWT RFC7519', 'Base64URL', 'Access Control', 'Hashing'],
+  },
+  {
+    id: 'Data & Analytics',
+    title: 'Data & Analytics',
+    icon: ArrowTrendUpIcon,
+    badge: 'Data Pipelines',
+    accentColor: 'amber' as const,
+    desc: 'SQL Moving Averages, Window Partitions, Cumulative Aggregations & Pandas',
+    skills: ['Window Functions', 'Rolling Averages', 'ETL Maps', 'Partitions'],
+  },
+];
 
 export const ProblemListPage: React.FC = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryCategory = searchParams.get('category');
 
-  const mapGoalToCategory = (goal?: string | null): string => {
-    if (!goal) return 'All';
-    const lower = goal.toLowerCase();
+  const normalizeToTrackName = (raw?: string | null): string => {
+    if (!raw) return 'Web Development';
+    const lower = raw.toLowerCase();
     if (lower.includes('ai') || lower.includes('ml') || lower.includes('machine')) return 'AI & Machine Learning';
     if (lower.includes('web') || lower.includes('front') || lower.includes('full')) return 'Web Development';
     if (lower.includes('app') || lower.includes('mobile')) return 'Mobile App Development';
     if (lower.includes('cyber') || lower.includes('sec')) return 'Cybersecurity';
     if (lower.includes('data') || lower.includes('analyt')) return 'Data & Analytics';
-    return 'All';
+    return 'Web Development';
   };
 
-  const savedGoal = user?.targetGoal || (user?.id ? localStorage.getItem(`rishabhlabs_goal_${user.id}`) : null) || localStorage.getItem('rishabhlabs_goal');
-  const initialCategory = mapGoalToCategory(savedGoal);
+  const primaryTrack = normalizeToTrackName(
+    user?.targetGoal ||
+    (user?.id ? localStorage.getItem(`rishabhlabs_goal_${user.id}`) : null) ||
+    localStorage.getItem('rishabhlabs_goal') ||
+    'Web Development'
+  );
+
+  // Shared enrolled tracks system across Learn, Roadmap, and Practice
+  const [enrolledTracks, setEnrolledTracks] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(`rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const normalized = parsed.map(normalizeToTrackName);
+          if (!normalized.includes(primaryTrack)) return [primaryTrack, ...normalized];
+          return normalized;
+        }
+      }
+    } catch { }
+    return [primaryTrack];
+  });
+
+  const [activeTrack, setActiveTrack] = useState<string>(() => {
+    if (queryCategory) return normalizeToTrackName(queryCategory);
+    return primaryTrack;
+  });
 
   const [problems, setProblems] = useState<CodingProblem[]>([]);
   const [difficultyFilter, setDifficultyFilter] = useState<string>('All');
-  const [categoryFilter, setCategoryFilter] = useState<string>(initialCategory);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showExploreModal, setShowExploreModal] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchProblems = async () => {
@@ -64,89 +143,156 @@ export const ProblemListPage: React.FC = () => {
     fetchProblems();
   }, []);
 
-  const categories = [
-    'All',
-    'AI & Machine Learning',
-    'Web Development',
-    'Mobile App Development',
-    'Cybersecurity',
-    'Data & Analytics',
-  ];
+  const handleTrackChange = (trackName: string) => {
+    const norm = normalizeToTrackName(trackName);
+    setActiveTrack(norm);
+    setSearchParams({ category: norm });
+  };
 
+  const handleEnrollSecondary = (chosenTrack: string) => {
+    const normalized = normalizeToTrackName(chosenTrack);
+    if (!enrolledTracks.includes(normalized)) {
+      const updated = [...enrolledTracks, normalized];
+      setEnrolledTracks(updated);
+      localStorage.setItem(`rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`, JSON.stringify(updated));
+    }
+    handleTrackChange(normalized);
+    setShowExploreModal(false);
+  };
+
+  const handleRemoveSecondaryTrack = (trackName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (trackName === primaryTrack) return;
+    const updated = enrolledTracks.filter((t) => t !== trackName);
+    setEnrolledTracks(updated);
+    localStorage.setItem(`rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`, JSON.stringify(updated));
+    if (activeTrack === trackName) {
+      handleTrackChange(primaryTrack);
+    }
+  };
+
+  // Filter problems by active enrolled track, difficulty, and search query
   const filtered = problems.filter((p) => {
     const matchDiff = difficultyFilter === 'All' || p.difficulty === difficultyFilter;
-    const matchCat = categoryFilter === 'All' || p.category === categoryFilter;
+
+    // Category match against active track
+    const pCat = p.category.toLowerCase();
+    const actLower = activeTrack.toLowerCase();
+    const matchCat =
+      (actLower.includes('web') && pCat.includes('web')) ||
+      (actLower.includes('ai') && (pCat.includes('ai') || pCat.includes('machine'))) ||
+      (actLower.includes('app') && pCat.includes('app')) ||
+      (actLower.includes('cyber') && pCat.includes('cyber')) ||
+      (actLower.includes('data') && pCat.includes('data'));
+
     const matchSearch =
       p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.category.toLowerCase().includes(searchQuery.toLowerCase());
+
     return matchDiff && matchCat && matchSearch;
   });
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
               Interactive Problem Solving
             </span>
-            {user?.targetGoal && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">
-                Tailored for {user.targetGoal}
-              </span>
-            )}
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-1">
             Coding Sandbox & Practice
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
-            Production-grade algorithmic and domain-specific challenges with in-browser test runners and AI hints.
+            Production-grade algorithmic and domain-specific challenges tailored strictly to your specialization.
           </p>
         </div>
 
         <Link
           to="/debugging-lab"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs font-bold hover:bg-rose-500/20 transition-colors self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs font-bold hover:bg-rose-500/20 transition-colors self-start sm:self-auto shadow-2xs"
         >
-          <Bug className="w-3.5 h-3.5" />
+          <BugIcon className="w-3.5 h-3.5" />
           <span>Open Debugging Lab</span>
         </Link>
       </div>
 
-      {/* Track & Category Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 shrink-0 mr-1 flex items-center gap-1">
-          <Filter className="w-3.5 h-3.5" />
-          Track:
-        </span>
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setCategoryFilter(cat)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all ${
-              categoryFilter === cat
-                ? 'bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 shadow-xs'
-                : 'bg-white dark:bg-[#212121] text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Enrolled Track Bar (Only shows enrolled track(s); allows adding a second track) */}
+      <div className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5 font-mono">
+            <Filter className="w-3.5 h-3.5 text-blue-500" />
+            Active Practice Track{enrolledTracks.length > 1 ? 's' : ''}
+          </span>
+          <span className="text-[11px] text-neutral-500">
+            {enrolledTracks.length === 1 ? 'Focused on your target career' : 'Dual Track Practice Active'}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {enrolledTracks.map((trk) => {
+            const isSelected = activeTrack === trk;
+            const isPrimary = trk === primaryTrack;
+
+            return (
+              <div
+                key={trk}
+                onClick={() => handleTrackChange(trk)}
+                className={`group flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all border ${isSelected
+                  ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 border-transparent shadow-xs'
+                  : 'bg-neutral-50 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 border-neutral-200/80 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-[#262626]'
+                  }`}
+              >
+                <span>{trk}</span>
+                {isPrimary ? (
+                  <span
+                    className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold uppercase ${isSelected
+                      ? 'bg-white/20 text-white dark:bg-neutral-900/20 dark:text-neutral-900'
+                      : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
+                      }`}
+                  >
+                    Primary
+                  </span>
+                ) : (
+                  <button
+                    onClick={(e) => handleRemoveSecondaryTrack(trk, e)}
+                    className="p-0.5 rounded-full hover:bg-red-500/20 hover:text-red-500 transition-colors"
+                    title="Remove secondary track"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Add 2nd Track / Explore Button */}
+          {enrolledTracks.length < 2 && (
+            <button
+              onClick={() => setShowExploreModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 text-xs font-semibold transition-colors bg-neutral-50/50 dark:bg-transparent"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Track</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Difficulty & Search Bar */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-4">
+      <div className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
         <div className="flex items-center gap-2 text-xs flex-wrap">
           <span className="text-neutral-400 text-[11px] font-semibold">Difficulty:</span>
           {['All', 'Easy', 'Medium', 'Hard'].map((diff) => (
             <button
               key={diff}
               onClick={() => setDifficultyFilter(diff)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                difficultyFilter === diff
-                  ? 'bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 font-bold'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-              }`}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${difficultyFilter === diff
+                ? 'bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 font-bold'
+                : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
             >
               {diff}
             </button>
@@ -156,7 +302,7 @@ export const ProblemListPage: React.FC = () => {
         <div className="w-full sm:w-64">
           <input
             type="text"
-            placeholder="Search questions by title or keyword..."
+            placeholder={`Search ${activeTrack} problems...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-3.5 py-1.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0"
@@ -169,22 +315,21 @@ export const ProblemListPage: React.FC = () => {
         {loading ? (
           <div className="py-16 text-center space-y-2">
             <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="text-xs text-neutral-500">Loading practice problems...</p>
+            <p className="text-xs text-neutral-500">Loading {activeTrack} practice problems...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center space-y-2">
             <p className="text-sm font-semibold text-neutral-600 dark:text-neutral-400">
-              No problems match your current filter.
+              No problems match your current difficulty filter in {activeTrack}.
             </p>
             <button
               onClick={() => {
-                setCategoryFilter('All');
                 setDifficultyFilter('All');
                 setSearchQuery('');
               }}
               className="text-xs text-blue-500 hover:underline font-bold"
             >
-              Clear filters
+              Reset filters
             </button>
           </div>
         ) : (
@@ -202,7 +347,7 @@ export const ProblemListPage: React.FC = () => {
                   <div className="flex items-center gap-4 min-w-0">
                     <div className="w-9 h-9 rounded-xl bg-neutral-100 dark:bg-[#1a1a1a] border border-neutral-200/60 dark:border-neutral-700/60 flex items-center justify-center text-neutral-700 dark:text-neutral-300 shrink-0">
                       {prob.isDebuggingChallenge ? (
-                        <Bug className="w-4 h-4 text-rose-500" />
+                        <BugIcon className="w-4 h-4 text-rose-500" />
                       ) : prob.category.includes('AI') ? (
                         <ChipBrainIcon className="w-4 h-4 text-purple-500" />
                       ) : prob.category.includes('Cyber') ? (
@@ -237,13 +382,12 @@ export const ProblemListPage: React.FC = () => {
 
                   <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                     <span
-                      className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
-                        isEasy
-                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
-                          : isMedium
+                      className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${isEasy
+                        ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
+                        : isMedium
                           ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25'
                           : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/25'
-                      }`}
+                        }`}
                     >
                       {prob.difficulty}
                     </span>
@@ -256,6 +400,231 @@ export const ProblemListPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Explore / Add Second Track Modal */}
+      {showExploreModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-3 sm:p-5 animate-in fade-in duration-200"
+          onClick={() => setShowExploreModal(false)}
+        >
+          <div
+            className="w-full max-w-3xl bg-white dark:bg-[#1e1e1e] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col max-h-[88vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Fixed Sticky Modal Header */}
+            <div className="p-5 sm:p-6 pb-4 border-b border-neutral-100 dark:border-neutral-800 flex items-start justify-between gap-4 shrink-0 bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-md">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/50 font-mono">
+                  <Sparkles className="w-3 h-3" />
+                  <span>PRACTICE SPECIALIZATION • MAX 2 TRACKS</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-neutral-900 dark:text-white">
+                  Add a Second Coding Track
+                </h2>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-xl">
+                  Cross-train by unlocking practice challenges across two engineering fields. Your problem catalog and filter tabs update immediately.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowExploreModal(false)}
+                className="p-2 rounded-xl text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Track Cards Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-4">
+              {/* Enrollment Slots Tracker Banner */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/70 dark:border-neutral-800/70 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-neutral-700 dark:text-neutral-300">Active Coding Tracks:</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {enrolledTracks.map((trk) => {
+                      const isPrim = trk === primaryTrack;
+                      return (
+                        <span
+                          key={trk}
+                          className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold ${isPrim
+                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                            }`}
+                        >
+                          {trk} {isPrim ? '(Primary)' : '(2nd Track)'}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <span className="text-[11px] font-mono font-semibold text-neutral-500 shrink-0">
+                  {enrolledTracks.length}/2 Slots Utilized {enrolledTracks.length < 2 ? '• 1 Slot Open' : '• Limit Reached'}
+                </span>
+              </div>
+
+              {/* 5 Tracks Grid: 2 columns, with 5th track spanning full width (2 columns) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {TRACK_CONFIGS.map((tc, idx) => {
+                  const Icon = tc.icon;
+                  const normalizedId = normalizeToTrackName(tc.id);
+                  const isPrimary = normalizedId === primaryTrack;
+                  const isEnrolled = enrolledTracks.includes(normalizedId);
+                  const isCurrentView = normalizedId === activeTrack;
+                  const isLastCard = idx === TRACK_CONFIGS.length - 1;
+
+                  // Theme accents per track
+                  const colorStyles = {
+                    blue: {
+                      iconBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+                      badge: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200/60 dark:border-blue-800/60',
+                      borderHover: 'hover:border-blue-500/50',
+                    },
+                    purple: {
+                      iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+                      badge: 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border-purple-200/60 dark:border-purple-800/60',
+                      borderHover: 'hover:border-purple-500/50',
+                    },
+                    cyan: {
+                      iconBg: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+                      badge: 'bg-cyan-50 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-200/60 dark:border-cyan-800/60',
+                      borderHover: 'hover:border-cyan-500/50',
+                    },
+                    emerald: {
+                      iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+                      badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/60',
+                      borderHover: 'hover:border-emerald-500/50',
+                    },
+                    amber: {
+                      iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+                      badge: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/60',
+                      borderHover: 'hover:border-amber-500/50',
+                    },
+                  }[tc.accentColor || 'blue'];
+
+                  return (
+                    <div
+                      key={tc.id}
+                      className={`p-5 rounded-3xl border transition-colors relative flex flex-col justify-between ${isLastCard ? 'sm:col-span-2' : 'sm:col-span-1'
+                        } ${isCurrentView
+                          ? 'bg-neutral-50/90 dark:bg-neutral-900/80 border-blue-500/50 ring-1 ring-blue-500/30'
+                          : isEnrolled
+                            ? 'bg-neutral-50/50 dark:bg-neutral-900/40 border-emerald-500/30'
+                            : `bg-neutral-50/30 dark:bg-neutral-900/30 border-neutral-200/80 dark:border-neutral-800 ${colorStyles.borderHover}`
+                        }`}
+                    >
+                      <div className={isLastCard ? 'sm:grid sm:grid-cols-12 sm:gap-6 items-start' : 'space-y-3'}>
+                        {/* Top / Left Section */}
+                        <div className={isLastCard ? 'sm:col-span-7 space-y-3' : 'space-y-3'}>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border ${colorStyles.iconBg}`}>
+                                <Icon className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <h3 className="text-sm font-bold text-neutral-900 dark:text-white leading-tight">
+                                  {tc.title}
+                                </h3>
+                                <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border mt-0.5 ${colorStyles.badge}`}>
+                                  {tc.badge}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Status Pill in Card Header */}
+                            {isPrimary ? (
+                              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
+                                Primary Track ★
+                              </span>
+                            ) : isEnrolled ? (
+                              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                                Enrolled (2nd) ✓
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                            {tc.desc}
+                          </p>
+
+                          {/* Skill Tags */}
+                          <div className="flex flex-wrap gap-1.5 pt-1">
+                            {tc.skills.map((sk) => (
+                              <span
+                                key={sk}
+                                className="text-[10px] px-2 py-0.5 rounded-md bg-neutral-200/50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 font-medium"
+                              >
+                                {sk}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Bottom / Right Section (Actions) */}
+                        <div className={isLastCard ? 'sm:col-span-5 flex flex-col justify-between h-full pt-4 sm:pt-0 sm:border-l sm:border-neutral-200/60 sm:dark:border-neutral-800/60 sm:pl-6 space-y-3' : 'pt-4 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between gap-2'}>
+                          {isLastCard && (
+                            <div className="hidden sm:block space-y-1">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Problem Set:</span>
+                              <p className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                                Curated Data & SQL Engineering Challenges
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-2 w-full justify-end">
+                            {isCurrentView ? (
+                              <span className="w-full sm:w-auto text-center px-3.5 py-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold border border-blue-500/20">
+                                Active Filter ✓
+                              </span>
+                            ) : isEnrolled ? (
+                              <div className="flex items-center gap-2 w-full sm:w-auto">
+                                <button
+                                  onClick={() => {
+                                    handleTrackChange(normalizedId);
+                                    setShowExploreModal(false);
+                                  }}
+                                  className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 text-xs font-bold transition-colors"
+                                >
+                                  View Problems
+                                </button>
+                                {!isPrimary && (
+                                  <button
+                                    onClick={(e) => handleRemoveSecondaryTrack(normalizedId, e)}
+                                    className="px-2.5 py-2 rounded-xl text-xs font-semibold text-rose-500 hover:bg-rose-500/10 transition-colors"
+                                    title="Drop secondary track"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+                            ) : enrolledTracks.length < 2 ? (
+                              <button
+                                onClick={() => handleEnrollSecondary(normalizedId)}
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 text-xs font-bold transition-colors shadow-2xs"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>Unlock Track Problems</span>
+                              </button>
+                            ) : (
+                              <button
+                                disabled
+                                className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-neutral-200/50 dark:bg-neutral-800 text-neutral-400 text-xs font-semibold cursor-not-allowed"
+                                title="Remove your second track first to unlock this one"
+                              >
+                                Max 2 Tracks Active
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

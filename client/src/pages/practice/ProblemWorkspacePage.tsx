@@ -16,9 +16,9 @@ import {
   Clock,
   Sparkles,
   Terminal,
-  Bug,
   ChevronDown
 } from 'lucide-react';
+import { BugIcon } from '../../components/icons/TrackIcons';
 
 export const ProblemWorkspacePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -292,7 +292,7 @@ export const ProblemWorkspacePage: React.FC = () => {
           {problem.isDebuggingChallenge && (
             <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs space-y-1">
               <div className="flex items-center gap-2 font-bold">
-                <Bug className="w-4 h-4" />
+                <BugIcon className="w-4 h-4" />
                 <span>Fix the Bug Challenge</span>
               </div>
               <p>{problem.brokenBugExplanation}</p>
