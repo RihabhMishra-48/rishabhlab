@@ -421,7 +421,7 @@ export const InteractiveSequenceFlowVisualizer: React.FC = () => {
               <span>{copied ? 'Copied' : 'Copy Diagram'}</span>
             </button>
           </div>
-          <pre className="p-4 rounded-xl bg-navy-950 text-foreground/80 font-mono text-xs leading-relaxed overflow-x-auto shadow-inner select-all">
+          <pre className="p-4 rounded-xl bg-neutral-950 dark:bg-black text-neutral-100 font-mono text-xs leading-relaxed overflow-x-auto shadow-inner border border-neutral-800 select-all">
             {rawAsciiSequence}
           </pre>
         </div>
