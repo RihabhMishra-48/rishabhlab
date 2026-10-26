@@ -20,7 +20,7 @@ export interface FlowNode {
   title: string;
   subtitle: string;
   description: string;
-  accent: 'blue' | 'purple' | 'emerald' | 'amber' | 'rose' | 'cyan';
+  accent: 'blue' | 'purple' | 'emerald' | 'orange' | 'rose' | 'cyan';
   iconType?: 'cpu' | 'shield' | 'layers' | 'database' | 'zap' | 'activity';
   inputs?: string[];
   outputs?: string[];
@@ -84,10 +84,10 @@ export const VisualFlowDiagram: React.FC<VisualFlowDiagramProps> = ({
         return isSelected
           ? 'bg-brand-emerald/25 text-foreground font-bold'
           : 'bg-brand-emerald/10 text-brand-emerald hover:bg-brand-emerald/20';
-      case 'amber':
+      case 'orange':
         return isSelected
-          ? 'bg-amber-500/25 text-foreground font-bold'
-          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20';
+          ? 'bg-orange-500/25 text-foreground font-bold'
+          : 'bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20';
       case 'rose':
         return isSelected
           ? 'bg-rose-500/25 text-foreground font-bold'
@@ -251,8 +251,8 @@ export const VisualFlowDiagram: React.FC<VisualFlowDiagramProps> = ({
 
             {/* Execution / Security Notes */}
             {selectedNode.notes && (
-              <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-800 dark:text-amber-300 text-[11px] flex items-start gap-2 leading-relaxed">
-                <Info className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+              <div className="p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 text-[11px] flex items-start gap-2 leading-relaxed border border-neutral-200 dark:border-neutral-700">
+                <Info className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400 shrink-0 mt-0.5" />
                 <span>
                   <strong className="font-bold">Execution Note:</strong> {selectedNode.notes}
                 </span>

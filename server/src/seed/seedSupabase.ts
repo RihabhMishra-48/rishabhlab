@@ -98,104 +98,12 @@ export async function seedSupabase() {
     }
     console.log('✅ [Supabase Seed] Lessons seeded.');
 
-    // 2. Coding Problems
-    const problems = [
-      {
-        slug: 'filter-active-users',
-        title: 'Filter Active Users',
-        difficulty: 'Easy',
-        category: 'Arrays & Functional Programming',
-        is_debugging_challenge: false,
-        description_markdown: `Given an array of user objects where each user contains an \`id\`, \`name\`, and boolean \`isActive\` flag, write a function \`filterActiveUsers(users)\` that returns only the users whose \`isActive\` property is \`true\`.\n\n### Input\n- An array of objects: \`[{ id: number, name: string, isActive: boolean }]\`\n\n### Output\n- Array of active user objects preserving original order.`,
-        examples: [
-          {
-            input: `[{ id: 1, name: "Rishabh", isActive: true }, { id: 2, name: "Aarav", isActive: false }]`,
-            output: `[{ id: 1, name: "Rishabh", isActive: true }]`,
-            explanation: 'Only Rishabh has isActive: true.'
-          }
-        ],
-        constraints: ['0 <= users.length <= 10,000', 'Each element contains valid id, name, and isActive'],
-        starter_code: {
-          javascript: `function filterActiveUsers(users) {\n  // Write your code here\n  return users.filter(user => user.isActive);\n}`,
-          python: `def filter_active_users(users):\n    # Write your code here\n    return [u for u in users if u.get("isActive") == True]`,
-          cpp: `#include <vector>\n// Struct User { int id; string name; bool isActive; };`,
-          java: `public class Solution {\n    // Implementation\n}`
-        },
-        hints: {
-          level1Concept: 'Look at the JavaScript Array.prototype.filter() method.',
-          level2Stronger: 'Filter accepts a callback function that evaluates each object and returns true or false.',
-          level3Approach: 'return users.filter(u => u.isActive === true);'
-        },
-        test_cases: [
-          {
-            testCaseId: 'tc-1',
-            input: `[{"id":1,"name":"Rishabh","isActive":true},{"id":2,"name":"Aarav","isActive":false}]`,
-            expectedOutput: `[{"id":1,"name":"Rishabh","isActive":true}]`,
-            isHidden: false
-          },
-          {
-            testCaseId: 'tc-2',
-            input: `[{"id":10,"name":"Dev","isActive":false}]`,
-            expectedOutput: `[]`,
-            isHidden: false
-          },
-          {
-            testCaseId: 'tc-3',
-            input: `[{"id":1,"name":"A","isActive":true},{"id":2,"name":"B","isActive":true}]`,
-            expectedOutput: `[{"id":1,"name":"A","isActive":true},{"id":2,"name":"B","isActive":true}]`,
-            isHidden: true
-          }
-        ],
-        acceptance_rate: '89%'
-      },
-      {
-        slug: 'two-sum',
-        title: 'Two Sum',
-        difficulty: 'Easy',
-        category: 'Hash Tables & Arrays',
-        is_debugging_challenge: false,
-        description_markdown: `Given an array of integers \`nums\` and an integer \`target\`, return indices of the two numbers such that they add up to \`target\`.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.`,
-        examples: [
-          {
-            input: 'nums = [2,7,11,15], target = 9',
-            output: '[0,1]',
-            explanation: 'Because nums[0] + nums[1] == 9, we return [0, 1].'
-          }
-        ],
-        constraints: ['2 <= nums.length <= 10^4', '-10^9 <= nums[i] <= 10^9', 'Exactly one valid answer exists.'],
-        starter_code: {
-          javascript: `function twoSum(nums, target) {\n  const map = new Map();\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (map.has(complement)) return [map.get(complement), i];\n    map.set(nums[i], i);\n  }\n  return [];\n}`,
-          python: `def two_sum(nums, target):\n    lookup = {}\n    for i, num in enumerate(nums):\n        comp = target - num\n        if comp in lookup:\n            return [lookup[comp], i]\n        lookup[num] = i\n    return []`,
-          cpp: `#include <vector>\n#include <unordered_map>`,
-          java: `import java.util.HashMap;`
-        },
-        hints: {
-          level1Concept: 'A brute force solution checks every pair with two nested loops O(n²). Can you do it in one pass with a Hash Map?',
-          level2Stronger: 'For each number x, calculate the required complement = target - x. Check if complement already exists in your map.',
-          level3Approach: 'Create an object/map. Loop through nums: if target - nums[i] in map, return [map[target - nums[i]], i]. Else map[nums[i]] = i.'
-        },
-        test_cases: [
-          {
-            testCaseId: 'tc-1',
-            input: `{"nums":[2,7,11,15],"target":9}`,
-            expectedOutput: `[0,1]`,
-            isHidden: false
-          },
-          {
-            testCaseId: 'tc-2',
-            input: `{"nums":[3,2,4],"target":6}`,
-            expectedOutput: `[1,2]`,
-            isHidden: false
-          }
-        ],
-        acceptance_rate: '76%'
-      }
-    ];
-
-    for (const prob of problems) {
+    // 2. Coding Problems (Full Multi-Track & Algorithmic Practice Suite)
+    const { ALL_CODING_PROBLEMS } = await import('./seedCodingProblems');
+    for (const prob of ALL_CODING_PROBLEMS) {
       await supabase.from('coding_problems').upsert(prob, { onConflict: 'slug' });
     }
-    console.log('✅ [Supabase Seed] Coding problems seeded.');
+    console.log(`✅ [Supabase Seed] ${ALL_CODING_PROBLEMS.length} coding problems seeded across all tracks.`);
 
     // 3. Mentors
     const mentors = [

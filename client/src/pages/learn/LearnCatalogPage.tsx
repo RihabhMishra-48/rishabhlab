@@ -239,7 +239,7 @@ export const LearnCatalogPage: React.FC = () => {
       label: 'Data & Analytics',
       icon: ArrowTrendUpIcon,
       badge: 'Data Engineering',
-      accentColor: 'amber' as const,
+      accentColor: 'orange' as const,
       desc: 'SQL Mastery, Pandas, Distributed ETL Pipelines & Executive Visualizations',
       skills: ['SQL', 'Pandas', 'Apache Spark', 'ETL Pipelines'],
       hours: '115 hrs',
@@ -429,10 +429,10 @@ export const LearnCatalogPage: React.FC = () => {
                       badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/60',
                       borderHover: 'hover:border-emerald-500/50',
                     },
-                    amber: {
-                      iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-                      badge: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/60',
-                      borderHover: 'hover:border-amber-500/50',
+                    orange: {
+                      iconBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
+                      badge: 'bg-orange-50 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300 border-orange-200/60 dark:border-orange-800/60',
+                      borderHover: 'hover:border-orange-500/50',
                     },
                   }[t.accentColor || 'blue'];
 

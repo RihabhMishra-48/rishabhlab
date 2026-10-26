@@ -26,12 +26,12 @@ class AIService {
     return this.getApiKey() !== null;
   }
 
-  public async callGemini(prompt: string): Promise<string | null> {
+  public async callGemini(prompt: string, timeoutMs: number = 5000): Promise<string | null> {
     const key = this.getApiKey();
     if (!key) return null;
 
-    // Supported modern models: flash-lite-latest, flash-latest, gemini-3.8-flash
-    const models = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-3.8-flash'];
+    // Fast, lightweight modern Gemini flash models
+    const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
 
     for (const model of models) {
       try {
@@ -45,6 +45,7 @@ class AIService {
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
           }),
+          signal: AbortSignal.timeout(timeoutMs),
         });
 
         if (res.ok) {
@@ -53,18 +54,15 @@ class AIService {
           if (text && typeof text === 'string') {
             return text;
           }
-        } else {
-          const errData = await res.text();
-          console.warn(`Gemini model ${model} returned ${res.status}:`, errData.slice(0, 150));
         }
       } catch (err) {
-        console.warn(`Gemini call error for ${model}:`, err);
+        // Silently skip to next model or fallback
       }
     }
     return null;
   }
 
-  public async generateRoadmap(input: IOnboardingProfileInput) {
+  public async generateRoadmap(input: IOnboardingProfileInput, useAi: boolean = false) {
     const isWeb = input.goal.toLowerCase().includes('web');
     const isAI = input.goal.toLowerCase().includes('ai') || input.goal.toLowerCase().includes('ml') || input.goal.toLowerCase().includes('machine');
     const isData = input.goal.toLowerCase().includes('data') || input.goal.toLowerCase().includes('analytics');
@@ -75,8 +73,8 @@ class AIService {
     else if (isData) category = 'Data / Analytics';
     else if (isCyber) category = 'Cybersecurity';
 
-    // If Gemini API Key is configured, use Gemini for dynamic roadmap generation
-    if (this.isGeminiActive()) {
+    // If explicitly requested to synthesize with AI and Gemini is active
+    if (useAi && this.isGeminiActive()) {
       try {
         const prompt = `You are the lead curriculum architect at Rishabh Labs, a personalized execution platform for college students.
 Generate a structured 6-stage roadmap for a student with the following profile:

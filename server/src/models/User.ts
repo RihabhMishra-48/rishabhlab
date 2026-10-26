@@ -12,6 +12,12 @@ export interface IUser extends Document {
   bio?: string;
   githubUsername?: string;
   targetGoal?: string;
+  fieldOfInterest?: string;
+  verificationStatus?: 'approved' | 'pending' | 'rejected';
+  mentorExpertise?: string[];
+  mentorOrganization?: string;
+  mentorExperienceYears?: number;
+  mentorLinkedin?: string;
   streakDays?: number;
   totalPoints?: number;
   skillsCompleted?: number;
@@ -37,6 +43,16 @@ const UserSchema = new Schema<IUser>(
     bio: { type: String, default: '' },
     githubUsername: { type: String, default: '' },
     targetGoal: { type: String, default: '' },
+    fieldOfInterest: { type: String, default: '' },
+    verificationStatus: {
+      type: String,
+      enum: ['approved', 'pending', 'rejected'],
+      default: 'approved',
+    },
+    mentorExpertise: [{ type: String }],
+    mentorOrganization: { type: String, default: '' },
+    mentorExperienceYears: { type: Number, default: 0 },
+    mentorLinkedin: { type: String, default: '' },
     streakDays: { type: Number, default: 0 },
     totalPoints: { type: Number, default: 0 },
     skillsCompleted: { type: Number, default: 0 },

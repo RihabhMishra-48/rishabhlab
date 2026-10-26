@@ -84,7 +84,7 @@ const TRACK_CONFIGS = [
     title: 'Data & Analytics',
     icon: ArrowTrendUpIcon,
     badge: 'Data Engineering',
-    accentColor: 'amber' as const,
+    accentColor: 'orange' as const,
     desc: 'SQL Mastery, Pandas, Distributed ETL Pipelines & Executive Visualizations',
     skills: ['SQL', 'Pandas', 'Apache Spark', 'ETL Pipelines', 'Power BI'],
     hours: '115 hrs',
@@ -139,35 +139,6 @@ export const RoadmapPage: React.FC = () => {
     });
   }, [primaryTrack, user?.id]);
 
-  const [activeTrack, setActiveTrack] = useState<string>(() => {
-    if (queryTrack) return normalizeTrackName(queryTrack);
-    return primaryTrack;
-  });
-
-  const [roadmap, setRoadmap] = useState<Roadmap>(() => getCuratedRoadmap(activeTrack));
-  const [selectedNode, setSelectedNode] = useState<RoadmapNode | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [regenerating, setRegenerating] = useState(false);
-  const [showExploreModal, setShowExploreModal] = useState<boolean>(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (showExploreModal) {
-      document.body.style.overflow = 'hidden';
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTop = 0;
-      }
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') setShowExploreModal(false);
-      };
-      window.addEventListener('keydown', handleKeyDown);
-      return () => {
-        document.body.style.overflow = '';
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [showExploreModal]);
-
   // Helper to load persisted statuses from localStorage
   const applySavedStatuses = (baseRoadmap: Roadmap, track: string): Roadmap => {
     try {
@@ -191,6 +162,42 @@ export const RoadmapPage: React.FC = () => {
     return baseRoadmap;
   };
 
+  const [activeTrack, setActiveTrack] = useState<string>(() => {
+    if (queryTrack) return normalizeTrackName(queryTrack);
+    return primaryTrack;
+  });
+
+  const [roadmap, setRoadmap] = useState<Roadmap>(() => {
+    const initialTrack = queryTrack ? normalizeTrackName(queryTrack) : primaryTrack;
+    return applySavedStatuses(getCuratedRoadmap(initialTrack), initialTrack);
+  });
+  const [selectedNode, setSelectedNode] = useState<RoadmapNode | null>(() => {
+    const initialTrack = queryTrack ? normalizeTrackName(queryTrack) : primaryTrack;
+    const initialRoadmap = applySavedStatuses(getCuratedRoadmap(initialTrack), initialTrack);
+    return initialRoadmap.nodes.find((n) => n.status === 'in_progress') || initialRoadmap.nodes[0] || null;
+  });
+  const [loading, setLoading] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [showExploreModal, setShowExploreModal] = useState<boolean>(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showExploreModal) {
+      document.body.style.overflow = 'hidden';
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = 0;
+      }
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setShowExploreModal(false);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [showExploreModal]);
+
   const fetchRoadmap = async (trackName?: string, shouldRegenerate = false) => {
     const target = normalizeTrackName(
       trackName || activeTrack || user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'Web Development'
@@ -198,8 +205,11 @@ export const RoadmapPage: React.FC = () => {
     const fallbackRoadmap = applySavedStatuses(getCuratedRoadmap(target), target);
 
     try {
-      if (shouldRegenerate) setRegenerating(true);
-      else setLoading(true);
+      if (shouldRegenerate) {
+        setRegenerating(true);
+      } else if (!roadmap || !roadmap.nodes || roadmap.nodes.length === 0) {
+        setLoading(true);
+      }
 
       const data = await api.getRoadmap(target, shouldRegenerate);
 
@@ -208,21 +218,13 @@ export const RoadmapPage: React.FC = () => {
         const active =
           data.roadmap.nodes.find((n: RoadmapNode) => n.status === 'in_progress') ||
           data.roadmap.nodes[0];
-        setSelectedNode(active);
+        setSelectedNode((prev) => (prev && data.roadmap.nodes.some((n: RoadmapNode) => n.nodeId === prev.nodeId) ? prev : active));
       } else {
         setRoadmap(fallbackRoadmap);
-        const active =
-          fallbackRoadmap.nodes.find((n: RoadmapNode) => n.status === 'in_progress') ||
-          fallbackRoadmap.nodes[0];
-        setSelectedNode(active);
       }
     } catch (err) {
-      console.warn('API roadmap fetch fallback to curated roadmap:', err);
-      setRoadmap(fallbackRoadmap);
-      const active =
-        fallbackRoadmap.nodes.find((n: RoadmapNode) => n.status === 'in_progress') ||
-        fallbackRoadmap.nodes[0];
-      setSelectedNode(active);
+      console.warn('API roadmap background sync skipped:', err);
+      // Keep existing cached/curated roadmap intact
     } finally {
       setLoading(false);
       setRegenerating(false);
@@ -237,6 +239,11 @@ export const RoadmapPage: React.FC = () => {
     const norm = normalizeTrackName(trackName);
     setActiveTrack(norm);
     setSearchParams({ track: norm });
+    // Instant zero-latency render of the selected track from cache/curated
+    const instantCurated = applySavedStatuses(getCuratedRoadmap(norm), norm);
+    setRoadmap(instantCurated);
+    const active = instantCurated.nodes.find((n) => n.status === 'in_progress') || instantCurated.nodes[0];
+    setSelectedNode(active);
   };
 
   const handleEnrollSecondary = (chosenTrack: string) => {
@@ -448,7 +455,7 @@ export const RoadmapPage: React.FC = () => {
         </div>
 
         {/* Connected Node Stations */}
-        {loading ? (
+        {loading && (!nodes || nodes.length === 0) ? (
           <div className="py-16 text-center space-y-3 relative z-10">
             <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
             <p className="text-sm font-bold text-neutral-900 dark:text-white">
@@ -839,10 +846,10 @@ export const RoadmapPage: React.FC = () => {
                       badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/60',
                       borderHover: 'hover:border-emerald-500/50',
                     },
-                    amber: {
-                      iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-                      badge: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/60',
-                      borderHover: 'hover:border-amber-500/50',
+                    orange: {
+                      iconBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
+                      badge: 'bg-orange-50 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300 border-orange-200/60 dark:border-orange-800/60',
+                      borderHover: 'hover:border-orange-500/50',
                     },
                   }[tc.accentColor || 'blue'];
 

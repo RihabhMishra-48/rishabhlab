@@ -86,7 +86,7 @@ export const HomePage: React.FC = () => {
             {!user && (
               <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 Already have an account?{' '}
-                <Link to="/login" className="font-semibold text-neutral-900 dark:text-white underline underline-offset-4 hover:text-amber-500 transition-colors">
+                <Link to="/login" className="font-semibold text-neutral-900 dark:text-white underline underline-offset-4 hover:opacity-80 transition-opacity">
                   Sign in to your account →
                 </Link>
               </p>
@@ -155,7 +155,7 @@ export const HomePage: React.FC = () => {
               to="/hackathon"
               className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
             >
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
+              <div className="w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-3">
                 <Trophy className="w-4 h-4" />
               </div>
               <h3 className="text-xs font-bold text-neutral-900 dark:text-white">Hackathon Mode</h3>
@@ -224,7 +224,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             <div className="p-6 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800/80 shadow-2xs space-y-3">
-              <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-bold text-xs flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-bold text-xs flex items-center justify-center">
                 4
               </div>
               <h3 className="font-bold text-base text-neutral-900 dark:text-white">Ship</h3>

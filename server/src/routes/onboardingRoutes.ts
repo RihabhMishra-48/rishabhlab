@@ -8,25 +8,48 @@ import { aiService } from '../services/aiService';
 
 const router = Router();
 
-// Submit student onboarding data
+import { Mentor } from '../models/Mentorship';
+
+// Submit student or mentor onboarding data
 router.post('/complete', requireAuth, async (req: AuthRequest, res) => {
   try {
     const user = req.user!;
-    const { goal, currentLevel, availableTime, desiredOutcome, targetDate, existingSkills, preferredLearningStyle } = req.body;
+    const {
+      role = 'student',
+      fieldOfInterest,
+      goal,
+      name,
+      college,
+      degree,
+      year,
+      currentLevel,
+      availableTime,
+      desiredOutcome,
+      targetDate,
+      existingSkills,
+      preferredLearningStyle,
+      mentorOrganization,
+      mentorExperienceYears,
+      mentorLinkedin,
+      mentorBio,
+      mentorExpertise,
+    } = req.body;
+
+    const selectedGoal = fieldOfInterest || goal || 'Web Development';
+    const chosenRole = role === 'mentor' ? 'mentor' : 'student';
+    const verificationStatus = chosenRole === 'mentor' ? 'pending' : 'approved';
 
     const onboardingRecord = await Onboarding.create({
       userId: user._id,
-      goal: goal || 'Web Development',
-      currentLevel: currentLevel || 'Complete Beginner',
+      goal: selectedGoal,
+      currentLevel: currentLevel || (chosenRole === 'mentor' ? 'Advanced' : 'Complete Beginner'),
       availableTime: availableTime || '2 hours/day',
-      desiredOutcome: desiredOutcome || 'Build projects',
+      desiredOutcome: desiredOutcome || (chosenRole === 'mentor' ? 'Guide students & review code' : 'Build projects'),
       targetDate: targetDate || '90 days',
       existingSkills: existingSkills || [],
       preferredLearningStyle: preferredLearningStyle || 'Hands-on Building',
       status: 'completed',
     });
-
-    const selectedGoal = goal || 'AI / ML';
 
     // Clear any previous roadmaps/missions for this user so the new track takes effect immediately
     await Roadmap.deleteMany({ userId: user._id });
@@ -35,7 +58,7 @@ router.post('/complete', requireAuth, async (req: AuthRequest, res) => {
     // Generate tailored Roadmap via AIService
     const generatedRoadmapData = await aiService.generateRoadmap({
       goal: selectedGoal,
-      currentLevel: currentLevel || 'Complete Beginner',
+      currentLevel: currentLevel || (chosenRole === 'mentor' ? 'Advanced' : 'Complete Beginner'),
       availableTime: availableTime || '2 hours/day',
       desiredOutcome: desiredOutcome || 'Build projects',
       targetDate: targetDate || '90 days',
@@ -60,22 +83,69 @@ router.post('/complete', requireAuth, async (req: AuthRequest, res) => {
       isAllCompleted: false,
     });
 
-    // Update user profile in local MongoDB
+    // Update user record in local MongoDB
+    if (name && name.trim()) user.name = name.trim();
+    user.role = chosenRole;
+    if (chosenRole === 'student') {
+      user.college = college ? college.trim() : (user.college || '');
+      user.degree = degree ? degree.trim() : (user.degree || '');
+      user.year = year ? year.trim() : (user.year || '');
+    } else {
+      user.college = '';
+      user.degree = '';
+      user.year = '';
+    }
+    user.targetGoal = selectedGoal;
+    user.fieldOfInterest = selectedGoal;
+    user.verificationStatus = verificationStatus;
+    user.isOnboarded = true;
+
+    if (chosenRole === 'mentor') {
+      user.mentorOrganization = mentorOrganization ? mentorOrganization.trim() : (user.mentorOrganization || '');
+      user.mentorExperienceYears = Number(mentorExperienceYears) || 0;
+      user.mentorLinkedin = mentorLinkedin || '';
+      user.mentorExpertise = Array.isArray(mentorExpertise) && mentorExpertise.length > 0 ? mentorExpertise : [selectedGoal];
+      if (mentorBio) user.bio = mentorBio;
+
+      // Register or update mentor listing in Mentors collection
+      try {
+        await Mentor.findOneAndUpdate(
+          { name: user.name },
+          {
+            name: user.name,
+            title: `${selectedGoal} Specialist & Mentor`,
+            company: mentorOrganization ? mentorOrganization.trim() : 'Industry Expert',
+            avatar: user.avatar || '/avatars/rishabh.webp',
+            rating: 5.0,
+            reviewsCount: 0,
+            bio: mentorBio || user.bio || `Specialized mentor in ${selectedGoal} with ${user.mentorExperienceYears}+ years experience.`,
+            hourlyRate: 'Free for Students',
+            topics: user.mentorExpertise,
+            availability: ['Mon, Wed, Fri (6:00 PM - 8:00 PM)', 'Weekends'],
+            isAvailableToday: true,
+            domain: selectedGoal,
+          },
+          { upsert: true, new: true }
+        );
+      } catch (mErr) {
+        console.warn('Could not upsert mentor listing:', mErr);
+      }
+    }
+
+    await user.save();
+
+    // Update student profile in local MongoDB
     await StudentProfile.findOneAndUpdate(
       { userId: user._id },
       {
         targetGoal: selectedGoal,
         activeRoadmapId: roadmap._id,
-        progressPercent: 5,
-        skillsCompleted: 0,
+        progressPercent: chosenRole === 'mentor' ? 100 : 5,
+        skillsCompleted: chosenRole === 'mentor' ? 10 : 0,
         streakDays: 1,
       },
       { upsert: true }
     );
-
-    user.targetGoal = selectedGoal;
-    user.isOnboarded = true;
-    await user.save();
 
     // Sync to Supabase profiles if configured
     try {
@@ -84,10 +154,21 @@ router.post('/complete', requireAuth, async (req: AuthRequest, res) => {
         await supabase
           .from('profiles')
           .update({
+            full_name: user.name,
+            role: chosenRole,
             target_goal: selectedGoal,
+            field_of_interest: selectedGoal,
+            college_name: user.college,
+            degree: user.degree,
+            year_of_study: user.year,
             current_level: currentLevel,
             available_time: availableTime,
             desired_outcome: desiredOutcome,
+            verification_status: verificationStatus,
+            mentor_organization: user.mentorOrganization,
+            mentor_experience_years: user.mentorExperienceYears,
+            mentor_linkedin: user.mentorLinkedin,
+            is_onboarded: true,
           })
           .eq('email', user.email);
       }
@@ -97,7 +178,23 @@ router.post('/complete', requireAuth, async (req: AuthRequest, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Onboarding completed and personalized roadmap generated!',
+      message: chosenRole === 'mentor'
+        ? 'Mentor application submitted for advance verification. Welcome aboard!'
+        : 'Onboarding completed and personalized curriculum generated!',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        college: user.college,
+        degree: user.degree,
+        year: user.year,
+        avatar: user.avatar,
+        targetGoal: user.targetGoal,
+        fieldOfInterest: user.fieldOfInterest,
+        verificationStatus: user.verificationStatus,
+        isOnboarded: user.isOnboarded,
+      },
       onboarding: onboardingRecord,
       roadmapId: roadmap._id,
       missionId: mission._id,

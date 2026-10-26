@@ -224,7 +224,7 @@ export const ProjectsCatalogPage: React.FC = () => {
                         : isApp
                         ? 'bg-indigo-500/10 dark:bg-indigo-950/40 border-indigo-500/25 text-indigo-500 dark:text-indigo-400'
                         : isData
-                        ? 'bg-amber-500/10 dark:bg-amber-950/40 border-amber-500/25 text-amber-500 dark:text-amber-400'
+                        ? 'bg-orange-500/10 dark:bg-orange-950/40 border-orange-500/25 text-orange-500 dark:text-orange-400'
                         : 'bg-blue-500/10 dark:bg-blue-950/40 border-blue-500/25 text-blue-500 dark:text-blue-400'
                     }`}
                   >

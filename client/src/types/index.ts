@@ -10,6 +10,12 @@ export interface User {
   bio?: string;
   githubUsername?: string;
   targetGoal?: string;
+  fieldOfInterest?: string;
+  verificationStatus?: 'approved' | 'pending' | 'rejected';
+  mentorOrganization?: string;
+  mentorExperienceYears?: number;
+  mentorLinkedin?: string;
+  mentorExpertise?: string[];
   isOnboarded: boolean;
   streakDays?: number;
   streak_days?: number;
@@ -110,7 +116,7 @@ export interface CodingProblem {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   category: string;
   isDebuggingChallenge?: boolean;
-  brokenBugExplanation?: string;
+  brokenBugExplanation?: string | null;
   descriptionMarkdown: string;
   examples: Array<{
     input: string;
@@ -130,6 +136,12 @@ export interface CodingProblem {
     expectedOutput: string;
     isHidden: boolean;
   }>;
+  hints?: {
+    level1Concept?: string;
+    level2Stronger?: string;
+    level3Approach?: string;
+    level4Mentor?: string;
+  };
   tags: string[];
   acceptanceRate: number;
 }

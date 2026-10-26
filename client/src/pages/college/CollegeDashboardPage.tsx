@@ -55,7 +55,7 @@ export const CollegeDashboardPage: React.FC = () => {
             GLA
           </div>
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Institutional Admin Portal
             </span>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">

@@ -72,8 +72,8 @@ export const FeaturesPage: React.FC = () => {
       tagline: 'Turn 48-hour sprints into winning MVPs',
       description: 'Live countdowns, phase-by-phase deliverables, AI problem analyzers, tech stack recommendations, and pitch deck simulators.',
       icon: Trophy,
-      color: 'text-amber-500',
-      bgColor: 'bg-amber-500/10',
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-500/10',
       actionUrl: '/hackathon',
     },
     {

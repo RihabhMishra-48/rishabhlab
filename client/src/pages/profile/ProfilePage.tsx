@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Link } from 'react-router-dom';
+  Link
+} from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -25,15 +26,6 @@ import {
   Target,
   ArrowRight,
 } from 'lucide-react';
-
-const PRESET_AVATARS = [
-  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop',
-];
 
 export const ProfilePage: React.FC = () => {
   const { user, refreshUser } = useAuth();
@@ -77,8 +69,8 @@ export const ProfilePage: React.FC = () => {
         bio: user.bio || '',
         college: user.college || '',
         degree: user.degree || '',
-        year: user.year || '3rd Year',
-        targetGoal: user.targetGoal || 'Web Development',
+        year: user.year || '',
+        targetGoal: user.targetGoal || user.fieldOfInterest || 'Cybersecurity',
         avatar: user.avatar || '',
       });
     }
@@ -138,21 +130,32 @@ export const ProfilePage: React.FC = () => {
         githubUsername: formData.username,
         avatar: formData.avatar,
         targetGoal: formData.targetGoal,
+        fieldOfInterest: formData.targetGoal,
       });
+
+      if (user?.id) {
+        localStorage.setItem(`rishabhlabs_goal_${user.id}`, formData.targetGoal);
+      }
+      localStorage.setItem('rishabhlabs_goal', formData.targetGoal);
 
       // 2. Sync to Supabase profiles table if available
       try {
         const { supabase, isSupabaseConfigured } = await import('../../services/supabase');
         if (isSupabaseConfigured && user?.id) {
-          await supabase.from('profiles').update({
-            full_name: formData.name,
-            college_name: formData.college,
-            degree: formData.degree,
-            year_of_study: formData.year,
-            avatar_url: formData.avatar,
-            github_username: formData.username,
+          const updateData: any = {
+            full_name: formData.name.trim() || user?.name || 'Engineer',
+            college_name: formData.college.trim() || null,
+            degree: formData.degree.trim() || null,
+            year_of_study: formData.year.trim() || null,
+            avatar_url: formData.avatar || null,
+            github_username: formData.username.trim() || null,
             target_goal: formData.targetGoal,
-          }).eq('id', user.id);
+            bio: formData.bio.trim() || null,
+          };
+          const { error: sbErr } = await supabase.from('profiles').update(updateData).eq('id', user.id);
+          if (sbErr) {
+            console.warn('Supabase profile sync notice:', sbErr.message);
+          }
         }
       } catch (sbErr) {
         console.warn('Supabase profile sync error:', sbErr);
@@ -228,28 +231,57 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             <p className="text-xs text-neutral-500 flex items-center gap-1.5 flex-wrap">
-              {user?.targetGoal && (
-                <span className="px-2 py-0.5 rounded-md font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                  {user.targetGoal} Track
-                </span>
-              )}
-              {user?.year && <span>• {user.year}</span>}
-              {user?.degree && <span>• {user.degree}</span>}
-              {user?.college && (
+              {user?.role === 'mentor' ? (
                 <>
-                  <span>•</span>
-                  <strong className="text-neutral-700 dark:text-neutral-300 font-semibold">
-                    {user.college}
-                  </strong>
+                  <span className="px-2 py-0.5 rounded-md font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+                    Mentor · {user?.targetGoal || user?.fieldOfInterest || 'Technical Guide'}
+                  </span>
+                  {user?.mentorOrganization && (
+                    <>
+                      <span>•</span>
+                      <strong className="text-neutral-700 dark:text-neutral-300 font-semibold">
+                        {user.mentorOrganization}
+                      </strong>
+                    </>
+                  )}
+                  {Boolean(user?.mentorExperienceYears) && (
+                    <span>• {user.mentorExperienceYears}+ yrs experience</span>
+                  )}
+                  {!user?.mentorOrganization && (
+                    <button
+                      onClick={() => setIsEditModalOpen(true)}
+                      className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+                    >
+                      + Add Organization / Company
+                    </button>
+                  )}
                 </>
-              )}
-              {!user?.college && !user?.degree && (
-                <button
-                  onClick={() => setIsEditModalOpen(true)}
-                  className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                >
-                  + Add College & Degree
-                </button>
+              ) : (
+                <>
+                  {user?.targetGoal && (
+                    <span className="px-2 py-0.5 rounded-md font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                      {user.targetGoal} Track
+                    </span>
+                  )}
+                  {user?.year && <span>• {user.year}</span>}
+                  {user?.degree && <span>• {user.degree}</span>}
+                  {user?.college && (
+                    <>
+                      <span>•</span>
+                      <strong className="text-neutral-700 dark:text-neutral-300 font-semibold">
+                        {user.college}
+                      </strong>
+                    </>
+                  )}
+                  {!user?.college && !user?.degree && (
+                    <button
+                      onClick={() => setIsEditModalOpen(true)}
+                      className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                    >
+                      + Add College & Degree
+                    </button>
+                  )}
+                </>
               )}
             </p>
 
@@ -296,11 +328,10 @@ export const ProfilePage: React.FC = () => {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              activeTab === tab
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${activeTab === tab
                 ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-2xs'
                 : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2a2a2a]'
-            }`}
+              }`}
           >
             {tab}
           </button>
@@ -331,7 +362,7 @@ export const ProfilePage: React.FC = () => {
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             Streak
           </span>
-          <p className="text-2xl font-extrabold text-amber-500 font-mono">
+          <p className="text-2xl font-extrabold text-orange-500 font-mono">
             {stats.streakDays}
           </p>
         </div>
@@ -453,7 +484,7 @@ export const ProfilePage: React.FC = () => {
         </div>
       )}
 
-            {activeTab === 'Skills' && (() => {
+      {activeTab === 'Skills' && (() => {
         const goal = (user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'Web Development').toLowerCase();
         let defaultSkills = [
           { name: 'React 18 & Hooks', category: 'Frontend', level: 'Advanced', verified: true },
@@ -658,7 +689,7 @@ export const ProfilePage: React.FC = () => {
             title: '90-Day Engineering Sprint Enrolled',
             desc: `Committed to personalized curriculum for ${user?.targetGoal || 'Web Development'} track.`,
             date: 'Sprint 1',
-            badge: '🎯',
+            badge: '',
           },
           {
             title: 'Diagnostic Benchmark Completed',
@@ -670,25 +701,25 @@ export const ProfilePage: React.FC = () => {
             title: 'Algorithmic Problem Solver',
             desc: 'Successfully executed code sandbox test suites with 100% test passage.',
             date: 'Active',
-            badge: '🧠',
+            badge: '',
           },
           {
             title: 'Verified Proof of Work',
             desc: 'Public developer profile configured with skills and college verification.',
             date: 'Active',
-            badge: '🛡️',
+            badge: '',
           },
           {
             title: 'First Milestone Accomplished',
             desc: 'Submitted project milestone task with verified architecture guide.',
             date: 'Sprint 1',
-            badge: '🏆',
+            badge: '',
           },
           {
             title: '1:1 Expert Mentorship Ready',
             desc: 'Eligible for direct code review and career direction sessions with industry leads.',
             date: 'Available',
-            badge: '🤝',
+            badge: '',
           },
         ];
 
@@ -701,7 +732,7 @@ export const ProfilePage: React.FC = () => {
                 key={i}
                 className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-2 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
               >
-                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-lg">
+                <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-lg">
                   {a.badge || '🏆'}
                 </div>
                 <h3 className="text-xs font-bold text-neutral-900 dark:text-white">{a.title}</h3>
@@ -782,24 +813,6 @@ export const ProfilePage: React.FC = () => {
                       )}
                     </div>
                     <p className="text-[11px] text-neutral-400">Supports JPG, PNG, WEBP (Max 2MB)</p>
-                  </div>
-                </div>
-
-                {/* Preset Avatars */}
-                <div className="pt-2">
-                  <span className="text-[11px] text-neutral-400 block mb-1.5 font-medium">Or choose an avatar preset:</span>
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                    {PRESET_AVATARS.map((preset, idx) => (
-                      <img
-                        key={idx}
-                        src={preset}
-                        alt={`Preset ${idx + 1}`}
-                        onClick={() => setFormData((prev) => ({ ...prev, avatar: preset }))}
-                        className={`w-9 h-9 rounded-xl object-cover cursor-pointer border-2 transition-all ${
-                          formData.avatar === preset ? 'border-blue-600 scale-105 shadow-xs' : 'border-transparent hover:opacity-80'
-                        }`}
-                      />
-                    ))}
                   </div>
                 </div>
               </div>
@@ -895,6 +908,7 @@ export const ProfilePage: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, year: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
                   >
+                    <option value="">Not Specified / Optional</option>
                     <option value="1st Year">1st Year</option>
                     <option value="2nd Year">2nd Year</option>
                     <option value="3rd Year">3rd Year</option>

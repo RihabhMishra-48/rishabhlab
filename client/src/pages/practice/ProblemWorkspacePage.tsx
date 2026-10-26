@@ -16,10 +16,16 @@ import {
   Clock,
   Sparkles,
   Terminal,
-  ChevronDown
+  ChevronDown,
+  Trophy
 } from 'lucide-react';
 import { BugIcon } from '../../components/icons/TrackIcons';
 import { CustomDropdown, DropdownOption } from '../../components/common/CustomDropdown';
+import {
+  ProblemDescriptionRenderer,
+  extractConstraintsFromMarkdown,
+  renderInlineContent,
+} from '../../components/practice/ProblemDescriptionRenderer';
 
 const LANGUAGE_OPTIONS: DropdownOption[] = [
   { value: 'javascript', label: 'JavaScript (Node 20)' },
@@ -168,7 +174,7 @@ export const ProblemWorkspacePage: React.FC = () => {
       setExecutionStatus('Accepted');
       setExecutionSummary(
         isSprint18
-          ? '🏆 Weekly Code Sprint #18 Solved! +150 XP Awarded! Runtime: 38ms (Faster than 96.4%). You climbed into the Top 10 on the GLA Cohort Leaderboard!'
+          ? '🏆 Weekly Code Sprint #18 Solved! +150 XP Awarded! Runtime: 38ms (Faster than 96.4%). You climbed into the Top 10 on the Sprint Leaderboard!'
           : 'Official Submission Accepted! Runtime: 42ms (Faster than 94.2% of submissions)'
       );
       setTestResults(mockResults);
@@ -235,36 +241,48 @@ export const ProblemWorkspacePage: React.FC = () => {
     );
   }
 
+  // Extract constraints embedded in markdown (if any) and merge with problem.constraints
+  const { extractedConstraints } = extractConstraintsFromMarkdown(problem.descriptionMarkdown || '');
+  const rawConstraintsList = [...(problem.constraints || []), ...extractedConstraints];
+  const seenConstraintKeys = new Set<string>();
+  const allConstraints = rawConstraintsList.filter((c) => {
+    const key = c.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!key || seenConstraintKeys.has(key)) return false;
+    seenConstraintKeys.add(key);
+    return true;
+  });
+
+  const isSprintProblem = targetSlug === 'high-throughput-in-memory-cache' || /Weekly Code Sprint/i.test(problem.title);
+  const cleanProblemTitle = problem.title.replace(/^Weekly Code Sprint\s*(?:#?\d+)?:\s*/i, '');
+
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 overflow-hidden">
       <header className="h-12 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#171717] px-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
           <Link
-            to={targetSlug === 'high-throughput-in-memory-cache' ? '/hackathon' : '/practice'}
-            className="p-1 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
-            title={targetSlug === 'high-throughput-in-memory-cache' ? 'Back to Arena' : 'Back to Problems'}
+            to={isSprintProblem ? '/hackathon' : '/practice'}
+            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
+            title={isSprintProblem ? 'Back to Arena' : 'Back to Problems'}
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <span className="text-xs font-bold text-neutral-900 dark:text-white truncate max-w-xs">
-            {problem.title}
+          <span
+            className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white truncate max-w-[200px] sm:max-w-xs md:max-w-md lg:max-w-lg"
+            title={cleanProblemTitle}
+          >
+            {cleanProblemTitle}
           </span>
           <span
-            className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${problem.difficulty === 'Easy'
-                ? 'bg-emerald-500/10 text-emerald-500'
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 ${
+              problem.difficulty === 'Easy'
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                 : problem.difficulty === 'Medium'
-                  ? 'bg-amber-500/10 text-amber-500'
-                  : 'bg-rose-500/10 text-rose-500'
-              }`}
+                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+            }`}
           >
             {problem.difficulty}
           </span>
-          {targetSlug === 'high-throughput-in-memory-cache' && (
-            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span>LIVE SPRINT</span>
-            </span>
-          )}
         </div>
 
         {/* Action Controls */}
@@ -272,7 +290,7 @@ export const ProblemWorkspacePage: React.FC = () => {
           {/* Progressive Hint Button */}
           <button
             onClick={openHintModal}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700 text-xs font-bold transition-colors"
             title="Step-by-step hints"
           >
             <HelpCircle className="w-3.5 h-3.5" />
@@ -309,21 +327,47 @@ export const ProblemWorkspacePage: React.FC = () => {
         </div>
       </header>
 
-      {targetSlug === 'high-throughput-in-memory-cache' && (
-        <div className="bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-b border-amber-500/25 px-4 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-            <span className="font-bold text-amber-500 font-mono text-[11px] uppercase tracking-wider shrink-0">
-              Weekly Code Sprint #18
-            </span>
-            <span className="text-neutral-400 hidden sm:inline">•</span>
-            <span className="text-neutral-700 dark:text-neutral-300 text-xs">
-              GLA Cohort Rank #14 • Passing 100% test cases awards <strong className="text-emerald-600 dark:text-emerald-400 font-bold">+150 XP</strong> towards Top 10
-            </span>
+      {isSprintProblem && (
+        <div className="relative bg-[#171516] dark:bg-[#131112] border-b border-neutral-200/70 dark:border-neutral-800/80 px-4 py-1.5 flex items-center justify-between text-xs shrink-0 shadow-2xs">
+          {/* Subtle accent hairline */}
+          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent pointer-events-none" />
+
+          {/* Left HUD Capsule Group */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            {/* Live Sprint Capsule */}
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+              </span>
+              <span>Sprint #18 Live</span>
+            </div>
+
+            {/* Standing Pill */}
+            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-neutral-100 dark:bg-neutral-800/90 text-neutral-700 dark:text-neutral-300 border border-neutral-200/80 dark:border-neutral-700/60 shrink-0">
+              <span className="text-neutral-400 dark:text-neutral-500 font-sans">Rank</span>
+              <span className="font-bold text-neutral-900 dark:text-white">#14</span>
+            </div>
+
+            {/* Divider */}
+            <span className="h-3 w-[1px] bg-neutral-300 dark:bg-neutral-800 hidden sm:inline-block shrink-0" />
+
+            {/* Goal & Reward Chips */}
+            <div className="hidden sm:flex items-center gap-2 min-w-0">
+              <span className="text-neutral-500 dark:text-neutral-400 text-xs truncate">
+                Pass all test cases to climb Top 10
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 shrink-0">
+                <Trophy className="w-3 h-3 text-amber-500" />
+                <span>+150 XP</span>
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 font-mono text-xs text-amber-600 dark:text-amber-400 font-bold shrink-0">
-            <Clock className="w-3.5 h-3.5" />
-            <span>3h 42m Left to Submit</span>
+
+          {/* Right Timer Capsule */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800/90 border border-neutral-200/80 dark:border-neutral-700/60 shrink-0">
+            <Clock className="w-3 h-3 text-amber-500 shrink-0" />
+            <span>3h 42m Left</span>
           </div>
         </div>
       )}
@@ -342,51 +386,97 @@ export const ProblemWorkspacePage: React.FC = () => {
             </div>
           )}
 
-          <div className="space-y-3">
-            <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
-              Description
-            </h2>
-            <div className="text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-line">
-              {problem.descriptionMarkdown}
+          {/* Problem Header: Badges & Title */}
+          <div className="space-y-3 pb-3 border-b border-neutral-200/80 dark:border-neutral-800/80">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                  problem.difficulty === 'Easy'
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                    : problem.difficulty === 'Medium'
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                    : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                }`}
+              >
+                {problem.difficulty}
+              </span>
+              {problem.category && (
+                <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200/80 dark:border-neutral-700/80">
+                  {problem.category}
+                </span>
+              )}
+              {isSprintProblem && (
+                <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  Sprint #18 Challenge
+                </span>
+              )}
+              {problem.acceptanceRate && (
+                <span className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400 ml-auto">
+                  Acceptance: {problem.acceptanceRate}%
+                </span>
+              )}
             </div>
+
+            <h1 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white leading-snug">
+              {cleanProblemTitle}
+            </h1>
+          </div>
+
+          {/* Formatted Problem Description */}
+          <div className="space-y-2">
+            <ProblemDescriptionRenderer
+              markdown={problem.descriptionMarkdown}
+              problemTitle={problem.title}
+            />
           </div>
 
           {/* Examples */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-              Examples
-            </h3>
-            {problem.examples.map((ex, i) => (
-              <div
-                key={i}
-                className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs font-mono space-y-1.5"
-              >
-                <div>
-                  <span className="text-neutral-400">Input: </span>
-                  <span className="text-neutral-800 dark:text-neutral-200">{ex.input}</span>
-                </div>
-                <div>
-                  <span className="text-neutral-400">Output: </span>
-                  <span className="text-emerald-500 font-bold">{ex.output}</span>
-                </div>
-                {ex.explanation && (
-                  <div className="text-[11px] text-neutral-500 pt-1 font-sans">
-                    Explanation: {ex.explanation}
+          {problem.examples && problem.examples.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
+                <span>Examples</span>
+              </h3>
+              {problem.examples.map((ex, i) => (
+                <div
+                  key={i}
+                  className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/90 border border-neutral-200 dark:border-neutral-800 text-xs font-mono space-y-2"
+                >
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-neutral-400 font-semibold select-none">Input:</span>
+                    <span className="text-neutral-800 dark:text-neutral-200 break-all">{ex.input}</span>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-neutral-400 font-semibold select-none">Output:</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold break-all">{ex.output}</span>
+                  </div>
+                  {ex.explanation && (
+                    <div className="text-[11px] text-neutral-500 dark:text-neutral-400 pt-1.5 border-t border-neutral-200/60 dark:border-neutral-800/60 font-sans leading-relaxed">
+                      <span className="font-semibold text-neutral-600 dark:text-neutral-300">Explanation: </span>
+                      {ex.explanation}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Constraints */}
-          {problem.constraints && problem.constraints.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-                Constraints
+          {allConstraints.length > 0 && (
+            <div className="space-y-2.5 pt-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
+                <span>Constraints</span>
               </h3>
-              <ul className="list-disc pl-5 space-y-1 text-xs text-neutral-600 dark:text-neutral-400 font-mono">
-                {problem.constraints.map((c, i) => (
-                  <li key={i}>{c}</li>
+              <ul className="space-y-2 font-mono text-xs">
+                {allConstraints.map((c, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-2.5 px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500/80 mt-1.5 shrink-0" />
+                    <div className="flex-1 leading-relaxed">
+                      {renderInlineContent(c)}
+                    </div>
+                  </li>
                 ))}
               </ul>
             </div>

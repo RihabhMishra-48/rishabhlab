@@ -202,6 +202,43 @@ export const MentorshipPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Mentor Profile Status Banner */}
+      {user?.role === 'mentor' && (
+        <div className="p-5 rounded-3xl bg-neutral-900 text-white dark:bg-[#212121] border border-neutral-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center shrink-0">
+              <Briefcase className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm font-bold">Your Mentor Profile</h3>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  user.verificationStatus === 'pending'
+                    ? 'bg-neutral-800 text-neutral-300 border border-neutral-700'
+                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                }`}>
+                  {user.verificationStatus === 'pending' ? 'Advance Verification: In Progress' : 'Verified Industry Mentor'}
+                </span>
+              </div>
+              <p className="text-xs text-neutral-400 mt-1">
+                Domain: <strong className="text-white">{user.fieldOfInterest || user.targetGoal || 'Cybersecurity'}</strong>{user.mentorOrganization || user.college ? <> · Institution: <strong className="text-white">{user.mentorOrganization || user.college}</strong></> : null}
+              </p>
+            </div>
+          </div>
+          <div className="text-xs text-neutral-400">
+            {user.verificationStatus === 'pending' ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-800/90 text-neutral-300 border border-neutral-700/80 font-medium">
+                Reviewing credentials · Live directory preview enabled
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium">
+                Active on Mentor Directory
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Hero Book a 1:1 Session Card (Sleek Grayish Monochrome Aesthetic) */}
       <div className="relative rounded-3xl bg-gradient-to-br from-[#FAFAFA] via-[#F4F4F5] to-[#E4E4E7] dark:from-[#212121] dark:via-[#1A1A1A] dark:to-[#141414] border border-neutral-200/90 dark:border-neutral-800 shadow-sm overflow-hidden p-6 sm:p-8 lg:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
         {/* Soft Ambient Neutral Glows */}
@@ -261,7 +298,7 @@ export const MentorshipPage: React.FC = () => {
           <div className="w-56 h-56 rounded-full bg-gradient-to-tr from-neutral-200/90 via-slate-100 to-neutral-200/60 dark:from-neutral-800/90 dark:via-neutral-850 dark:to-neutral-900 border border-neutral-300/80 dark:border-neutral-700/80 flex items-center justify-center relative shadow-inner">
             {/* Top-left Floating Badge */}
             <div className="absolute -top-3 -left-3 px-3 py-1.5 rounded-xl bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 font-bold text-[11px] shadow-md border border-neutral-800 dark:border-neutral-300 flex items-center gap-1.5 z-20">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 dark:text-amber-500" />
+              <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
               <span>Top Rated 4.98★</span>
             </div>
 
@@ -421,8 +458,8 @@ export const MentorshipPage: React.FC = () => {
 
                     {/* Rating & Verified Pill */}
                     <div className="flex flex-wrap items-center gap-2 pt-1.5">
-                      <div className="flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md text-[11px]">
-                        <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                      <div className="flex items-center gap-1 font-bold text-neutral-800 dark:text-neutral-200 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-md text-[11px]">
+                        <Star className="w-3.5 h-3.5 fill-current text-neutral-800 dark:text-neutral-200" />
                         <span>{mentor.rating}</span>
                         <span className="text-neutral-400 font-normal">({mentor.reviewsCount})</span>
                       </div>

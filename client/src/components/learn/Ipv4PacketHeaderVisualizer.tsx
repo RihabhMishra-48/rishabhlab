@@ -7,7 +7,7 @@ interface HeaderField {
   shortName: string;
   bits: number;
   colSpan: string;
-  accent: 'blue' | 'indigo' | 'purple' | 'emerald' | 'amber' | 'rose' | 'cyan' | 'neutral';
+  accent: 'blue' | 'indigo' | 'purple' | 'emerald' | 'orange' | 'rose' | 'cyan' | 'neutral';
   offset: string;
   example: string;
   description: string;
@@ -84,7 +84,7 @@ const IPV4_FIELDS: HeaderField[] = [
     shortName: 'Flags [DF, MF]',
     bits: 3,
     colSpan: 'col-span-4',
-    accent: 'amber',
+    accent: 'orange',
     offset: 'Bits 48–50',
     example: '[0, DF=1, MF=0]',
     description: 'Bit 0: Reserved (always 0). Bit 1: Don\'t Fragment (DF). Bit 2: More Fragments (MF).',
@@ -211,10 +211,10 @@ export const Ipv4PacketHeaderVisualizer: React.FC = () => {
         return isSelected
           ? 'bg-emerald-500/25 text-emerald-900 dark:text-emerald-100 font-bold'
           : 'bg-emerald-500/10 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20';
-      case 'amber':
+      case 'orange':
         return isSelected
-          ? 'bg-amber-500/25 text-amber-900 dark:text-amber-100 font-bold'
-          : 'bg-amber-500/10 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20';
+          ? 'bg-orange-500/25 text-orange-900 dark:text-orange-100 font-bold'
+          : 'bg-orange-500/10 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 hover:bg-orange-500/20';
       case 'rose':
         return isSelected
           ? 'bg-rose-500/25 text-rose-900 dark:text-rose-100 font-bold'
@@ -429,8 +429,8 @@ export const Ipv4PacketHeaderVisualizer: React.FC = () => {
               {selectedField.description}
             </p>
 
-            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-800 dark:text-amber-300 text-[11px] flex items-start gap-2 leading-relaxed">
-              <Shield className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 text-[11px] flex items-start gap-2 leading-relaxed border border-neutral-200 dark:border-neutral-700">
+              <Shield className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400 shrink-0 mt-0.5" />
               <span>
                 <strong className="font-bold">Security Context:</strong> {selectedField.securityNote}
               </span>

@@ -69,7 +69,7 @@ export const PublicPortfolioPage: React.FC = () => {
 
             <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800 text-center shrink-0">
               <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Streak Record</span>
-              <p className="text-2xl font-extrabold text-amber-500 font-mono mt-0.5">{profile?.stats?.streakDays ?? 0} Days</p>
+              <p className="text-2xl font-extrabold text-orange-500 font-mono mt-0.5">{profile?.stats?.streakDays ?? 0} Days</p>
             </div>
           </div>
 

@@ -20,7 +20,7 @@ export const Hero3DVisual: React.FC = () => {
           <div className="flex items-center justify-between pb-2 border-b border-neutral-800">
             <div className="flex gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80"></div>
-              <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80"></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-orange-400/80"></div>
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></div>
             </div>
             <span className="text-[10px] font-mono text-neutral-400">Day 17 • execution.ts</span>
@@ -32,7 +32,7 @@ export const Hero3DVisual: React.FC = () => {
             <p className="pl-3 text-neutral-300">track: <span className="text-emerald-400">'Web Development'</span>,</p>
             <p className="pl-3 text-neutral-300">goal: <span className="text-emerald-400">'Build & Ship Daily'</span>,</p>
             <p className="pl-3 text-neutral-300">status: <span className="text-cyan-400">'In Progress (41%)'</span>,</p>
-            <p className="pl-3 text-neutral-300">streak: <span className="text-amber-400">12</span></p>
+            <p className="pl-3 text-neutral-300">streak: <span className="text-orange-400">12</span></p>
             <p className="text-purple-400">{'}'};</p>
           </div>
 

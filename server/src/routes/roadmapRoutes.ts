@@ -11,22 +11,38 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
   try {
     const user = req.user!;
     const profile = await StudentProfile.findOne({ userId: user._id });
-    const userGoal = (req.query.track as string) || profile?.targetGoal || (user as any).targetGoal || 'AI / Machine Learning';
+    const userGoal = (req.query.track as string) || profile?.targetGoal || (user as any).targetGoal || 'Web Development';
+    const isExplicitRegenerate = req.query.regenerate === 'true';
 
-    let roadmap = await Roadmap.findOne({ userId: user._id });
-    const shouldRegenerate = req.query.regenerate === 'true' || 
-      (req.query.track && roadmap && !roadmap.title.toLowerCase().includes((req.query.track as string).toLowerCase().slice(0, 4)));
+    const trackLower = userGoal.toLowerCase();
+    let catFilter = 'Web Development';
+    if (trackLower.includes('ai') || trackLower.includes('ml') || trackLower.includes('machine')) catFilter = 'AI / Machine Learning';
+    else if (trackLower.includes('data') || trackLower.includes('analytics')) catFilter = 'Data / Analytics';
+    else if (trackLower.includes('cyber') || trackLower.includes('security')) catFilter = 'Cybersecurity';
+    else if (trackLower.includes('app') || trackLower.includes('mobile')) catFilter = 'Mobile App Development';
 
-    if (!roadmap || shouldRegenerate) {
-      const generated = await aiService.generateRoadmap({
-        goal: userGoal,
-        currentLevel: profile?.level || 'Beginner',
-        availableTime: '2 hr/day',
-        desiredOutcome: 'High-impact projects & placement',
-        targetDate: '90 days',
-      });
+    // Find existing roadmap for this user matching category
+    let roadmap = await Roadmap.findOne({
+      userId: user._id,
+      $or: [
+        { category: { $regex: new RegExp(catFilter.slice(0, 4), 'i') } },
+        { title: { $regex: new RegExp(catFilter.slice(0, 4), 'i') } },
+      ],
+    });
 
-      if (roadmap) {
+    if (!roadmap || isExplicitRegenerate) {
+      const generated = await aiService.generateRoadmap(
+        {
+          goal: userGoal,
+          currentLevel: profile?.level || 'Beginner',
+          availableTime: '2 hr/day',
+          desiredOutcome: 'High-impact projects & placement',
+          targetDate: '90 days',
+        },
+        isExplicitRegenerate
+      );
+
+      if (roadmap && isExplicitRegenerate) {
         roadmap.title = generated.title;
         roadmap.slug = generated.slug;
         roadmap.category = generated.category;
@@ -34,7 +50,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
         roadmap.totalNodes = generated.totalNodes;
         roadmap.completedNodes = 0;
         await roadmap.save();
-      } else {
+      } else if (!roadmap) {
         roadmap = await Roadmap.create({
           ...generated,
           userId: user._id,

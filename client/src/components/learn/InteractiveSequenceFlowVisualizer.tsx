@@ -400,8 +400,8 @@ export const InteractiveSequenceFlowVisualizer: React.FC = () => {
             </div>
 
             {/* Security Vulnerability Insight */}
-            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-800 dark:text-amber-300 text-[11px] flex items-start gap-2 leading-relaxed">
-              <Shield className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 text-[11px] flex items-start gap-2 leading-relaxed border border-neutral-200 dark:border-neutral-700">
+              <Shield className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400 shrink-0 mt-0.5" />
               <span>
                 <strong className="font-bold">Security Analysis:</strong> {currentStepData.securityInsight}
               </span>

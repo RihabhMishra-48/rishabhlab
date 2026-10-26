@@ -1394,21 +1394,14 @@ export const seedDatabase = async () => {
         slug: 'high-throughput-in-memory-cache',
         difficulty: 'Medium',
         category: 'Algorithm Sprint',
-        descriptionMarkdown: `## Weekly Code Sprint #18: High-Throughput In-Memory Cache
-
-Design and implement a high-performance in-memory key-value cache engine supporting **TTL expiration**, thread-safe **LRU (Least Recently Used) eviction**, and sub-millisecond lookups.
+        descriptionMarkdown: `Design and implement a high-performance in-memory key-value cache engine supporting **TTL expiration**, thread-safe **LRU (Least Recently Used) eviction**, and sub-millisecond lookups.
 
 ### Requirements
 Implement the \`CacheEngine\` class with the following methods:
 - \`set(key: string, value: any, ttlMs?: number): void\` — Stores the key-value pair. If capacity is exceeded, evict the least recently used, non-expired key. If \`ttlMs\` is provided, the entry expires after \`ttlMs\` milliseconds.
 - \`get(key: string): any\` — Returns the value if found and not expired. Returns \`null\` if missing or expired. Accessing a key updates its recency in the LRU order.
 - \`purge(): number\` — Purges all expired keys and returns the number of keys removed.
-- \`size(): number\` — Returns the number of currently active, non-expired keys.
-
-### Constraints
-- 1 <= capacity <= 10,000
-- Keys are non-empty strings
-- Operations must run in average O(1) time complexity.`,
+- \`size(): number\` — Returns the number of currently active, non-expired keys.`,
         examples: [
           {
             input: '["CacheEngine", 2], ["set", "token", "xyz", 5000], ["get", "token"], ["set", "session", "abc"], ["size"]',

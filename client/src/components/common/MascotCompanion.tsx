@@ -92,7 +92,7 @@ const InteractiveMascot: React.FC<InteractiveMascotProps> = ({
       title="Click or tap to boop avatar!"
     >
       {showStageAura && (
-        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-400/25 via-blue-400/20 to-purple-400/15 blur-md pointer-events-none transition-opacity duration-300 group-hover:opacity-100 opacity-70" />
+        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-orange-400/20 via-blue-400/20 to-purple-400/15 blur-md pointer-events-none transition-opacity duration-300 group-hover:opacity-100 opacity-70" />
       )}
 
       <span
@@ -156,7 +156,7 @@ export const MascotCompanion: React.FC = () => {
 
   const speeches = [
     `Day ${streakDays} streak is live 🔥! Keep writing clean code to protect your flame.`,
-    `Weekly Code Sprint #18 is active! GLA University rank #14 can climb to top 10 today 🏆`,
+    `Weekly Code Sprint #18 is active! Your rank #14 can climb to top 10 today 🏆`,
     `Streak Freeze 🛡️ is active. Even if you take a break today, your streak stays safe!`,
     `Great progress on Web Dev! 3 days left until your Day 20 Silver Dev Badge ⭐`,
     `Tap or boop me to check my expressions or test coding reactions! ✨`,
@@ -281,7 +281,7 @@ export const MascotCompanion: React.FC = () => {
       >
         {/* Speech Bubble */}
         {showSpeechBubble && !isOpen && (
-          <div className="mb-2 max-w-[240px] sm:max-w-[280px] p-3 rounded-2xl bg-white dark:bg-[#212121] border border-amber-200/80 dark:border-amber-900/60 shadow-lg text-xs text-neutral-800 dark:text-neutral-200 relative animate-in fade-in duration-300">
+          <div className="mb-2 max-w-[240px] sm:max-w-[280px] p-3 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800 shadow-lg text-xs text-neutral-800 dark:text-neutral-200 relative animate-in fade-in duration-300">
             <button
               onClick={() => setShowSpeechBubble(false)}
               className="absolute top-1.5 right-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 p-0.5 rounded-full"
@@ -290,22 +290,22 @@ export const MascotCompanion: React.FC = () => {
               <X className="w-3 h-3" />
             </button>
             <div className="pr-3">
-              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 block mb-0.5 font-mono">
-                CHIBI AVATAR • DEV COMPANION
+              <span className="text-[10px] font-bold text-neutral-500 dark:text-neutral-400 block mb-0.5 font-mono">
+                CHIBI AVATAR DEV COMPANION
               </span>
               <p className="leading-snug text-[11px] sm:text-xs">
                 {speeches[speechIndex]}
               </p>
               <button
                 onClick={() => setIsOpen(true)}
-                className="mt-1.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                className="mt-1.5 text-[10px] font-bold text-neutral-900 dark:text-white hover:underline flex items-center gap-1"
               >
                 <span>View Streak Guardian Hub</span>
                 <ArrowRight className="w-2.5 h-2.5" />
               </button>
             </div>
             {/* Bubble Tail */}
-            <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-white dark:bg-[#212121] border-b border-r border-amber-200/80 dark:border-amber-900/60 rotate-45" />
+            <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-white dark:bg-[#212121] border-b border-r border-neutral-200 dark:border-neutral-800 rotate-45" />
           </div>
         )}
 
@@ -323,7 +323,7 @@ export const MascotCompanion: React.FC = () => {
           {/* Streak Flame Badge: Clicking opens modal */}
           <button
             onClick={() => setIsOpen(true)}
-            className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white font-mono font-bold text-[10px] shadow-md border-2 border-white dark:border-neutral-900 cursor-pointer transition-colors whitespace-nowrap"
+            className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-mono font-bold text-[10px] shadow-md border-2 border-white dark:border-neutral-900 cursor-pointer transition-colors whitespace-nowrap"
             title="Click to view Streak Guardian details"
           >
             <Flame className="w-3 h-3 fill-current" />
@@ -347,11 +347,11 @@ export const MascotCompanion: React.FC = () => {
 
             {/* Character Header */}
             <div className="flex items-center gap-3.5 pr-8">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-blue-500/20 border border-amber-300/40 flex items-center justify-center text-amber-500">
+              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
                 <Flame className="w-6 h-6 fill-current" />
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                   Interactive Dev Companion
                 </span>
                 <h3 className="text-lg sm:text-xl font-extrabold text-neutral-900 dark:text-white leading-tight">
@@ -375,7 +375,7 @@ export const MascotCompanion: React.FC = () => {
                   Gaze Tracker
                 </span>
                 <span className="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono">
-                  60 FPS • Interactive
+                  60 FPS Interactive
                 </span>
               </div>
 
@@ -391,7 +391,7 @@ export const MascotCompanion: React.FC = () => {
               </div>
 
               {/* Status Hint Pill */}
-              <div className="mt-2 text-[11px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full font-mono">
+              <div className="mt-2 text-[11px] font-semibold text-neutral-300 bg-neutral-900 border border-neutral-700 px-3 py-1 rounded-full font-mono">
                 {activeReaction
                   ? `Reaction: ${activeReaction.toUpperCase()}`
                   : `Looking: ${direction.replace('-', ' ').toUpperCase()}`}
@@ -409,7 +409,7 @@ export const MascotCompanion: React.FC = () => {
                       onClick={() => triggerReaction(r.key, 900)}
                       className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                         activeReaction === r.key
-                          ? 'bg-amber-500/20 border-amber-400 text-amber-300'
+                          ? 'bg-neutral-800 border-neutral-500 text-white'
                           : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-300 hover:text-white'
                       }`}
                     >
@@ -422,10 +422,10 @@ export const MascotCompanion: React.FC = () => {
             </div>
 
             {/* Streak Status Showcase Box */}
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-300/40 dark:border-amber-700/40 space-y-3">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#252528] border border-neutral-200/90 dark:border-neutral-800 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
+                  <div className="w-8 h-8 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-xs">
                     <Flame className="w-5 h-5 fill-current" />
                   </div>
                   <div>
@@ -446,7 +446,7 @@ export const MascotCompanion: React.FC = () => {
               </div>
 
               {/* 7-Day Dot Tracker */}
-              <div className="pt-2 border-t border-amber-200/40 dark:border-amber-900/40">
+              <div className="pt-2 border-t border-neutral-200/80 dark:border-neutral-800">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-2">
                   This Week's Consistency
                 </span>
@@ -454,10 +454,10 @@ export const MascotCompanion: React.FC = () => {
                   {weekdays.map((item, idx) => (
                     <div
                       key={idx}
-                      className="p-1.5 rounded-xl bg-white dark:bg-[#262626] border border-neutral-200/60 dark:border-neutral-800 flex flex-col items-center gap-1"
+                      className="p-1.5 rounded-xl bg-neutral-50 dark:bg-[#1e1e20] border border-neutral-200/60 dark:border-neutral-800 flex flex-col items-center gap-1"
                     >
                       <span className="text-[9px] font-bold text-neutral-400">{item.day}</span>
-                      <Flame className="w-3.5 h-3.5 text-amber-500 fill-current" />
+                      <Flame className="w-3.5 h-3.5 text-orange-500 fill-current" />
                     </div>
                   ))}
                 </div>
@@ -467,7 +467,7 @@ export const MascotCompanion: React.FC = () => {
             {/* Next Milestone Card */}
             <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-neutral-200 dark:bg-neutral-800 text-amber-500 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center">
                   <Trophy className="w-4 h-4" />
                 </div>
                 <div>
@@ -481,7 +481,7 @@ export const MascotCompanion: React.FC = () => {
               </div>
               <button
                 onClick={triggerCelebration}
-                className="px-3 py-1.5 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
+                className="px-3 py-1.5 rounded-full text-xs font-bold bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
               >
                 <Sparkles className="w-3 h-3" />
                 <span>{sparkClaimed ? 'Sparked! ✨' : 'Spark'}</span>

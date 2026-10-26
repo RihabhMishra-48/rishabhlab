@@ -7,7 +7,7 @@ export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [college, setCollege] = useState('GLA University');
+  const [college, setCollege] = useState('');
   const [role, setRole] = useState<'student' | 'mentor' | 'college_admin'>('student');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,7 +25,7 @@ export const RegisterPage: React.FC = () => {
     setError('');
     setIsSubmitting(true);
     try {
-      await register({ name, email, password, college, role });
+      await register({ name, email, password, college: college.trim() || undefined, role });
       navigate('/onboarding');
     } catch (err: any) {
       setError(err.message || 'Registration failed.');
@@ -77,7 +77,7 @@ export const RegisterPage: React.FC = () => {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-              College Email
+              Email Address
             </label>
             <input
               type="email"
@@ -85,37 +85,8 @@ export const RegisterPage: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0"
-              placeholder="name@gla.ac.in"
+              placeholder="name@example.com"
             />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-              College / University
-            </label>
-            <input
-              type="text"
-              value={college}
-              onChange={(e) => setCollege(e.target.value)}
-              required
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0"
-              placeholder="GLA University"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-              Account Role
-            </label>
-            <select
-              value={role}
-              onChange={(e: any) => setRole(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0"
-            >
-              <option value="student">Student</option>
-              <option value="mentor">Mentor</option>
-              <option value="college_admin">College Admin</option>
-            </select>
           </div>
 
           <div className="space-y-1.5">
@@ -133,13 +104,26 @@ export const RegisterPage: React.FC = () => {
             />
           </div>
 
+          <p className="text-[11px] text-neutral-500 text-center">
+            Next: Multi-step personalization for your role & primary field of interest.
+          </p>
+
           <button
             type="submit"
             disabled={isSubmitting}
             className="w-full py-3 rounded-full bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 font-semibold text-xs transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
           >
-            {isSubmitting ? 'Creating account...' : 'Start Onboarding'}
-            <ArrowRight className="w-3.5 h-3.5" />
+            {isSubmitting ? (
+              <span className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 border-2 border-white/30 dark:border-neutral-900/30 border-t-white dark:border-t-neutral-900 rounded-full animate-spin"></span>
+                Creating account...
+              </span>
+            ) : (
+              <>
+                <span>Continue to Step-by-Step Setup</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
 
           <div className="relative my-3">

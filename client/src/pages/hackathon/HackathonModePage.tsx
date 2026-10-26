@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { Hackathon } from '../../types';
 import {
@@ -40,6 +41,10 @@ import {
 } from 'lucide-react';
 
 export const HackathonModePage: React.FC = () => {
+  const { user } = useAuth();
+  const userTrack = user?.fieldOfInterest || user?.targetGoal || 'Cybersecurity';
+  const userCollege = user?.college || '';
+
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'competitions';
 
@@ -65,12 +70,57 @@ export const HackathonModePage: React.FC = () => {
 
   // Filter & Search state for Contests & Arena
   const [selectedFilter, setSelectedFilter] = useState<
-    'all' | 'live' | 'Hackathon' | 'Algorithm Sprint' | 'Bug Bounty' | 'Full-Stack Speed Run'
+    'all' | 'live' | 'track' | 'Hackathon' | 'Algorithm Sprint' | 'Bug Bounty' | 'Full-Stack Speed Run'
   >('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Leaderboard state
-  const [selectedCampus, setSelectedCampus] = useState<'GLA University' | 'Global'>('GLA University');
+  const [selectedCampus, setSelectedCampus] = useState<string>(user?.college || 'Global');
+
+  // Track match helper for dynamic filtering & badge highlighting
+  const isTrackMatch = (comp: Competition) => {
+    const normTrack = userTrack.toLowerCase();
+    const text = `${comp.title} ${comp.category} ${comp.description} ${comp.tags.join(' ')}`.toLowerCase();
+    if (normTrack.includes('cyber') || normTrack.includes('security')) {
+      return text.includes('bug bounty') || text.includes('cyber') || text.includes('security') || text.includes('jwt') || text.includes('idor');
+    }
+    if (normTrack.includes('web') || normTrack.includes('fullstack') || normTrack.includes('front') || normTrack.includes('back')) {
+      return text.includes('speed run') || text.includes('web') || text.includes('react') || text.includes('next.js') || text.includes('full-stack');
+    }
+    if (normTrack.includes('ai') || normTrack.includes('machine') || normTrack.includes('genai')) {
+      return text.includes('ai / machine learning') || text.includes('rag') || text.includes('vector') || text.includes('ai / ml') || text.includes('genai');
+    }
+    if (normTrack.includes('mobile') || normTrack.includes('app')) {
+      return text.includes('mobile') || text.includes('app') || text.includes('flutter');
+    }
+    if (normTrack.includes('cloud') || normTrack.includes('devops')) {
+      return text.includes('cloud & devops') || text.includes('kubernetes') || text.includes('terraform') || text.includes('docker');
+    }
+    if (normTrack.includes('data')) {
+      return text.includes('data structures') || text.includes('cache') || text.includes('analytics');
+    }
+    return true;
+  };
+
+  // Pre-seed 48h Hackathon AI prompt based on student's active track
+  useEffect(() => {
+    if (userTrack) {
+      const t = userTrack.toLowerCase();
+      if (t.includes('cyber') || t.includes('security')) {
+        setProblemInput('Automated API security scanner for detecting IDOR vulnerabilities, JWT misconfigurations, and privilege escalation in cloud-native microservices.');
+      } else if (t.includes('web') || t.includes('fullstack')) {
+        setProblemInput('Modern collaborative design canvas with real-time WebRTC synchronization, AI layout synthesis, and instant React component export.');
+      } else if (t.includes('ai') || t.includes('machine')) {
+        setProblemInput('Autonomous agentic pipeline that parses untidy multimodal PDFs, generates high-density vector embeddings, and answers complex queries with zero hallucination.');
+      } else if (t.includes('app') || t.includes('mobile')) {
+        setProblemInput('Cross-platform Flutter mobile wallet with offline biometric signatures and dynamic QR peer-to-peer settlement.');
+      } else if (t.includes('cloud') || t.includes('devops')) {
+        setProblemInput('Autonomous Kubernetes resource right-sizing daemon with automated canary verification and zero-downtime rollback.');
+      } else if (t.includes('data')) {
+        setProblemInput('Real-time clickstream analytics engine using Apache Kafka and DuckDB for sub-second behavioral cohort scoring.');
+      }
+    }
+  }, [userTrack]);
 
   // Category Metadata helper for crisp visual hierarchy & domain identity
   const getCategoryMeta = (category: Competition['category']) => {
@@ -95,8 +145,8 @@ export const HackathonModePage: React.FC = () => {
         return {
           icon: Flame,
           label: 'Speed Run',
-          badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
-          accent: 'text-amber-500',
+          badge: 'bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20',
+          accent: 'text-orange-500',
           format: '2-Hour Blitz',
         };
       case 'Bug Bounty':
@@ -120,7 +170,8 @@ export const HackathonModePage: React.FC = () => {
 
   const filteredCompetitions = competitions.filter((comp) => {
     if (selectedFilter === 'live' && comp.status !== 'live') return false;
-    if (selectedFilter !== 'all' && selectedFilter !== 'live' && comp.category !== selectedFilter) return false;
+    if (selectedFilter === 'track' && !isTrackMatch(comp)) return false;
+    if (selectedFilter !== 'all' && selectedFilter !== 'live' && selectedFilter !== 'track' && comp.category !== selectedFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchesTitle = comp.title.toLowerCase().includes(q);
@@ -177,13 +228,13 @@ export const HackathonModePage: React.FC = () => {
     }));
   };
 
-  const currentLeaderboard = CAMPUS_LEADERBOARDS[selectedCampus] || CAMPUS_LEADERBOARDS['GLA University'];
+  const currentLeaderboard = CAMPUS_LEADERBOARDS[selectedCampus] || CAMPUS_LEADERBOARDS['Global'] || CAMPUS_LEADERBOARDS['GLA University'];
   const topThree = currentLeaderboard.slice(0, 3);
   const remainingRankings = currentLeaderboard.slice(3);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
-      {/* Platform Theme Header — Relatable to RishabhLabs & Campus Arena */}
+      {/* Platform Theme Header — Dynamic Focus Track & Campus Arena */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div className="flex items-center gap-3.5 sm:gap-4">
           <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-center text-neutral-900 dark:text-white shrink-0 shadow-xs">
@@ -200,31 +251,35 @@ export const HackathonModePage: React.FC = () => {
               </span>
             </div>
             <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
-              Compete in weekly coding sprints, climb the GLA campus leaderboard, and launch 48-hr prototypes.
+              Compete in weekly sprints tailored to your track, climb campus ranks, and build 48-hr prototypes.
             </p>
           </div>
         </div>
 
-        {/* User Rank Card Pill — Exact Theme Relatable to Student Dashboard */}
-        <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs self-start sm:self-auto">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-bold text-neutral-900 dark:text-white bg-neutral-100 dark:bg-[#1a1a1a] px-2 py-0.5 rounded-md border border-neutral-200/80 dark:border-neutral-800">
-              #14
-            </span>
-            <div className="flex items-center gap-1">
-              <Building2 className="w-3.5 h-3.5 text-neutral-400" />
-              <span className="text-xs font-bold text-neutral-900 dark:text-white">GLA Cohort</span>
+        {/* User Rank Telemetry Pill */}
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+
+          {/* User Rank Card Pill */}
+          <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono font-bold text-neutral-900 dark:text-white bg-neutral-100 dark:bg-[#1a1a1a] px-2 py-0.5 rounded-md border border-neutral-200/80 dark:border-neutral-800">
+                #14
+              </span>
+              <div className="flex items-center gap-1">
+                <Building2 className="w-3.5 h-3.5 text-neutral-400" />
+                <span className="text-xs font-bold text-neutral-900 dark:text-white truncate max-w-[120px]">{userCollege}</span>
+              </div>
+              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                Top 4%
+              </span>
             </div>
-            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
-              Top 4%
-            </span>
-          </div>
-          <span className="text-neutral-300 dark:text-neutral-700">•</span>
-          <div className="flex items-center gap-1.5 text-xs font-mono text-neutral-500 dark:text-neutral-400">
-            <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
-            <span>17d</span>
             <span className="text-neutral-300 dark:text-neutral-700">•</span>
-            <span className="text-neutral-900 dark:text-neutral-200 font-bold">1,450 XP</span>
+            <div className="flex items-center gap-1.5 text-xs font-mono text-neutral-500 dark:text-neutral-400">
+              <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
+              <span>17d</span>
+              <span className="text-neutral-300 dark:text-neutral-700">•</span>
+              <span className="text-neutral-900 dark:text-neutral-200 font-bold">1,450 XP</span>
+            </div>
           </div>
         </div>
       </div>
@@ -234,39 +289,32 @@ export const HackathonModePage: React.FC = () => {
         <div className="flex flex-wrap items-center gap-1">
           <button
             onClick={() => handleTabChange('competitions')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-              activeMainTab === 'competitions'
-                ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-xs'
-                : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${activeMainTab === 'competitions'
+              ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-xs'
+              : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+              }`}
           >
             <Trophy className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
             <span>Weekly Sprints & Contests</span>
-            <span className="flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span>1 Live</span>
-            </span>
           </button>
 
           <button
             onClick={() => handleTabChange('leaderboard')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-              activeMainTab === 'leaderboard'
-                ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-xs'
-                : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${activeMainTab === 'leaderboard'
+              ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-xs'
+              : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+              }`}
           >
             <Award className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
-            <span>GLA Campus Leaderboard</span>
+            <span>Campus Leaderboard</span>
           </button>
 
           <button
             onClick={() => handleTabChange('builder')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-              activeMainTab === 'builder'
-                ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-xs'
-                : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${activeMainTab === 'builder'
+              ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-xs'
+              : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+              }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
             <span>48h Hackathon AI Studio</span>
@@ -276,7 +324,7 @@ export const HackathonModePage: React.FC = () => {
         {/* Clean Live Status indicator matching StudentDashboard telemetry */}
         <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 text-xs font-mono text-neutral-500 dark:text-neutral-400 mr-1">
           <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-          <span className="text-neutral-800 dark:text-neutral-200 font-bold">428 GLA Coders</span>
+          <span className="text-neutral-800 dark:text-neutral-200 font-bold">428 Active Coders</span>
           <span className="text-neutral-300 dark:text-neutral-700">•</span>
           <span className="text-neutral-700 dark:text-neutral-300 font-semibold">Sprint #18</span>
           <span className="text-neutral-300 dark:text-neutral-700">•</span>
@@ -328,7 +376,7 @@ export const HackathonModePage: React.FC = () => {
                     <span>428 GLA Coders Active</span>
                   </div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-mono font-semibold shadow-2xs">
-                    <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                    <Trophy className="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" />
                     <span className="text-emerald-700 dark:text-emerald-400 font-bold">₹20,000 Prize Pool</span>
                   </div>
                 </div>
@@ -361,12 +409,9 @@ export const HackathonModePage: React.FC = () => {
                 >
                   <div className="flex items-center justify-between pb-2.5 border-b border-neutral-200/60 dark:border-neutral-700/80">
                     <div className="flex items-center gap-2">
-                      <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                      <Trophy className="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" />
                       <span className="text-xs font-bold text-neutral-900 dark:text-white">Live Sprint Standings</span>
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold">
-                      GLA Cohort
-                    </span>
                   </div>
 
                   <div className="space-y-1.5">
@@ -443,28 +488,27 @@ export const HackathonModePage: React.FC = () => {
               <div className="flex flex-wrap items-center gap-1.5">
                 {[
                   { id: 'all', label: 'All Contests', count: competitions.length },
-                  { id: 'live', label: '🟢 Live', count: competitions.filter((c) => c.status === 'live').length },
-                  { id: 'Hackathon', label: '🏆 Hackathons', count: competitions.filter((c) => c.category === 'Hackathon').length },
-                  { id: 'Algorithm Sprint', label: '⚡ Code Sprints', count: competitions.filter((c) => c.category === 'Algorithm Sprint').length },
-                  { id: 'Full-Stack Speed Run', label: '🚀 Speed Runs', count: competitions.filter((c) => c.category === 'Full-Stack Speed Run').length },
-                  { id: 'Bug Bounty', label: '🛡️ Bug Bounty', count: competitions.filter((c) => c.category === 'Bug Bounty').length },
+                  { id: 'track', label: `For ${userTrack}`, count: competitions.filter(isTrackMatch).length },
+                  { id: 'live', label: 'Live', count: competitions.filter((c) => c.status === 'live').length },
+                  { id: 'Hackathon', label: 'Hackathons', count: competitions.filter((c) => c.category === 'Hackathon').length },
+                  { id: 'Algorithm Sprint', label: 'Code Sprints', count: competitions.filter((c) => c.category === 'Algorithm Sprint').length },
+                  { id: 'Full-Stack Speed Run', label: 'Speed Runs', count: competitions.filter((c) => c.category === 'Full-Stack Speed Run').length },
+                  { id: 'Bug Bounty', label: 'Bug Bounty', count: competitions.filter((c) => c.category === 'Bug Bounty').length },
                 ].map((f) => (
                   <button
                     key={f.id}
                     onClick={() => setSelectedFilter(f.id as any)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
-                      selectedFilter === f.id
-                        ? 'bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 shadow-2xs'
-                        : 'bg-white dark:bg-[#212121] text-neutral-600 dark:text-neutral-400 border border-neutral-200/80 dark:border-neutral-800 hover:text-neutral-900 dark:hover:text-white'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${selectedFilter === f.id
+                      ? 'bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 shadow-2xs'
+                      : 'bg-white dark:bg-[#212121] text-neutral-600 dark:text-neutral-400 border border-neutral-200/80 dark:border-neutral-800 hover:text-neutral-900 dark:hover:text-white'
+                      }`}
                   >
                     <span>{f.label}</span>
                     <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                        selectedFilter === f.id
-                          ? 'bg-white/20 dark:bg-neutral-900/20 text-white dark:text-neutral-950 font-bold'
-                          : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500'
-                      }`}
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${selectedFilter === f.id
+                        ? 'bg-white/20 dark:bg-neutral-900/20 text-white dark:text-neutral-950 font-bold'
+                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500'
+                        }`}
                     >
                       {f.count}
                     </span>
@@ -523,6 +567,7 @@ export const HackathonModePage: React.FC = () => {
                 const isReg = registeredMap[comp.id];
                 const meta = getCategoryMeta(comp.category);
                 const CategoryIcon = meta.icon;
+                const matchesUserTrack = isTrackMatch(comp);
 
                 return (
                   <div
@@ -532,17 +577,18 @@ export const HackathonModePage: React.FC = () => {
                     <div className="space-y-4">
                       {/* 1. Header: Category Badge with Accent & Status */}
                       <div className="flex items-center justify-between gap-2">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${meta.badge}`}>
-                          <CategoryIcon className="w-3.5 h-3.5" />
-                          <span>{meta.label}</span>
-                        </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${meta.badge}`}>
+                            <CategoryIcon className="w-3.5 h-3.5" />
+                            <span>{meta.label}</span>
+                          </span>
+                        </div>
 
                         <span
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase border ${
-                            comp.status === 'live'
-                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25'
-                              : 'bg-neutral-100 dark:bg-[#2b2b2b] text-neutral-600 dark:text-neutral-400 border-neutral-200/80 dark:border-neutral-700'
-                          }`}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase border ${comp.status === 'live'
+                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25'
+                            : 'bg-neutral-100 dark:bg-[#2b2b2b] text-neutral-600 dark:text-neutral-400 border-neutral-200/80 dark:border-neutral-700'
+                            }`}
                         >
                           {comp.status === 'live' && (
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
@@ -613,7 +659,7 @@ export const HackathonModePage: React.FC = () => {
                           Prize Pool
                         </span>
                         <span className="text-xs font-bold text-neutral-900 dark:text-white font-mono flex items-center gap-1.5 truncate mt-0.5">
-                          <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <Trophy className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400 shrink-0" />
                           <span className="text-emerald-700 dark:text-emerald-400 font-extrabold truncate">
                             {comp.prizePool.split('+')[0].trim()}
                           </span>
@@ -640,11 +686,10 @@ export const HackathonModePage: React.FC = () => {
                         ) : (
                           <button
                             onClick={() => handleToggleRegister(comp.id)}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-                              isReg
-                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
-                                : 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 hover:bg-neutral-800 shadow-2xs'
-                            }`}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${isReg
+                              ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                              : 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 hover:bg-neutral-800 shadow-2xs'
+                              }`}
                           >
                             {isReg ? 'Registered ✓' : 'Register Free'}
                           </button>
@@ -680,25 +725,34 @@ export const HackathonModePage: React.FC = () => {
 
             {/* Campus Selector Toggle */}
             <div className="flex items-center gap-1.5 p-1 rounded-full bg-neutral-100 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-xs font-bold">
-              <button
-                onClick={() => setSelectedCampus('GLA University')}
-                className={`px-4 py-1.5 rounded-full transition-colors cursor-pointer ${
-                  selectedCampus === 'GLA University'
+              {userCollege && userCollege !== 'GLA University' && (
+                <button
+                  onClick={() => setSelectedCampus(userCollege)}
+                  className={`px-4 py-1.5 rounded-full transition-colors cursor-pointer ${selectedCampus === userCollege
                     ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-2xs border border-neutral-200/60 dark:border-neutral-700/60'
                     : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-                }`}
+                    }`}
+                >
+                  🎓 {userCollege}
+                </button>
+              )}
+              <button
+                onClick={() => setSelectedCampus('GLA University')}
+                className={`px-4 py-1.5 rounded-full transition-colors cursor-pointer ${selectedCampus === 'GLA University'
+                  ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-2xs border border-neutral-200/60 dark:border-neutral-700/60'
+                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                  }`}
               >
                 🏫 GLA University
               </button>
               <button
                 onClick={() => setSelectedCampus('Global')}
-                className={`px-4 py-1.5 rounded-full transition-colors cursor-pointer ${
-                  selectedCampus === 'Global'
-                    ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-2xs border border-neutral-200/60 dark:border-neutral-700/60'
-                    : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-                }`}
+                className={`px-4 py-1.5 rounded-full transition-colors cursor-pointer ${selectedCampus === 'Global'
+                  ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-2xs border border-neutral-200/60 dark:border-neutral-700/60'
+                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                  }`}
               >
-                🌍 Global Cohort
+                🌍 Global
               </button>
             </div>
           </div>
@@ -804,7 +858,7 @@ export const HackathonModePage: React.FC = () => {
                 Rankings 4 – 15
               </h3>
               <span className="text-xs font-mono text-neutral-400">
-                GLA B.Tech CS & AI Cohort
+                {selectedCampus} Standings
               </span>
             </div>
 
@@ -812,24 +866,21 @@ export const HackathonModePage: React.FC = () => {
               {remainingRankings.map((user) => (
                 <div
                   key={user.id}
-                  className={`py-3 px-3.5 flex items-center justify-between gap-4 rounded-2xl transition-colors ${
-                    user.isCurrentUser
-                      ? 'bg-neutral-100 dark:bg-[#282828] border border-neutral-300/80 dark:border-neutral-700 shadow-2xs'
-                      : 'hover:bg-neutral-50 dark:hover:bg-[#1a1a1a]/80'
-                  }`}
+                  className={`py-3 px-3.5 flex items-center justify-between gap-4 rounded-2xl transition-colors ${user.isCurrentUser
+                    ? 'bg-neutral-100 dark:bg-[#282828] border border-neutral-300/80 dark:border-neutral-700 shadow-2xs'
+                    : 'hover:bg-neutral-50 dark:hover:bg-[#1a1a1a]/80'
+                    }`}
                 >
                   <div className="flex items-center gap-4">
-                    <span className={`w-8 text-sm font-bold font-mono ${
-                      user.isCurrentUser ? 'text-neutral-900 dark:text-white' : 'text-neutral-400'
-                    }`}>
+                    <span className={`w-8 text-sm font-bold font-mono ${user.isCurrentUser ? 'text-neutral-900 dark:text-white' : 'text-neutral-400'
+                      }`}>
                       #{user.rank}
                     </span>
 
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs sm:text-sm font-bold ${
-                          user.isCurrentUser ? 'text-neutral-900 dark:text-white' : 'text-neutral-900 dark:text-white'
-                        }`}>
+                        <span className={`text-xs sm:text-sm font-bold ${user.isCurrentUser ? 'text-neutral-900 dark:text-white' : 'text-neutral-900 dark:text-white'
+                          }`}>
                           {user.name}
                         </span>
                         {user.badge && (
@@ -908,13 +959,12 @@ export const HackathonModePage: React.FC = () => {
                   return (
                     <div
                       key={phase.phaseId}
-                      className={`p-3.5 sm:p-4 transition-colors flex items-start justify-between gap-3.5 ${
-                        isActive
-                          ? 'bg-white dark:bg-[#262626] text-neutral-900 dark:text-white'
-                          : isCompleted
+                      className={`p-3.5 sm:p-4 transition-colors flex items-start justify-between gap-3.5 ${isActive
+                        ? 'bg-white dark:bg-[#262626] text-neutral-900 dark:text-white'
+                        : isCompleted
                           ? 'bg-neutral-50/40 dark:bg-transparent text-neutral-500 dark:text-neutral-400'
                           : 'bg-white/40 dark:bg-transparent text-neutral-600 dark:text-neutral-400 opacity-75'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-start gap-3.5 min-w-0">
                         <div className="mt-0.5 shrink-0">
@@ -959,11 +1009,10 @@ export const HackathonModePage: React.FC = () => {
               <div className="grid grid-cols-2 gap-2.5 text-xs font-semibold">
                 <button
                   onClick={() => runTool('ideas')}
-                  className={`p-3.5 rounded-2xl text-left transition-colors flex items-center gap-2 cursor-pointer ${
-                    activeTool === 'ideas'
-                      ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold border border-transparent shadow-2xs'
-                      : 'bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-                  }`}
+                  className={`p-3.5 rounded-2xl text-left transition-colors flex items-center gap-2 cursor-pointer ${activeTool === 'ideas'
+                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold border border-transparent shadow-2xs'
+                    : 'bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                    }`}
                 >
                   <Lightbulb className="w-4 h-4 text-neutral-600 dark:text-neutral-400 shrink-0" />
                   <span>Generate Ideas</span>
@@ -971,11 +1020,10 @@ export const HackathonModePage: React.FC = () => {
 
                 <button
                   onClick={() => runTool('architecture')}
-                  className={`p-3.5 rounded-2xl text-left transition-colors flex items-center gap-2 cursor-pointer ${
-                    activeTool === 'architecture'
-                      ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold border border-transparent shadow-2xs'
-                      : 'bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-                  }`}
+                  className={`p-3.5 rounded-2xl text-left transition-colors flex items-center gap-2 cursor-pointer ${activeTool === 'architecture'
+                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold border border-transparent shadow-2xs'
+                    : 'bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                    }`}
                 >
                   <Layers className="w-4 h-4 text-neutral-600 dark:text-neutral-400 shrink-0" />
                   <span>Architecture</span>
@@ -983,11 +1031,10 @@ export const HackathonModePage: React.FC = () => {
 
                 <button
                   onClick={() => runTool('code')}
-                  className={`p-3.5 rounded-2xl text-left transition-colors flex items-center gap-2 cursor-pointer ${
-                    activeTool === 'code'
-                      ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold border border-transparent shadow-2xs'
-                      : 'bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-                  }`}
+                  className={`p-3.5 rounded-2xl text-left transition-colors flex items-center gap-2 cursor-pointer ${activeTool === 'code'
+                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold border border-transparent shadow-2xs'
+                    : 'bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                    }`}
                 >
                   <FileCode className="w-4 h-4 text-neutral-600 dark:text-neutral-400 shrink-0" />
                   <span>Scaffold Code</span>
@@ -995,11 +1042,10 @@ export const HackathonModePage: React.FC = () => {
 
                 <button
                   onClick={() => runTool('pitch')}
-                  className={`p-3.5 rounded-2xl text-left transition-colors flex items-center gap-2 cursor-pointer ${
-                    activeTool === 'pitch'
-                      ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold border border-transparent shadow-2xs'
-                      : 'bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-                  }`}
+                  className={`p-3.5 rounded-2xl text-left transition-colors flex items-center gap-2 cursor-pointer ${activeTool === 'pitch'
+                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold border border-transparent shadow-2xs'
+                    : 'bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                    }`}
                 >
                   <Presentation className="w-4 h-4 text-neutral-600 dark:text-neutral-400 shrink-0" />
                   <span>Pitch Deck</span>

@@ -134,7 +134,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="p-2 rounded-full text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
             aria-label="Toggle theme"
           >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            {isDarkMode ? <Sun className="w-4 h-4 text-neutral-200" /> : <Moon className="w-4 h-4" />}
           </button>
 
           {/* User Profile Dropdown or Real Auth CTA */}

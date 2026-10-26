@@ -273,7 +273,7 @@ export const DailyMissionPage: React.FC = () => {
 
           {/* Today's Quote matching Screen 5 */}
           <div className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 flex items-center gap-3.5 shadow-2xs">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0">
               <Quote className="w-4 h-4" />
             </div>
             <div>
@@ -319,7 +319,7 @@ export const DailyMissionPage: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                 Ship Task Verification
               </span>
               <h3 className="text-lg font-bold text-neutral-900 dark:text-white">

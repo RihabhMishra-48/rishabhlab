@@ -26,7 +26,7 @@ router.post('/register', async (req, res) => {
       email: email.toLowerCase(),
       password: hashedPassword,
       role,
-      college: college || 'GLA University',
+      college: college ? college.trim() : '',
       isOnboarded: false,
     });
 
@@ -52,8 +52,13 @@ router.post('/register', async (req, res) => {
         email: user.email,
         role: user.role,
         college: user.college,
+        degree: user.degree,
+        year: user.year,
         avatar: user.avatar,
         isOnboarded: user.isOnboarded,
+        targetGoal: user.targetGoal,
+        fieldOfInterest: user.fieldOfInterest,
+        verificationStatus: user.verificationStatus,
       },
     });
   } catch (err: any) {
@@ -90,8 +95,13 @@ router.post('/login', async (req, res) => {
         email: user.email,
         role: user.role,
         college: user.college,
+        degree: user.degree,
+        year: user.year,
         avatar: user.avatar,
         isOnboarded: user.isOnboarded,
+        targetGoal: user.targetGoal,
+        fieldOfInterest: user.fieldOfInterest,
+        verificationStatus: user.verificationStatus,
       },
     });
   } catch (err: any) {
@@ -115,6 +125,13 @@ router.get('/me', requireAuth, async (req: AuthRequest, res) => {
     avatar: req.user.avatar,
     bio: req.user.bio,
     githubUsername: req.user.githubUsername,
+    targetGoal: req.user.targetGoal,
+    fieldOfInterest: req.user.fieldOfInterest || req.user.targetGoal,
+    verificationStatus: req.user.verificationStatus || 'approved',
+    mentorExpertise: req.user.mentorExpertise || [],
+    mentorOrganization: req.user.mentorOrganization || '',
+    mentorExperienceYears: req.user.mentorExperienceYears || 0,
+    mentorLinkedin: req.user.mentorLinkedin || '',
     isOnboarded: req.user.isOnboarded,
   });
 });

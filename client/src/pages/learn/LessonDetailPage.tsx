@@ -75,7 +75,7 @@ const EVENT_LOOP_FLOW: FlowNode[] = [
     title: 'Macrotask Queue',
     subtitle: 'Task Queue (Timers & I/O)',
     description: 'Holds setTimeout, setInterval, setImmediate, and I/O event callbacks. The Event Loop dequeues exactly ONE macrotask per tick.',
-    accent: 'amber',
+    accent: 'orange',
     iconType: 'activity',
     inputs: ['Timer callback', 'Socket read event'],
     outputs: ['Callback moved to Call Stack'],
@@ -126,7 +126,7 @@ const EXPRESS_MIDDLEWARE_FLOW: FlowNode[] = [
     title: 'Auth & JWT Guard',
     subtitle: 'app.use(verifyToken)',
     description: 'Inspects Authorization Bearer token header. Verifies HMAC-SHA256 signature against JWT_SECRET and attaches verified claims to req.user.',
-    accent: 'amber',
+    accent: 'orange',
     iconType: 'shield',
     inputs: ['Bearer <token>', 'JWT_SECRET key'],
     outputs: ['req.user = { id, role }', '401 Unauthorized if invalid'],
@@ -1009,8 +1009,8 @@ export const LessonDetailPage: React.FC = () => {
                             {/* Explanation box on submitted answer */}
                             {hasSubmitted && q.explanation && (
                               <div className="p-3.5 rounded-2xl bg-neutral-100/70 dark:bg-white/[0.04] space-y-1.5">
-                                <div className="flex items-center gap-1.5 font-bold text-[10px] font-mono uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                                  <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                <div className="flex items-center gap-1.5 font-bold text-[10px] font-mono uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                                  <Lightbulb className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400 shrink-0" />
                                   <span>Explanation</span>
                                 </div>
                                 <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed font-sans">

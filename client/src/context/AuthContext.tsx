@@ -59,10 +59,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
 
           if (profile) {
+            const goal = profile.field_of_interest || profile.target_goal || localGoal;
             const hasChosenGoal = Boolean(
-              (profile.target_goal && profile.target_goal.trim() !== '' && profile.target_goal !== 'Not Set') ||
-              localOnboarded
+              (goal && goal.trim() !== '' && goal !== 'Not Set') ||
+              localOnboarded ||
+              profile.is_onboarded
             );
+            const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture;
+            const isStockAvatar = profile.avatar_url && profile.avatar_url.includes('unsplash.com');
+            const userAvatar = (profile.avatar_url && !isStockAvatar) ? profile.avatar_url : (metaAvatar || profile.avatar_url || '');
+
             setUser({
               id: profile.id,
               name: profile.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
@@ -71,13 +77,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               college: profile.college_name || '',
               degree: profile.degree || '',
               year: profile.year_of_study || '',
-              avatar: profile.avatar_url || session.user.user_metadata?.avatar_url || '',
-              bio: '',
+              avatar: userAvatar,
+              bio: profile.bio || '',
               githubUsername: profile.github_username || '',
-              targetGoal: profile.target_goal || localGoal,
+              targetGoal: goal,
+              fieldOfInterest: goal,
+              verificationStatus: profile.verification_status || (profile.role === 'mentor' ? 'pending' : 'approved'),
+              mentorOrganization: profile.mentor_organization,
+              mentorExperienceYears: profile.mentor_experience_years,
+              mentorLinkedin: profile.mentor_linkedin,
+              mentorExpertise: profile.mentor_expertise,
               isOnboarded: hasChosenGoal,
             });
           } else {
+            const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '';
             setUser({
               id: session.user.id,
               name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
@@ -86,10 +99,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               college: '',
               degree: '',
               year: '',
-              avatar: session.user.user_metadata?.avatar_url || '',
+              avatar: metaAvatar,
               bio: '',
               githubUsername: '',
               targetGoal: localGoal,
+              fieldOfInterest: localGoal,
+              verificationStatus: 'approved',
               isOnboarded: localOnboarded,
             });
           }
@@ -138,9 +153,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const userGoalKey = `rishabhlabs_goal_${data.id}`;
             const localOnboarded = localStorage.getItem(userOnboardedKey) === 'true' || localStorage.getItem('rishabhlabs_onboarded') === 'true';
             const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
+            const effectiveGoal = data.fieldOfInterest || data.targetGoal || localGoal;
             setUser({
               ...data,
-              targetGoal: data.targetGoal || localGoal,
+              targetGoal: effectiveGoal,
+              fieldOfInterest: effectiveGoal,
+              verificationStatus: data.verificationStatus || (data.role === 'mentor' ? 'pending' : 'approved'),
               isOnboarded: Boolean(data.isOnboarded || localOnboarded),
             });
             setLoading(false);
@@ -173,10 +191,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
 
             if (profile) {
+              const goal = profile.field_of_interest || profile.target_goal || localGoal;
               const hasChosenGoal = Boolean(
-                (profile.target_goal && profile.target_goal.trim() !== '' && profile.target_goal !== 'Not Set') ||
-                localOnboarded
+                (goal && goal.trim() !== '' && goal !== 'Not Set') ||
+                localOnboarded ||
+                profile.is_onboarded
               );
+              const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture;
+              const isStockAvatar = profile.avatar_url && profile.avatar_url.includes('unsplash.com');
+              const userAvatar = (profile.avatar_url && !isStockAvatar) ? profile.avatar_url : (metaAvatar || profile.avatar_url || '');
+
               setUser({
                 id: profile.id,
                 name: profile.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
@@ -185,15 +209,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 college: profile.college_name || '',
                 degree: profile.degree || '',
                 year: profile.year_of_study || '',
-                avatar: profile.avatar_url || session.user.user_metadata?.avatar_url || '',
-                bio: '',
+                avatar: userAvatar,
+                bio: profile.bio || '',
                 githubUsername: profile.github_username || '',
-                targetGoal: profile.target_goal || localGoal,
+                targetGoal: goal,
+                fieldOfInterest: goal,
+                verificationStatus: profile.verification_status || (profile.role === 'mentor' ? 'pending' : 'approved'),
+                mentorOrganization: profile.mentor_organization,
+                mentorExperienceYears: profile.mentor_experience_years,
+                mentorLinkedin: profile.mentor_linkedin,
+                mentorExpertise: profile.mentor_expertise,
                 isOnboarded: hasChosenGoal,
               });
               setLoading(false);
               return;
             } else {
+              const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '';
               setUser({
                 id: session.user.id,
                 name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
@@ -202,7 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 college: '',
                 degree: '',
                 year: '',
-                avatar: session.user.user_metadata?.avatar_url || '',
+                avatar: metaAvatar,
                 bio: '',
                 githubUsername: '',
                 targetGoal: localGoal,

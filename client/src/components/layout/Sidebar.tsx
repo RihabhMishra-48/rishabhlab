@@ -277,7 +277,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }`
               }
             >
-              <Building2 className="w-4 h-4 shrink-0 text-amber-500 dark:text-amber-400" />
+              <Building2 className="w-4 h-4 shrink-0 text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-white" />
               {!isCollapsed ? (
                 <>
                   <span className="truncate">College Admin</span>
@@ -364,13 +364,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-neutral-900 dark:text-white truncate">{user.name}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-semibold text-neutral-900 dark:text-white truncate">{user.name}</p>
+                  {user.role === 'mentor' && (
+                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${
+                      user.verificationStatus === 'pending'
+                        ? 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700'
+                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                    }`}>
+                      {user.verificationStatus === 'pending' ? 'Mentor · Pending' : 'Mentor'}
+                    </span>
+                  )}
+                </div>
                 <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">
-                  {user.college || user.targetGoal || 'Student'}
+                  {user.fieldOfInterest || user.targetGoal || user.college || 'Student'}
                 </p>
               </div>
-              <div className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 font-semibold shrink-0">
-                <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+              <div className="flex items-center gap-1 text-[11px] text-orange-600 dark:text-orange-400 font-semibold shrink-0">
+                <Flame className="w-3.5 h-3.5 fill-orange-500 text-orange-500" />
                 <span>{(user as any).streak_days ?? (user as any).streakDays ?? 0}</span>
               </div>
             </Link>
@@ -402,8 +413,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop';
                   }}
                 />
-                <div className="absolute -bottom-1 -right-1 flex items-center justify-center bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 dark:border-amber-500/40 rounded-full px-1 text-[8px] font-bold text-amber-600 dark:text-amber-300">
-                  <Flame className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                <div className="absolute -bottom-1 -right-1 flex items-center justify-center bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/30 dark:border-orange-500/40 rounded-full px-1 text-[8px] font-bold text-orange-600 dark:text-orange-300">
+                  <Flame className="w-2.5 h-2.5 fill-orange-500 text-orange-500" />
                 </div>
               </Link>
 

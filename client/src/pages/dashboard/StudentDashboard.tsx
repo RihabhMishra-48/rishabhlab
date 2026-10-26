@@ -20,7 +20,9 @@ import {
   Sparkles,
   GitBranch,
   Play,
-  Award
+  Award,
+  Briefcase,
+  Shield
 } from 'lucide-react';
 
 export const StudentDashboard: React.FC = () => {
@@ -136,14 +138,72 @@ export const StudentDashboard: React.FC = () => {
 
         {/* Quick Streak & Points Pill */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold">
-            <Flame className="w-4 h-4 fill-amber-500" />
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-[#252528] border border-neutral-200 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 text-xs font-bold">
+            <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
             <span>{stats.streakDays ?? 0} Day Streak</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-bold">
             <Award className="w-4 h-4" />
             <span>{stats.totalPoints ?? 0} XP</span>
           </div>
+        </div>
+      </div>
+
+      {/* Mentor Notice Banner (If user is Mentor) */}
+      {user?.role === 'mentor' && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/90 dark:border-neutral-800 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-[#28282b] text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shrink-0">
+              <Briefcase className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm font-bold text-neutral-900 dark:text-white">Mentor Command Center</h3>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  user.verificationStatus === 'pending'
+                    ? 'bg-neutral-100 dark:bg-[#2a2a2d] text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700'
+                    : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
+                }`}>
+                  {user.verificationStatus === 'pending' ? 'Advance Verification: In Progress' : 'Verified Industry Mentor'}
+                </span>
+              </div>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                {user.verificationStatus === 'pending'
+                  ? 'Your mentor credentials are under academic review. You have full access to explore mentee requests and set slot availability.'
+                  : `You are active as a verified mentor in ${user.fieldOfInterest || user.targetGoal || 'Engineering'}. Students can schedule 1:1 sessions.`}
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/mentorship"
+            className="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 font-semibold text-xs transition-colors shrink-0 text-center"
+          >
+            Mentorship Workspace →
+          </Link>
+        </div>
+      )}
+
+      {/* Dynamic Active Track Focus Strip */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 sm:px-4 sm:py-3 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-xs">
+        <div className="flex items-center gap-2.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+          <span className="text-neutral-500 dark:text-neutral-400 font-medium">Active Focus Track:</span>
+          <span className="font-extrabold text-neutral-900 dark:text-white px-2 py-0.5 rounded-md bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+            {targetTrack}
+          </span>
+        </div>
+        <div className="flex items-center gap-3 text-xs">
+          <Link to="/learn" className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white font-medium">
+            Learn Modules →
+          </Link>
+          <span className="text-neutral-300 dark:text-neutral-700">|</span>
+          <Link to="/practice" className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white font-medium">
+            Coding Problems →
+          </Link>
+          <span className="text-neutral-300 dark:text-neutral-700">|</span>
+          <Link to="/roadmap" className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white font-medium">
+            Roadmap →
+          </Link>
         </div>
       </div>
 
@@ -370,24 +430,12 @@ export const StudentDashboard: React.FC = () => {
             <div className="p-2.5 sm:p-3 rounded-2xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200/60 dark:border-neutral-800 flex flex-col justify-between space-y-1.5 sm:space-y-2 min-w-0">
               <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400">
                 <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider truncate">Streak</span>
-                <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 shrink-0" />
+                <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-500 shrink-0" />
               </div>
               <div className="min-w-0">
-                <div className="text-[11px] sm:text-xs font-bold text-amber-500 font-mono flex items-baseline gap-1 truncate">
+                <div className="text-[11px] sm:text-xs font-bold text-neutral-900 dark:text-white font-mono flex items-baseline gap-1 truncate">
                   <span>{stats.streakDays || 7}</span>
                   <span className="text-[9px] sm:text-[10px] font-normal text-neutral-400">days</span>
-                </div>
-                <div className="mt-1.5 flex items-center gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <span
-                      key={i}
-                      className={`h-1 flex-1 rounded-full ${
-                        i < Math.min(5, stats.streakDays || 7)
-                          ? 'bg-amber-500'
-                          : 'bg-neutral-200 dark:bg-neutral-800'
-                      }`}
-                    />
-                  ))}
                 </div>
               </div>
             </div>
@@ -396,26 +444,23 @@ export const StudentDashboard: React.FC = () => {
       </div>
 
       {/* Live Contest & Leaderboard Banner matching Screen Reference */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-neutral-900/95 dark:bg-[#141417]/95 border border-amber-500/35 dark:border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-amber-500/5 relative overflow-hidden">
-        {/* Subtle Ambient Radial Glow */}
-        <div className="absolute -top-10 -left-10 w-44 h-44 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-
+      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#1f1f22] border border-neutral-200/90 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
         <div className="flex items-center gap-3.5 relative z-10">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500 text-neutral-950 flex items-center justify-center font-extrabold text-sm shadow-xs shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 flex items-center justify-center font-extrabold text-sm shadow-xs shrink-0">
             <Trophy className="w-5 h-5 fill-current" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400 font-mono">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-mono">
                 LIVE ARENA CONTEST
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             </div>
-            <h3 className="text-sm font-bold text-white">
-              Weekly Code Sprint #18 is Live • GLA University Rank #14
+            <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+              Weekly Code Sprint #18 is Live • Sprint Rank #14
             </h3>
-            <p className="text-[11px] text-neutral-400">
-              3h 42m left to submit. Top 10 GLA coders unlock industry mentor credits.
+            <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+              3h 42m left to submit. Top 10 coders unlock industry mentor credits.
             </p>
           </div>
         </div>
@@ -423,13 +468,13 @@ export const StudentDashboard: React.FC = () => {
         <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 relative z-10">
           <Link
             to="/hackathon?tab=competitions"
-            className="px-4 py-2 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 transition-colors shadow-2xs"
+            className="px-4 py-2 rounded-full text-xs font-bold bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 transition-colors shadow-2xs"
           >
             Enter Contest
           </Link>
           <Link
             to="/hackathon?tab=leaderboard"
-            className="px-3.5 py-2 rounded-full text-xs font-semibold bg-neutral-800/80 hover:bg-neutral-700/80 text-neutral-200 border border-neutral-700/60 dark:bg-[#27272a] dark:hover:bg-[#323238] dark:border-neutral-700/60 dark:text-neutral-200 transition-colors"
+            className="px-3.5 py-2 rounded-full text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 text-neutral-800 dark:bg-[#2c2c30] dark:hover:bg-[#38383c] dark:text-neutral-200 border border-neutral-200/80 dark:border-neutral-700/60 transition-colors"
           >
             Leaderboard
           </Link>
@@ -468,7 +513,7 @@ export const StudentDashboard: React.FC = () => {
             to="/hackathon"
             className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#212121] hover:bg-neutral-50 dark:hover:bg-[#2a2a2a] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs transition-colors group"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 p-2 flex items-center justify-center mb-3">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-neutral-100 dark:bg-[#2c2c30] border border-neutral-200 dark:border-neutral-700 p-2 flex items-center justify-center mb-3">
               <img src="/graphics/troph-cap.svg" alt="Hackathon Mode" className="w-5 h-5 sm:w-6 sm:h-6 object-contain dark:invert" />
             </div>
             <h3 className="text-xs font-bold text-neutral-900 dark:text-white">Hackathon Mode</h3>

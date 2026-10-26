@@ -69,7 +69,7 @@ const TRACK_CONFIGS = [
     title: 'Data & Analytics',
     icon: ArrowTrendUpIcon,
     badge: 'Data Pipelines',
-    accentColor: 'amber' as const,
+    accentColor: 'orange' as const,
     desc: 'SQL Moving Averages, Window Partitions, Cumulative Aggregations & Pandas',
     skills: ['Window Functions', 'Rolling Averages', 'ETL Maps', 'Partitions'],
   },
@@ -402,7 +402,7 @@ export const ProblemListPage: React.FC = () => {
                       ) : prob.category.includes('Cyber') ? (
                         <ShieldCheckIcon className="w-4 h-4 text-emerald-500" />
                       ) : prob.category.includes('Data') ? (
-                        <ArrowTrendUpIcon className="w-4 h-4 text-amber-500" />
+                        <ArrowTrendUpIcon className="w-4 h-4 text-orange-500" />
                       ) : prob.category.includes('App') ? (
                         <MobileNotchIcon className="w-4 h-4 text-indigo-500" />
                       ) : (
@@ -434,7 +434,7 @@ export const ProblemListPage: React.FC = () => {
                       className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${isEasy
                         ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
                         : isMedium
-                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25'
+                          ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/25'
                           : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/25'
                         }`}
                     >
@@ -561,10 +561,10 @@ export const ProblemListPage: React.FC = () => {
                       badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/60',
                       borderHover: 'hover:border-emerald-500/50',
                     },
-                    amber: {
-                      iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-                      badge: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/60',
-                      borderHover: 'hover:border-amber-500/50',
+                    orange: {
+                      iconBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
+                      badge: 'bg-orange-50 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300 border-orange-200/60 dark:border-orange-800/60',
+                      borderHover: 'hover:border-orange-500/50',
                     },
                   }[tc.accentColor || 'blue'];
 
