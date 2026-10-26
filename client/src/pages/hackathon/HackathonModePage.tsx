@@ -27,11 +27,16 @@ import {
   Users,
   Medal,
   ChevronRight,
+  ChevronDown,
   Shield,
   Code,
   ExternalLink,
   Target,
-  Building2
+  Building2,
+  Search,
+  Zap,
+  Check,
+  X
 } from 'lucide-react';
 
 export const HackathonModePage: React.FC = () => {
@@ -58,8 +63,74 @@ export const HackathonModePage: React.FC = () => {
     'comp-2': true,
   });
 
+  // Filter & Search state for Contests & Arena
+  const [selectedFilter, setSelectedFilter] = useState<
+    'all' | 'live' | 'Hackathon' | 'Algorithm Sprint' | 'Bug Bounty' | 'Full-Stack Speed Run'
+  >('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
   // Leaderboard state
   const [selectedCampus, setSelectedCampus] = useState<'GLA University' | 'Global'>('GLA University');
+
+  // Category Metadata helper for crisp visual hierarchy & domain identity
+  const getCategoryMeta = (category: Competition['category']) => {
+    switch (category) {
+      case 'Algorithm Sprint':
+        return {
+          icon: Code,
+          label: 'Algorithm Sprint',
+          badge: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+          accent: 'text-emerald-500',
+          format: 'Timed Speed Solve',
+        };
+      case 'Hackathon':
+        return {
+          icon: Trophy,
+          label: 'National Hackathon',
+          badge: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20',
+          accent: 'text-indigo-500',
+          format: '48-Hour Build',
+        };
+      case 'Full-Stack Speed Run':
+        return {
+          icon: Flame,
+          label: 'Speed Run',
+          badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
+          accent: 'text-amber-500',
+          format: '2-Hour Blitz',
+        };
+      case 'Bug Bounty':
+        return {
+          icon: Shield,
+          label: 'Bug Bounty',
+          badge: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20',
+          accent: 'text-rose-500',
+          format: 'Live Sandbox',
+        };
+      default:
+        return {
+          icon: Target,
+          label: category,
+          badge: 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700',
+          accent: 'text-neutral-500',
+          format: 'Contest',
+        };
+    }
+  };
+
+  const filteredCompetitions = competitions.filter((comp) => {
+    if (selectedFilter === 'live' && comp.status !== 'live') return false;
+    if (selectedFilter !== 'all' && selectedFilter !== 'live' && comp.category !== selectedFilter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchesTitle = comp.title.toLowerCase().includes(q);
+      const matchesDesc = comp.description.toLowerCase().includes(q);
+      const matchesTag = comp.tags.some((t) => t.toLowerCase().includes(q));
+      const matchesCategory = comp.category.toLowerCase().includes(q);
+      if (!matchesTitle && !matchesDesc && !matchesTag && !matchesCategory) return false;
+    }
+    return true;
+  });
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -124,7 +195,7 @@ export const HackathonModePage: React.FC = () => {
                 Arena & Hackathons
               </h1>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 Season 4
               </span>
             </div>
@@ -172,7 +243,7 @@ export const HackathonModePage: React.FC = () => {
             <Trophy className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
             <span>Weekly Sprints & Contests</span>
             <span className="flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span>1 Live</span>
             </span>
           </button>
@@ -204,10 +275,7 @@ export const HackathonModePage: React.FC = () => {
 
         {/* Clean Live Status indicator matching StudentDashboard telemetry */}
         <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 text-xs font-mono text-neutral-500 dark:text-neutral-400 mr-1">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-          </span>
+          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
           <span className="text-neutral-800 dark:text-neutral-200 font-bold">428 GLA Coders</span>
           <span className="text-neutral-300 dark:text-neutral-700">•</span>
           <span className="text-neutral-700 dark:text-neutral-300 font-semibold">Sprint #18</span>
@@ -221,18 +289,19 @@ export const HackathonModePage: React.FC = () => {
           ======================================================== */}
       {activeMainTab === 'competitions' && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          {/* Highlight Live Sprint Arena Showcase Card */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Highlight Live Sprint Arena Showcase Card (Sleek Grayish Palette) */}
+          <div className="relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#FAFAFA] via-[#F4F4F5] to-[#E4E4E7] dark:from-[#212121] dark:via-[#1A1A1A] dark:to-[#141414] border border-neutral-200/90 dark:border-neutral-800 shadow-xs overflow-hidden">
+            {/* Ambient soft neutral glows */}
+            <div className="absolute -top-24 -right-24 w-80 h-80 bg-neutral-200/60 dark:bg-neutral-800/25 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-slate-200/50 dark:bg-neutral-900/30 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               {/* Left Column: Sprint Details & CTAs (7 cols) */}
               <div className="lg:col-span-7 space-y-4">
                 <div className="flex items-center gap-2.5">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                    </span>
-                    <span>WEEKLY SPRINT #18 • LIVE NOW</span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold font-mono bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span>WEEKLY SPRINT #18 • LIVE ARENA</span>
                   </span>
                   <span className="text-xs font-mono font-medium text-neutral-400 dark:text-neutral-500 hidden sm:inline">
                     Algorithm Arena
@@ -243,24 +312,24 @@ export const HackathonModePage: React.FC = () => {
                   <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight">
                     High-Throughput In-Memory Cache
                   </h2>
-                  <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-xl">
+                  <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed max-w-xl">
                     Design an in-memory key-value cache engine supporting TTL expiration, thread-safe LRU eviction, and sub-millisecond lookups under high concurrent simulated workload.
                   </p>
                 </div>
 
-                {/* Cohesive Theme-Relatable Telemetry Pills */}
+                {/* Cohesive Telemetry Pills */}
                 <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-mono font-semibold">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-mono font-semibold shadow-2xs">
                     <Clock className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
                     <span>3h 42m Left</span>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-mono font-semibold">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-mono font-semibold shadow-2xs">
                     <Users className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
                     <span>428 GLA Coders Active</span>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-mono font-semibold">
-                    <Trophy className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
-                    <span>₹20,000 Prize Pool</span>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-mono font-semibold shadow-2xs">
+                    <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="text-emerald-700 dark:text-emerald-400 font-bold">₹20,000 Prize Pool</span>
                   </div>
                 </div>
 
@@ -275,7 +344,7 @@ export const HackathonModePage: React.FC = () => {
                   </Link>
                   <button
                     onClick={() => handleTabChange('leaderboard')}
-                    className="px-4 py-2.5 rounded-full bg-neutral-100 hover:bg-neutral-200/80 dark:bg-[#2b2b2b] dark:hover:bg-[#333333] text-neutral-700 dark:text-neutral-300 font-semibold text-xs border border-neutral-200/80 dark:border-neutral-700 transition-colors cursor-pointer flex items-center gap-1.5"
+                    className="px-4 py-2.5 rounded-full bg-white hover:bg-neutral-100 dark:bg-[#2b2b2b] dark:hover:bg-[#333333] text-neutral-700 dark:text-neutral-300 font-semibold text-xs border border-neutral-200/80 dark:border-neutral-700 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
                   >
                     <span>View Standings</span>
                     <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
@@ -287,12 +356,12 @@ export const HackathonModePage: React.FC = () => {
               <div className="lg:col-span-5">
                 <div
                   onClick={() => handleTabChange('leaderboard')}
-                  className="p-4 sm:p-5 rounded-2xl bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 space-y-3 cursor-pointer hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                  className="p-4 sm:p-5 rounded-2xl bg-white/95 dark:bg-[#242424] border border-neutral-200/90 dark:border-neutral-700 shadow-md space-y-3 cursor-pointer hover:border-neutral-300 dark:hover:border-neutral-600 transition-colors"
                   title="Click to view full GLA & Global Leaderboards"
                 >
-                  <div className="flex items-center justify-between pb-2.5 border-b border-neutral-200/60 dark:border-neutral-800/80">
+                  <div className="flex items-center justify-between pb-2.5 border-b border-neutral-200/60 dark:border-neutral-700/80">
                     <div className="flex items-center gap-2">
-                      <Trophy className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
+                      <Trophy className="w-3.5 h-3.5 text-amber-500" />
                       <span className="text-xs font-bold text-neutral-900 dark:text-white">Live Sprint Standings</span>
                     </div>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold">
@@ -301,7 +370,7 @@ export const HackathonModePage: React.FC = () => {
                   </div>
 
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-[#212121] border border-neutral-200/60 dark:border-neutral-800/80 text-xs">
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-neutral-50/90 dark:bg-[#1c1c1c] border border-neutral-200/70 dark:border-neutral-800 text-xs">
                       <div className="flex items-center gap-2.5">
                         <span className="w-6 h-6 rounded-lg bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-mono font-bold text-xs flex items-center justify-center">
                           1
@@ -314,7 +383,7 @@ export const HackathonModePage: React.FC = () => {
                       <span className="font-mono font-bold text-neutral-900 dark:text-white text-xs">980 pts</span>
                     </div>
 
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-[#212121] border border-neutral-200/60 dark:border-neutral-800/80 text-xs">
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-neutral-50/90 dark:bg-[#1c1c1c] border border-neutral-200/70 dark:border-neutral-800 text-xs">
                       <div className="flex items-center gap-2.5">
                         <span className="w-6 h-6 rounded-lg bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 font-mono font-bold text-xs flex items-center justify-center">
                           2
@@ -327,7 +396,7 @@ export const HackathonModePage: React.FC = () => {
                       <span className="font-mono font-bold text-neutral-700 dark:text-neutral-300 text-xs">920 pts</span>
                     </div>
 
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-[#212121] border border-neutral-200/60 dark:border-neutral-800/80 text-xs">
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-neutral-50/90 dark:bg-[#1c1c1c] border border-neutral-200/70 dark:border-neutral-800 text-xs">
                       <div className="flex items-center gap-2.5">
                         <span className="w-6 h-6 rounded-lg bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-mono font-bold text-xs flex items-center justify-center">
                           3
@@ -341,7 +410,7 @@ export const HackathonModePage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pt-2.5 border-t border-neutral-200/60 dark:border-neutral-800/80 flex items-center justify-between text-xs font-mono">
+                  <div className="pt-2.5 border-t border-neutral-200/60 dark:border-neutral-700/80 flex items-center justify-between text-xs font-mono">
                     <span className="text-neutral-600 dark:text-neutral-400">
                       Your Rank: <span className="text-neutral-900 dark:text-white font-bold">#14</span> <span className="text-neutral-400 dark:text-neutral-500">(720 pts)</span>
                     </span>
@@ -352,124 +421,234 @@ export const HackathonModePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Competitions Grid matching StudentDashboard card design */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
+          {/* Competitions Section Header & Filter/Search Toolbar */}
+          <div className="space-y-4 pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h2 className="text-base font-bold text-neutral-900 dark:text-white">
+                <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">
                   Upcoming Hackathons & Code Sprints
                 </h2>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
                   Join national hackathons, weekly sprints, and speed runs to boost campus rank.
                 </p>
               </div>
-              <span className="text-xs text-neutral-400 font-mono font-semibold hidden sm:block">
-                4 Active & Verified Contests
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 font-mono font-semibold hidden sm:block">
+                Showing {filteredCompetitions.length} of {competitions.length} Contests
               </span>
             </div>
 
+            {/* Filter Tabs & Search Bar */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              {/* Category Filter Pills */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: 'all', label: 'All Contests', count: competitions.length },
+                  { id: 'live', label: '🟢 Live', count: competitions.filter((c) => c.status === 'live').length },
+                  { id: 'Hackathon', label: '🏆 Hackathons', count: competitions.filter((c) => c.category === 'Hackathon').length },
+                  { id: 'Algorithm Sprint', label: '⚡ Code Sprints', count: competitions.filter((c) => c.category === 'Algorithm Sprint').length },
+                  { id: 'Full-Stack Speed Run', label: '🚀 Speed Runs', count: competitions.filter((c) => c.category === 'Full-Stack Speed Run').length },
+                  { id: 'Bug Bounty', label: '🛡️ Bug Bounty', count: competitions.filter((c) => c.category === 'Bug Bounty').length },
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setSelectedFilter(f.id as any)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
+                      selectedFilter === f.id
+                        ? 'bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 shadow-2xs'
+                        : 'bg-white dark:bg-[#212121] text-neutral-600 dark:text-neutral-400 border border-neutral-200/80 dark:border-neutral-800 hover:text-neutral-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <span>{f.label}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                        selectedFilter === f.id
+                          ? 'bg-white/20 dark:bg-neutral-900/20 text-white dark:text-neutral-950 font-bold'
+                          : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500'
+                      }`}
+                    >
+                      {f.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Real-time Search Input */}
+              <div className="relative max-w-xs w-full">
+                <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by topic, tag, or title..."
+                  className="w-full pl-8.5 pr-8 py-1.5 rounded-xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-hidden focus:ring-1 focus:ring-neutral-400 dark:focus:ring-neutral-600 font-sans"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Zero State if search returns empty */}
+            {filteredCompetitions.length === 0 && (
+              <div className="p-10 text-center rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400 mx-auto">
+                  <Search className="w-5 h-5" />
+                </div>
+                <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+                  No matching contests found
+                </h3>
+                <p className="text-xs text-neutral-500 max-w-sm mx-auto">
+                  Try searching with different keywords or clearing your active filters.
+                </p>
+                <button
+                  onClick={() => {
+                    setSelectedFilter('all');
+                    setSearchQuery('');
+                  }}
+                  className="px-4 py-2 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-semibold cursor-pointer"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            )}
+
+            {/* Modern, Breathable 2-Column Contest Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {competitions.map((comp) => {
+              {filteredCompetitions.map((comp) => {
                 const isReg = registeredMap[comp.id];
+                const meta = getCategoryMeta(comp.category);
+                const CategoryIcon = meta.icon;
 
                 return (
                   <div
                     key={comp.id}
-                    className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col justify-between space-y-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                    className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col justify-between hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
                   >
-                    <div className="space-y-3.5">
+                    <div className="space-y-4">
+                      {/* 1. Header: Category Badge with Accent & Status */}
                       <div className="flex items-center justify-between gap-2">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase border ${
-                          comp.status === 'live'
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
-                            : 'bg-neutral-100 dark:bg-[#2b2b2b] text-neutral-600 dark:text-neutral-400 border-neutral-200/80 dark:border-neutral-700'
-                        }`}>
-                          {comp.status === 'live' && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          )}
-                          <span>{comp.status === 'live' ? 'Live Contest' : comp.remainingTime}</span>
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${meta.badge}`}>
+                          <CategoryIcon className="w-3.5 h-3.5" />
+                          <span>{meta.label}</span>
                         </span>
 
-                        <span className="text-[11px] font-bold text-neutral-400 dark:text-neutral-500 font-mono">
-                          {comp.category}
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase border ${
+                            comp.status === 'live'
+                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25'
+                              : 'bg-neutral-100 dark:bg-[#2b2b2b] text-neutral-600 dark:text-neutral-400 border-neutral-200/80 dark:border-neutral-700'
+                          }`}
+                        >
+                          {comp.status === 'live' && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                          )}
+                          <span>{comp.status === 'live' ? 'Live Now' : comp.remainingTime}</span>
                         </span>
                       </div>
 
+                      {/* 2. Main Title */}
                       <h3 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white leading-snug">
                         {comp.title}
                       </h3>
 
-                      <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-2 leading-relaxed">
+                      {/* 3. Concise Description */}
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 leading-relaxed">
                         {comp.description}
                       </p>
 
-                      {/* Specification Preview Box */}
-                      <div className="p-3.5 rounded-2xl bg-neutral-50/80 dark:bg-[#1a1a1a] border border-neutral-200/60 dark:border-neutral-800/80 space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 font-mono flex items-center gap-1.5">
-                            <Code className="w-3 h-3 text-neutral-500 dark:text-neutral-400" />
-                            Challenge Specification
-                          </span>
-                          <span className="text-[10px] font-mono font-bold text-neutral-500 dark:text-neutral-400 px-2 py-0.5 rounded-md bg-neutral-200/60 dark:bg-[#262626]">
-                            {comp.difficulty}
-                          </span>
-                        </div>
-                        <p className="text-[11px] font-mono text-neutral-800 dark:text-neutral-200 leading-normal">
-                          {comp.problemStatementBrief}
-                        </p>
-                      </div>
-
-                      {/* Tech Tags */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {comp.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold bg-neutral-100 dark:bg-[#2b2b2b] text-neutral-600 dark:text-neutral-300 border border-neutral-200/50 dark:border-neutral-700/50"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-3.5 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between gap-3">
-                      <div>
-                        <span className="text-[10px] text-neutral-400 block font-mono">Prize & Perks</span>
-                        <span className="text-xs font-bold text-neutral-900 dark:text-white font-mono flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                          <Trophy className="w-3.5 h-3.5 text-neutral-400" />
-                          <span>{comp.prizePool}</span>
+                      {/* 4. Streamlined Metadata Strip (Sleek Inline Badges, Zero Nested Boxes) */}
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-100/90 dark:bg-[#1a1a1a] border border-neutral-200/60 dark:border-neutral-800 text-[11px] font-mono text-neutral-700 dark:text-neutral-300">
+                          <Clock className="w-3 h-3 text-neutral-400" />
+                          <span>{meta.format}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-100/90 dark:bg-[#1a1a1a] border border-neutral-200/60 dark:border-neutral-800 text-[11px] font-mono text-neutral-700 dark:text-neutral-300">
+                          <Target className="w-3 h-3 text-neutral-400" />
+                          <span>{comp.difficulty}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-100/90 dark:bg-[#1a1a1a] border border-neutral-200/60 dark:border-neutral-800 text-[11px] font-mono text-neutral-700 dark:text-neutral-300">
+                          <Users className="w-3 h-3 text-neutral-400" />
+                          <span>{comp.participantsCount.toLocaleString()} Enrolled</span>
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        {comp.status === 'live' && (
+                      {/* 5. Clean Tech Stack Tags */}
+                      <div className="flex items-center gap-1.5 pt-0.5">
+                        {comp.tags.slice(0, 3).map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-2 py-0.5 rounded-md text-[10px] font-mono text-neutral-500 dark:text-neutral-400 bg-neutral-100/80 dark:bg-[#2b2b2b]/60 border border-neutral-200/50 dark:border-neutral-700/50"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                        {comp.tags.length > 3 && (
+                          <span className="text-[10px] font-mono text-neutral-400 pl-1">
+                            +{comp.tags.length - 3} more
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 6. Expandable Specification Brief (Uncluttered by default) */}
+                      <details className="group/details pt-1">
+                        <summary className="text-[11px] font-mono text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 cursor-pointer list-none inline-flex items-center gap-1">
+                          <ChevronDown className="w-3 h-3 text-neutral-400 group-open/details:rotate-180 transition-transform" />
+                          <span>View Problem Specification</span>
+                        </summary>
+                        <div className="mt-2 p-3 rounded-2xl bg-neutral-50/90 dark:bg-[#191919] border border-neutral-200/70 dark:border-neutral-800 text-xs text-neutral-700 dark:text-neutral-300 font-mono leading-relaxed">
+                          {comp.problemStatementBrief}
+                        </div>
+                      </details>
+                    </div>
+
+                    {/* 7. Card Action Footer */}
+                    <div className="pt-4 mt-5 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <span className="text-[10px] text-neutral-400 block font-mono uppercase tracking-wider">
+                          Prize Pool
+                        </span>
+                        <span className="text-xs font-bold text-neutral-900 dark:text-white font-mono flex items-center gap-1.5 truncate mt-0.5">
+                          <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span className="text-emerald-700 dark:text-emerald-400 font-extrabold truncate">
+                            {comp.prizePool.split('+')[0].trim()}
+                          </span>
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {comp.status === 'live' ? (
                           <Link
                             to="/practice/high-throughput-in-memory-cache"
-                            className="px-4 py-2 rounded-full text-xs font-bold bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 flex items-center gap-1.5 transition-colors shadow-2xs"
+                            className="px-4 py-2 rounded-xl text-xs font-bold bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 flex items-center gap-1.5 transition-colors shadow-2xs"
                           >
                             <Code className="w-3.5 h-3.5" />
                             <span>Enter Arena</span>
                           </Link>
-                        )}
-                        {comp.id === 'comp-2' && (
+                        ) : comp.id === 'comp-2' ? (
                           <button
                             onClick={() => handleTabChange('builder')}
-                            className="px-3.5 py-2 rounded-full text-xs font-bold bg-neutral-100 hover:bg-neutral-200 dark:bg-[#2b2b2b] dark:hover:bg-[#333333] text-neutral-800 dark:text-neutral-200 border border-neutral-200/80 dark:border-neutral-700 flex items-center gap-1.5 transition-colors cursor-pointer"
+                            className="px-4 py-2 rounded-xl text-xs font-bold bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                           >
                             <Sparkles className="w-3.5 h-3.5" />
                             <span>AI Studio</span>
                           </button>
+                        ) : (
+                          <button
+                            onClick={() => handleToggleRegister(comp.id)}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                              isReg
+                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                                : 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 hover:bg-neutral-800 shadow-2xs'
+                            }`}
+                          >
+                            {isReg ? 'Registered ✓' : 'Register Free'}
+                          </button>
                         )}
-                        <button
-                          onClick={() => handleToggleRegister(comp.id)}
-                          className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                            isReg
-                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                              : 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 hover:opacity-90 shadow-2xs'
-                          }`}
-                        >
-                          {isReg ? 'Registered ✓' : 'Register Now'}
-                        </button>
                       </div>
                     </div>
                   </div>

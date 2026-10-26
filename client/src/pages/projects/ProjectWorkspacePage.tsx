@@ -257,7 +257,7 @@ export const ProjectWorkspacePage: React.FC = () => {
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                 <span>In Progress</span>
               </span>
             )}

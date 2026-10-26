@@ -260,7 +260,7 @@ export const ProjectsCatalogPage: React.FC = () => {
                         }`}
                       >
                         {isCompleted && <CheckCircle2 className="w-2.5 h-2.5" />}
-                        {isInProgress && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />}
+                        {isInProgress && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
                         <span>{proj.status}</span>
                       </span>
 

@@ -409,7 +409,7 @@ export const StudentDashboard: React.FC = () => {
               <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400 font-mono">
                 LIVE ARENA CONTEST
               </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             </div>
             <h3 className="text-sm font-bold text-white">
               Weekly Code Sprint #18 is Live • GLA University Rank #14

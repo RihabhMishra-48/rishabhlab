@@ -174,7 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <>
                     <span className="truncate">{item.label}</span>
                     {item.label === 'Missions' && (
-                      <span className="ml-auto w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
+                      <span className="ml-auto w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
                     )}
                   </>
                 )}

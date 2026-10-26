@@ -15,7 +15,8 @@ import {
   Target,
   Plus,
   X,
-  Code
+  Code,
+  Check
 } from 'lucide-react';
 import {
   DisplayCodeIcon,
@@ -201,12 +202,14 @@ export const ProblemListPage: React.FC = () => {
     setShowExploreModal(false);
   };
 
-  const handleRemoveSecondaryTrack = (trackName: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleRemoveSecondaryTrack = (trackName: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (trackName === primaryTrack) return;
     const updated = enrolledTracks.filter((t) => t !== trackName);
     setEnrolledTracks(updated);
-    localStorage.setItem(`rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`, JSON.stringify(updated));
+    try {
+      localStorage.setItem(`rishabhlabs_enrolled_tracks_${user?.id || 'guest'}`, JSON.stringify(updated));
+    } catch { }
     if (activeTrack === trackName) {
       handleTrackChange(primaryTrack);
     }
@@ -281,13 +284,13 @@ export const ProblemListPage: React.FC = () => {
               <div
                 key={trk}
                 onClick={() => handleTrackChange(trk)}
-                className={`group flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all border ${isSelected
+                className={`group flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all border ${isSelected
                   ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 border-transparent shadow-xs'
                   : 'bg-neutral-50 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 border-neutral-200/80 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-[#262626]'
                   }`}
               >
                 <span>{trk}</span>
-                {isPrimary && (
+                {isPrimary ? (
                   <span
                     className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold uppercase ${isSelected
                       ? 'bg-white/20 text-white dark:bg-neutral-900/20 dark:text-neutral-900'
@@ -296,6 +299,19 @@ export const ProblemListPage: React.FC = () => {
                   >
                     Primary
                   </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => handleRemoveSecondaryTrack(trk, e)}
+                    className={`p-0.5 rounded-md transition-colors ${isSelected
+                      ? 'text-neutral-400 hover:text-white hover:bg-white/20'
+                      : 'text-neutral-400 hover:text-rose-600 hover:bg-rose-500/10'
+                      }`}
+                    title={`Deselect ${trk}`}
+                    aria-label={`Deselect ${trk}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
                 )}
               </div>
             );
@@ -470,22 +486,39 @@ export const ProblemListPage: React.FC = () => {
             {/* Scrollable Track Cards Body */}
             <div ref={scrollContainerRef} className="p-4 sm:p-6 overflow-y-auto space-y-3.5">
               {/* Enrollment Slots Tracker Banner */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3.5 py-2.5 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/70 dark:border-neutral-800/70 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-neutral-700 dark:text-neutral-300">Active Coding Tracks:</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/70 dark:border-neutral-800/70 text-xs">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-neutral-700 dark:text-neutral-300 shrink-0">Active Coding Tracks:</span>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {Array.from(new Set(enrolledTracks)).map((trk) => {
                       const isPrim = trk === primaryTrack;
+                      if (isPrim) {
+                        return (
+                          <span
+                            key={trk}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 select-none"
+                            title="Primary track cannot be deselected"
+                          >
+                            <span>{trk}</span>
+                            <span className="text-[10px] font-medium opacity-75">(Primary)</span>
+                          </span>
+                        );
+                      }
+
                       return (
-                        <span
+                        <button
                           key={trk}
-                          className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold ${isPrim
-                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                            }`}
+                          type="button"
+                          onClick={(e) => handleRemoveSecondaryTrack(trk, e)}
+                          className="group/chip inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-500/30 transition-colors cursor-pointer"
+                          title={`Click to deselect ${trk}`}
                         >
-                          {trk} {isPrim ? '(Primary)' : '✓'}
-                        </span>
+                          <span>{trk}</span>
+                          <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-emerald-500/15 group-hover/chip:bg-rose-500/20 transition-colors">
+                            <Check className="w-2.5 h-2.5 group-hover/chip:hidden text-emerald-600 dark:text-emerald-400" />
+                            <X className="w-2.5 h-2.5 hidden group-hover/chip:block text-rose-600 dark:text-rose-400" />
+                          </span>
+                        </button>
                       );
                     })}
                   </div>
@@ -573,9 +606,16 @@ export const ProblemListPage: React.FC = () => {
                             Primary Track ★
                           </span>
                         ) : isEnrolled ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                            Enrolled ✓
-                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleRemoveSecondaryTrack(normalizedId, e)}
+                            className="group/tag inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-rose-500/10 hover:text-rose-600 hover:border-rose-500/30 transition-colors shrink-0 cursor-pointer"
+                            title="Click to deselect"
+                          >
+                            <span>Enrolled</span>
+                            <Check className="w-2.5 h-2.5 group-hover/tag:hidden" />
+                            <X className="w-2.5 h-2.5 hidden group-hover/tag:inline text-rose-500" />
+                          </button>
                         ) : null}
                       </div>
 
@@ -599,23 +639,47 @@ export const ProblemListPage: React.FC = () => {
 
                         <div className="shrink-0">
                           {isCurrentView ? (
-                            <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 inline-block">
-                              Active Filter ✓
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 inline-block">
+                                Active Filter ✓
+                              </span>
+                              {!isPrimary && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleRemoveSecondaryTrack(normalizedId, e)}
+                                  className="text-xs font-bold px-2.5 py-1 rounded-lg text-neutral-500 hover:text-rose-600 hover:bg-rose-500/10 border border-neutral-200 dark:border-neutral-700 hover:border-rose-500/30 transition-colors cursor-pointer"
+                                  title="Deselect this track"
+                                >
+                                  Deselect
+                                </button>
+                              )}
+                            </div>
                           ) : isEnrolled ? (
-                            <button
-                              onClick={() => {
-                                handleTrackChange(normalizedId);
-                                setShowExploreModal(false);
-                              }}
-                              className="text-xs font-bold px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 transition-colors"
-                            >
-                              View Problems
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => {
+                                  handleTrackChange(normalizedId);
+                                  setShowExploreModal(false);
+                                }}
+                                className="text-xs font-bold px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 transition-colors cursor-pointer"
+                              >
+                                View Problems
+                              </button>
+                              {!isPrimary && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleRemoveSecondaryTrack(normalizedId, e)}
+                                  className="text-xs font-bold px-2.5 py-1.5 rounded-xl text-neutral-500 hover:text-rose-600 hover:bg-rose-500/10 border border-neutral-200 dark:border-neutral-700 hover:border-rose-500/30 transition-colors cursor-pointer"
+                                  title="Deselect track"
+                                >
+                                  Deselect
+                                </button>
+                              )}
+                            </div>
                           ) : (
                             <button
                               onClick={() => handleEnrollSecondary(normalizedId)}
-                              className="text-xs font-bold inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 transition-colors shadow-2xs"
+                              className="text-xs font-bold inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 transition-colors shadow-2xs cursor-pointer"
                             >
                               <Plus className="w-3.5 h-3.5" />
                               <span>Unlock Track</span>

@@ -269,10 +269,7 @@ export const MentorshipPage: React.FC = () => {
             <div className="w-48 bg-white dark:bg-[#242424] rounded-2xl border border-neutral-200/90 dark:border-neutral-700 p-4 shadow-xl space-y-3 z-10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-                  </span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                     Live Booking
                   </span>
@@ -405,10 +402,7 @@ export const MentorshipPage: React.FC = () => {
                           e.target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop';
                         }}
                       />
-                      <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white dark:border-[#202020]" />
-                      </span>
+                      <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#202020]" />
                     </div>
 
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border tracking-wide shadow-2xs ${theme.badge}`}>

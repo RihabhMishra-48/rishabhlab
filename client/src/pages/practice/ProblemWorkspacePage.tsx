@@ -261,7 +261,7 @@ export const ProblemWorkspacePage: React.FC = () => {
           </span>
           {targetSlug === 'high-throughput-in-memory-cache' && (
             <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span>LIVE SPRINT</span>
             </span>
           )}
@@ -312,7 +312,7 @@ export const ProblemWorkspacePage: React.FC = () => {
       {targetSlug === 'high-throughput-in-memory-cache' && (
         <div className="bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-b border-amber-500/25 px-4 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
             <span className="font-bold text-amber-500 font-mono text-[11px] uppercase tracking-wider shrink-0">
               Weekly Code Sprint #18
             </span>
