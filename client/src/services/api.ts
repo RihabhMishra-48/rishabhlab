@@ -290,4 +290,77 @@ export const api = {
     invalidateCache(/pricing/);
     return res;
   },
+
+  // Admin Mentors CRUD
+  adminGetMentors: () => request<any[]>('/admin/mentors'),
+  adminCreateMentor: async (data: any) => {
+    const res = await request<any>('/admin/mentors', { method: 'POST', body: JSON.stringify(data) });
+    invalidateCache(/mentor/);
+    return res;
+  },
+  adminUpdateMentor: async (id: string, data: any) => {
+    const res = await request<any>(`/admin/mentors/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    invalidateCache(/mentor/);
+    return res;
+  },
+  adminDeleteMentor: async (id: string) => {
+    const res = await request<any>(`/admin/mentors/${id}`, { method: 'DELETE' });
+    invalidateCache(/mentor/);
+    return res;
+  },
+
+  // Admin Questions / Coding Problems CRUD
+  adminGetProblems: () => request<any[]>('/admin/problems'),
+  adminCreateProblem: async (data: any) => {
+    const res = await request<any>('/admin/problems', { method: 'POST', body: JSON.stringify(data) });
+    invalidateCache(/problem/);
+    return res;
+  },
+  adminUpdateProblem: async (id: string, data: any) => {
+    const res = await request<any>(`/admin/problems/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    invalidateCache(/problem/);
+    return res;
+  },
+  adminDeleteProblem: async (id: string) => {
+    const res = await request<any>(`/admin/problems/${id}`, { method: 'DELETE' });
+    invalidateCache(/problem/);
+    return res;
+  },
+
+  // Admin Roadmaps CRUD
+  adminGetRoadmaps: () => request<any[]>('/admin/roadmaps'),
+  adminCreateRoadmap: async (data: any) => {
+    const res = await request<any>('/admin/roadmaps', { method: 'POST', body: JSON.stringify(data) });
+    invalidateCache(/roadmap/);
+    return res;
+  },
+  adminUpdateRoadmap: async (id: string, data: any) => {
+    const res = await request<any>(`/admin/roadmaps/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    invalidateCache(/roadmap/);
+    return res;
+  },
+  adminDeleteRoadmap: async (id: string) => {
+    const res = await request<any>(`/admin/roadmaps/${id}`, { method: 'DELETE' });
+    invalidateCache(/roadmap/);
+    return res;
+  },
+
+  // Admin Daily Tasks / Missions CRUD
+  adminGetMissions: () => request<any[]>('/admin/missions'),
+  adminCreateMission: async (data: any) => {
+    const res = await request<any>('/admin/missions', { method: 'POST', body: JSON.stringify(data) });
+    invalidateCache(/mission/);
+    return res;
+  },
+  adminUpdateMission: async (id: string, data: any) => {
+    const res = await request<any>(`/admin/missions/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    invalidateCache(/mission/);
+    return res;
+  },
+  adminDeleteMission: async (id: string) => {
+    const res = await request<any>(`/admin/missions/${id}`, { method: 'DELETE' });
+    invalidateCache(/mission/);
+    return res;
+  },
 };
+

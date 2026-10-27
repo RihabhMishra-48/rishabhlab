@@ -9,11 +9,23 @@ router.get('/', async (req, res) => {
   try {
     const { topic, domain } = req.query;
     const filter: any = {};
-    if (topic) filter.topics = topic;
     if (domain && domain !== 'All') {
       filter.domain = domain;
+    } else if (topic && topic !== 'All') {
+      filter.$or = [
+        { domain: new RegExp(String(topic), 'i') },
+        { topics: topic },
+      ];
     }
-    const mentors = await Mentor.find(filter);
+    let mentors = await Mentor.find(filter);
+    if (!mentors || mentors.length === 0) {
+      const count = await Mentor.countDocuments();
+      if (count === 0) {
+        const { getCleanMentors } = await import('../seed/seedData');
+        await Mentor.insertMany(getCleanMentors());
+        mentors = await Mentor.find(filter);
+      }
+    }
     res.json(mentors);
   } catch (err: any) {
     res.status(500).json({ message: err.message });

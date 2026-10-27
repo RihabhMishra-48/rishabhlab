@@ -11,6 +11,7 @@ import {
   BookOpen,
   CalendarDays,
   Building2,
+  ShieldAlert,
   X
 } from 'lucide-react';
 import { BugIcon } from '../icons/TrackIcons';
@@ -25,6 +26,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
   const navigate = useNavigate();
 
   const items = [
+    { title: 'Admin Control Center (Questions, Mentors, Roadmaps, Tasks)', category: 'Admin', path: '/admin', icon: ShieldAlert },
     { title: 'Home Dashboard Overview', category: 'Home', path: '/dashboard', icon: Compass, customGraphic: '/graphics/house-chimney.svg' },
     { title: "Today's Daily Mission", category: 'Mission', path: '/missions', icon: CheckCircle2 },
     { title: 'Personalized Roadmap', category: 'Roadmap', path: '/roadmap', icon: Compass },
