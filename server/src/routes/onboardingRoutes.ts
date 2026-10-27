@@ -115,7 +115,7 @@ router.post('/complete', requireAuth, async (req: AuthRequest, res) => {
             name: user.name,
             title: `${selectedGoal} Specialist & Mentor`,
             company: mentorOrganization ? mentorOrganization.trim() : 'Industry Expert',
-            avatar: user.avatar || '/avatars/rishabh.webp',
+            avatar: user.avatar || '',
             rating: 5.0,
             reviewsCount: 0,
             bio: mentorBio || user.bio || `Specialized mentor in ${selectedGoal} with ${user.mentorExperienceYears}+ years experience.`,

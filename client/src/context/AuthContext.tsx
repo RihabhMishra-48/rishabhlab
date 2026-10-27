@@ -68,8 +68,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               profile.is_onboarded
             );
             const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture;
-            const isStockAvatar = profile.avatar_url && profile.avatar_url.includes('unsplash.com');
-            const userAvatar = (profile.avatar_url && !isStockAvatar) ? profile.avatar_url : (metaAvatar || profile.avatar_url || '');
+            const isStockAvatar = profile.avatar_url && (profile.avatar_url.includes('unsplash.com') || profile.avatar_url.includes('rishabh.webp'));
+            const userAvatar = (profile.avatar_url && !isStockAvatar) ? profile.avatar_url : (metaAvatar || '');
 
             setUser({
               id: profile.id,
@@ -156,8 +156,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const localOnboarded = localStorage.getItem(userOnboardedKey) === 'true' || localStorage.getItem('rishabhlabs_onboarded') === 'true';
             const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
             const effectiveGoal = data.fieldOfInterest || data.targetGoal || localGoal;
+            const cleanAvatar = data.avatar && !data.avatar.includes('rishabh.webp') && !data.avatar.includes('unsplash.com') ? data.avatar : '';
             setUser({
               ...data,
+              avatar: cleanAvatar,
               targetGoal: effectiveGoal,
               fieldOfInterest: effectiveGoal,
               verificationStatus: data.verificationStatus || (data.role === 'mentor' ? 'pending' : 'approved'),
@@ -200,8 +202,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 profile.is_onboarded
               );
               const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture;
-              const isStockAvatar = profile.avatar_url && profile.avatar_url.includes('unsplash.com');
-              const userAvatar = (profile.avatar_url && !isStockAvatar) ? profile.avatar_url : (metaAvatar || profile.avatar_url || '');
+              const isStockAvatar = profile.avatar_url && (profile.avatar_url.includes('unsplash.com') || profile.avatar_url.includes('rishabh.webp'));
+              const userAvatar = (profile.avatar_url && !isStockAvatar) ? profile.avatar_url : (metaAvatar || '');
 
               setUser({
                 id: profile.id,

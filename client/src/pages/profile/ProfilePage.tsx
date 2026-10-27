@@ -4,6 +4,7 @@ import {
 } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { UserAvatar } from '../../components/common/UserAvatar';
 import {
   User as UserIcon,
   Compass,
@@ -63,6 +64,10 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (user) {
+      const cleanAvatar =
+        user.avatar && !user.avatar.includes('rishabh.webp') && !user.avatar.includes('unsplash.com')
+          ? user.avatar
+          : '';
       setFormData({
         name: user.name || '',
         username: user.githubUsername || '',
@@ -71,7 +76,7 @@ export const ProfilePage: React.FC = () => {
         degree: user.degree || '',
         year: user.year || '',
         targetGoal: user.targetGoal || user.fieldOfInterest || 'Cybersecurity',
-        avatar: user.avatar || '',
+        avatar: cleanAvatar,
       });
     }
   }, [user]);
@@ -199,21 +204,15 @@ export const ProfilePage: React.FC = () => {
       <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
           <div className="relative group cursor-pointer" onClick={() => setIsEditModalOpen(true)}>
-            {user?.avatar ? (
-              <img
-                src={user.avatar}
-                alt={user.name || 'User'}
-                className="w-20 h-20 rounded-3xl object-cover border-2 border-neutral-200 dark:border-neutral-700 shadow-md group-hover:opacity-80 transition-opacity"
-                onError={(e: any) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-3xl bg-linear-to-br from-neutral-800 to-neutral-950 dark:from-neutral-700 dark:to-neutral-900 text-white font-extrabold text-2xl flex items-center justify-center border-2 border-neutral-200 dark:border-neutral-700 shadow-md group-hover:opacity-85 transition-opacity">
-                {user?.name ? getInitials(user.name) : 'RL'}
-              </div>
-            )}
-            <div className="absolute inset-0 rounded-3xl bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+            <UserAvatar
+              src={user?.avatar}
+              name={user?.name}
+              email={user?.email}
+              size={80}
+              roundedClassName="rounded-3xl"
+              className="border-2 border-neutral-200 dark:border-neutral-700 shadow-md group-hover:opacity-85 transition-opacity"
+            />
+            <div className="absolute inset-0 rounded-3xl bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity pointer-events-none">
               <Camera className="w-5 h-5" />
             </div>
           </div>
@@ -775,13 +774,14 @@ export const ProfilePage: React.FC = () => {
                 </label>
                 <div className="flex items-center gap-4">
                   <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 shrink-0">
-                    {formData.avatar ? (
-                      <img src={formData.avatar} alt="Avatar preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center font-bold text-neutral-400">
-                        {formData.name ? getInitials(formData.name) : 'RL'}
-                      </div>
-                    )}
+                    <UserAvatar
+                      src={formData.avatar}
+                      name={formData.name || user?.name}
+                      email={user?.email}
+                      size={64}
+                      roundedClassName="rounded-2xl"
+                      className="w-full h-full"
+                    />
                   </div>
 
                   <div className="space-y-1.5 flex-1">

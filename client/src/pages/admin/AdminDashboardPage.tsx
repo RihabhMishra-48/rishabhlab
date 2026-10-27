@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { UserAvatar } from '../../components/common/UserAvatar';
 import { PricingPlan } from '../../types';
 import {
   ShieldAlert,
@@ -188,7 +189,7 @@ export const AdminDashboardPage: React.FC = () => {
         title: '',
         company: 'RishabhLabs',
         domain: 'Full-Stack Development',
-        avatar: '/avatars/rishabh.webp',
+        avatar: '',
         rating: 5.0,
         reviewsCount: 50,
         bio: '',
@@ -842,13 +843,12 @@ export const AdminDashboardPage: React.FC = () => {
                         <tr key={u._id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition-colors">
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-3">
-                              <img
-                                src={u.avatar || '/avatars/rishabh.webp'}
-                                alt={u.name}
-                                className="w-8 h-8 rounded-lg object-cover border border-neutral-200 dark:border-neutral-700 shrink-0"
-                                onError={(e: any) => {
-                                  e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop';
-                                }}
+                              <UserAvatar
+                                src={u.avatar}
+                                name={u.name}
+                                email={u.email}
+                                size="sm"
+                                roundedClassName="rounded-lg"
                               />
                               <div className="min-w-0">
                                 <p className="font-bold text-neutral-900 dark:text-white truncate flex items-center gap-1.5">
@@ -971,13 +971,11 @@ export const AdminDashboardPage: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={mentor.avatar || '/avatars/rishabh.webp'}
-                          alt={mentor.name}
-                          className="w-12 h-12 rounded-full object-cover border border-neutral-200 dark:border-neutral-700 shrink-0"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/avatars/rishabh.webp';
-                          }}
+                        <UserAvatar
+                          src={mentor.avatar}
+                          name={mentor.name}
+                          size="lg"
+                          roundedClassName="rounded-full"
                         />
                         <div>
                           <h3 className="font-bold text-sm text-neutral-900 dark:text-white leading-tight">
@@ -1554,7 +1552,7 @@ export const AdminDashboardPage: React.FC = () => {
                     value={editingMentor.avatar || ''}
                     onChange={(e) => setEditingMentor({ ...editingMentor, avatar: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs"
-                    placeholder="e.g. /avatars/rishabh.webp"
+                    placeholder="e.g. https://example.com/photo.jpg"
                   />
                 </div>
 
