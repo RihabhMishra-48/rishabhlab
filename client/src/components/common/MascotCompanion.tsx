@@ -2,6 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
+import { getCuratedMission } from '../../data/curatedMissions';
+import { normalizeTrackName } from '../../data/curatedRoadmaps';
+import { api } from '../../services/api';
+import { DailyMission } from '../../types';
 import {
   Flame,
   Shield,
@@ -10,7 +14,10 @@ import {
   Sparkles,
   ArrowRight,
   CheckCircle2,
-  Activity
+  Clock,
+  Zap,
+  Check,
+  AlertCircle,
 } from 'lucide-react';
 
 const DIRECTIONS = [
@@ -89,7 +96,7 @@ const InteractiveMascot: React.FC<InteractiveMascotProps> = ({
       onClick={onBoop}
       style={{ width: `${size}px`, height: `${size}px` }}
       className="relative block p-0 border-0 bg-transparent cursor-pointer select-none outline-hidden focus:outline-hidden touch-manipulation group"
-      title="Click or tap to boop avatar!"
+      title="Click or tap to interact!"
     >
       {showStageAura && (
         <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-orange-400/20 via-blue-400/20 to-purple-400/15 blur-md pointer-events-none transition-opacity duration-300 group-hover:opacity-100 opacity-70" />
@@ -126,15 +133,33 @@ const InteractiveMascot: React.FC<InteractiveMascotProps> = ({
   );
 };
 
+// Helper to clean repetitive prefix from curated mission task titles
+function cleanTaskTitle(title: string): string {
+  return title.replace(/^(learn|practice|build|ship)\s*[-–:]\s*/i, '').trim();
+}
+
+function getTaskBadgeStyle(type: string): string {
+  switch (type.toLowerCase()) {
+    case 'learn':
+      return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20';
+    case 'practice':
+      return 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20';
+    case 'build':
+      return 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20';
+    case 'ship':
+      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+    default:
+      return 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border-neutral-500/20';
+  }
+}
+
 export const MascotCompanion: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const [isOpen, setIsOpen] = useState(false);
-
-  const [speechIndex, setSpeechIndex] = useState(0);
+  const [taskFilter, setTaskFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [showSpeechBubble, setShowSpeechBubble] = useState(true);
-  const [sparkClaimed, setSparkClaimed] = useState(false);
 
   // Direction and reaction states
   const [direction, setDirection] = useState('center');
@@ -154,22 +179,47 @@ export const MascotCompanion: React.FC = () => {
   const nextMilestone = 20;
   const daysToMilestone = Math.max(0, nextMilestone - streakDays);
 
-  const speeches = [
-    `Day ${streakDays} streak is live 🔥! Keep writing clean code to protect your flame.`,
-    `Weekly Code Sprint #18 is active! Your rank #14 can climb to top 10 today 🏆`,
-    `Streak Freeze 🛡️ is active. Even if you take a break today, your streak stays safe!`,
-    `Great progress on Web Dev! 3 days left until your Day 20 Silver Dev Badge ⭐`,
-    `Tap or boop me to check my expressions or test coding reactions! ✨`,
-  ];
+  // Current track and cached mission
+  const targetTrack = normalizeTrackName(
+    user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'App Development'
+  );
+  const [mission, setMission] = useState<DailyMission>(() => getCuratedMission(targetTrack));
 
+  // Sync mission on mount & track change or modal open (0ms instant cache)
   useEffect(() => {
-    const timer = setInterval(() => {
-      setSpeechIndex((prev) => (prev + 1) % speeches.length);
-    }, 12000);
-    return () => clearInterval(timer);
-  }, [speeches.length]);
+    setMission(getCuratedMission(targetTrack));
 
-  // Trigger temporary reaction
+    const syncBackend = async () => {
+      try {
+        const data = await api.getTodayMission();
+        if (data && data.tasks && data.tasks.length > 0) {
+          setMission(data);
+        }
+      } catch {
+        // Fallback already cached
+      }
+    };
+    syncBackend();
+  }, [targetTrack, isOpen]);
+
+  // Derived task metrics
+  const tasks = mission?.tasks || [];
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter((t) => t.isCompleted);
+  const pendingTasks = tasks.filter((t) => !t.isCompleted);
+  const completedCount = completedTasks.length;
+  const pendingCount = pendingTasks.length;
+  const isAllDone = totalTasks > 0 && completedCount === totalTasks;
+  const progressPercent = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+
+  // Filtered task list
+  const displayedTasks = tasks.filter((t) => {
+    if (taskFilter === 'completed') return t.isCompleted;
+    if (taskFilter === 'pending') return !t.isCompleted;
+    return true;
+  });
+
+  // Reaction trigger helper
   const triggerReaction = useCallback((reactionName: string, duration = 800) => {
     if (reactionTimerRef.current) {
       clearTimeout(reactionTimerRef.current);
@@ -182,7 +232,7 @@ export const MascotCompanion: React.FC = () => {
     }, duration);
   }, []);
 
-  // Boop handler with combo dizzy reaction
+  // Boop handler with combo reaction
   const handleBoop = useCallback((e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     const now = Date.now();
@@ -204,7 +254,6 @@ export const MascotCompanion: React.FC = () => {
     const onPointerMove = (e: PointerEvent) => {
       if (activeReaction) return;
 
-      // Choose active tracking target: modal stage if open, otherwise floating widget
       const targetEl = isOpen ? modalStageRef.current : floatingContainerRef.current;
       if (!targetEl) return;
 
@@ -237,17 +286,53 @@ export const MascotCompanion: React.FC = () => {
     return () => window.removeEventListener('pointermove', onPointerMove);
   }, [activeReaction, isOpen]);
 
+  // Instant 0ms toggle for tasks
+  const handleToggleTask = async (taskId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!mission) return;
 
-  const triggerCelebration = () => {
-    setSparkClaimed(true);
-    triggerReaction('sparkle', 1200);
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.7, x: 0.85 },
-      colors: ['#F59E0B', '#3B82F6', '#10B981', '#EC4899', '#8B5CF6'],
-    });
-    setTimeout(() => setSparkClaimed(false), 4000);
+    const updatedTasks = tasks.map((t) =>
+      t.taskId === taskId ? { ...t, isCompleted: !t.isCompleted } : t
+    );
+    const doneCount = updatedTasks.filter((t) => t.isCompleted).length;
+    const allFinished = doneCount === updatedTasks.length;
+
+    const updatedMission: DailyMission = {
+      ...mission,
+      tasks: updatedTasks,
+      completedTasksCount: doneCount,
+      isAllCompleted: allFinished,
+    };
+    setMission(updatedMission);
+
+    // Save locally
+    try {
+      const completedIds = updatedTasks.filter((t) => t.isCompleted).map((t) => t.taskId);
+      localStorage.setItem(`rishabhlabs_mission_completed_${targetTrack}`, JSON.stringify(completedIds));
+    } catch {
+      // Ignore
+    }
+
+    if (allFinished) {
+      triggerReaction('delighted', 1500);
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6, x: 0.5 },
+        colors: ['#F59E0B', '#10B981', '#3B82F6', '#EC4899', '#8B5CF6'],
+      });
+    } else {
+      triggerReaction('wink', 600);
+    }
+
+    // Backend sync in background
+    if (mission._id) {
+      try {
+        await api.toggleMissionTask(mission._id, taskId);
+      } catch (err) {
+        console.warn('Mission sync notice:', err);
+      }
+    }
   };
 
   const weekdays = [
@@ -260,71 +345,68 @@ export const MascotCompanion: React.FC = () => {
     { day: 'Sun', completed: true },
   ];
 
-  const reactionButtons = [
-    { key: 'heart', label: 'Heart', emoji: '❤️' },
-    { key: 'sparkle', label: 'Sparkle', emoji: '✨' },
-    { key: 'surprised', label: 'Surprised', emoji: '😮' },
-    { key: 'wink', label: 'Wink', emoji: '😉' },
-    { key: 'bashful', label: 'Bashful', emoji: '😊' },
-    { key: 'sleepy', label: 'Sleepy', emoji: '💤' },
-    { key: 'dizzy', label: 'Dizzy', emoji: '😵' },
-    { key: 'delighted', label: 'Delighted', emoji: '🥳' },
-    { key: 'blink', label: 'Blink', emoji: '👀' },
-  ];
-
   return (
     <>
-      {/* Floating Mascot Widget */}
+      {/* Floating Mascot Widget (Minimized State) */}
       <div
         ref={floatingContainerRef}
         className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-40 select-none flex flex-col items-end pointer-events-auto"
       >
-        {/* Speech Bubble */}
+        {/* Minimal Speech Capsule (strictly 1-2 lines) */}
         {showSpeechBubble && !isOpen && (
-          <div className="mb-2 max-w-[240px] sm:max-w-[280px] p-3 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800 shadow-lg text-xs text-neutral-800 dark:text-neutral-200 relative animate-in fade-in duration-300">
+          <div
+            onClick={() => setIsOpen(true)}
+            className="mb-2 max-w-[260px] p-2.5 rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-xl text-neutral-800 dark:text-neutral-200 relative animate-in fade-in duration-200 cursor-pointer select-none"
+          >
             <button
-              onClick={() => setShowSpeechBubble(false)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowSpeechBubble(false);
+              }}
               className="absolute top-1.5 right-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 p-0.5 rounded-full"
               title="Dismiss"
             >
               <X className="w-3 h-3" />
             </button>
             <div className="pr-3">
-              <span className="text-[10px] font-bold text-neutral-500 dark:text-neutral-400 block mb-0.5 font-mono">
-                CHIBI AVATAR DEV COMPANION
-              </span>
-              <p className="leading-snug text-[11px] sm:text-xs">
-                {speeches[speechIndex]}
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-orange-500 dark:text-orange-400 mb-0.5 font-mono">
+                <Zap className="w-3 h-3 fill-current" />
+                <span>{completedCount}/{totalTasks} TASKS DONE ({progressPercent}%)</span>
+              </div>
+              <p className="leading-tight text-[11px] font-semibold text-neutral-800 dark:text-neutral-100 line-clamp-2">
+                {isAllDone
+                  ? 'Sabhi daily tasks poore! Tap karein progress dekhne ke liye →'
+                  : `${pendingCount} daily task bacha hai · Tap karein brief & tasks ke liye →`}
               </p>
-              <button
-                onClick={() => setIsOpen(true)}
-                className="mt-1.5 text-[10px] font-bold text-neutral-900 dark:text-white hover:underline flex items-center gap-1"
-              >
-                <span>View Streak Guardian Hub</span>
-                <ArrowRight className="w-2.5 h-2.5" />
-              </button>
             </div>
             {/* Bubble Tail */}
-            <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-white dark:bg-[#212121] border-b border-r border-neutral-200 dark:border-neutral-800 rotate-45" />
+            <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-white dark:bg-[#1f1f1f] border-b border-r border-neutral-200 dark:border-neutral-800 rotate-45" />
           </div>
         )}
 
         {/* Mascot Avatar Trigger Container */}
-        <div className="relative flex items-center justify-center">
+        <div
+          onClick={() => setIsOpen(true)}
+          className="relative flex items-center justify-center cursor-pointer group"
+          title="Click to view today's tasks & personal progress"
+        >
           {/* Interactive Character Sprite */}
           <InteractiveMascot
             size={76}
             activeReaction={activeReaction}
             direction={direction}
-            onBoop={handleBoop}
+            onBoop={() => setIsOpen(true)}
             showStageAura={true}
           />
 
-          {/* Streak Flame Badge: Clicking opens modal */}
+          {/* Streak Flame Badge */}
           <button
-            onClick={() => setIsOpen(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(true);
+            }}
             className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-mono font-bold text-[10px] shadow-md border-2 border-white dark:border-neutral-900 cursor-pointer transition-colors whitespace-nowrap"
-            title="Click to view Streak Guardian details"
+            title="Click to view today's tasks & personal progress"
           >
             <Flame className="w-3 h-3 fill-current" />
             <span>{streakDays}</span>
@@ -332,57 +414,40 @@ export const MascotCompanion: React.FC = () => {
         </div>
       </div>
 
-      {/* Expanded Streak Guardian Modal */}
+      {/* Expanded Dev Guardian Modal */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/70 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
-          <div className="w-full max-w-lg bg-white dark:bg-[#1f1f1f] rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 sm:p-7 relative my-auto space-y-5">
-            {/* Close Button */}
-            <button
-              onClick={() => setIsOpen(false)}
-              className="absolute top-4 right-4 p-2 rounded-full text-neutral-400 hover:text-neutral-700 dark:hover:text-white bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 transition-colors cursor-pointer"
-              title="Close modal"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            {/* Character Header */}
-            <div className="flex items-center gap-3.5 pr-8">
-              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
-                <Flame className="w-6 h-6 fill-current" />
-              </div>
-              <div className="space-y-0.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                  Interactive Dev Companion
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-neutral-950/75 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
+          <div className="w-full max-w-lg bg-white dark:bg-[#191718] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-5 sm:p-6 relative my-auto space-y-4 max-h-[90vh] overflow-y-auto">
+            
+            {/* Top Bar: Day, Track & Close Button */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 font-mono">
+                  Day {mission?.dayNumber || 1} • {targetTrack}
                 </span>
-                <h3 className="text-lg sm:text-xl font-extrabold text-neutral-900 dark:text-white leading-tight">
-                  Chibi Avatar (Cool Guy)
-                </h3>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                  Tracks your cursor gaze & responds to coding victories.
-                </p>
+                <span className="text-[11px] font-bold text-neutral-400">
+                  Daily Briefing
+                </span>
               </div>
+
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 rounded-full text-neutral-400 hover:text-neutral-700 dark:hover:text-white bg-neutral-100 dark:bg-neutral-800/80 hover:bg-neutral-200 transition-colors cursor-pointer"
+                title="Close modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            {/* Interactive Stage (Showcase Engine) */}
-            <div
+            {/* Unified Mascot Hero Card (Mascot + Coach Speech + Diagnostics) */}
+            <div 
               ref={modalStageRef}
-              className="relative w-full rounded-2xl bg-neutral-950 dark:bg-black border border-neutral-800 p-4 pt-5 pb-4 flex flex-col items-center justify-center shadow-inner overflow-hidden"
+              className="p-3.5 sm:p-4 rounded-2xl bg-neutral-50 dark:bg-[#211F20] border border-neutral-200/90 dark:border-neutral-800 flex items-center gap-4"
             >
-              {/* Stage Top Labels */}
-              <div className="w-full flex items-center justify-between text-[10px] font-bold tracking-wider uppercase mb-2">
-                <span className="text-neutral-400 flex items-center gap-1.5 font-mono">
-                  <Activity className="w-3 h-3 text-emerald-400" />
-                  Gaze Tracker
-                </span>
-                <span className="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono">
-                  60 FPS Interactive
-                </span>
-              </div>
-
-              {/* Central Mascot (130px size) */}
-              <div className="my-2">
+              {/* Left: Mascot Sprite */}
+              <div className="shrink-0 flex items-center justify-center">
                 <InteractiveMascot
-                  size={130}
+                  size={84}
                   activeReaction={activeReaction}
                   direction={direction}
                   onBoop={handleBoop}
@@ -390,131 +455,178 @@ export const MascotCompanion: React.FC = () => {
                 />
               </div>
 
-              {/* Status Hint Pill */}
-              <div className="mt-2 text-[11px] font-semibold text-neutral-300 bg-neutral-900 border border-neutral-700 px-3 py-1 rounded-full font-mono">
-                {activeReaction
-                  ? `Reaction: ${activeReaction.toUpperCase()}`
-                  : `Looking: ${direction.replace('-', ' ').toUpperCase()}`}
-              </div>
+              {/* Right: Personal Coach Diagnostic Speech & Quick Stats */}
+              <div className="min-w-0 flex-1 space-y-2">
+                {/* Speech Bubble */}
+                <div className="p-2.5 rounded-xl bg-white dark:bg-[#161415] border border-neutral-200/80 dark:border-neutral-800/80 shadow-2xs">
+                  <p className="text-xs font-medium text-neutral-800 dark:text-neutral-200 leading-snug">
+                    {isAllDone ? (
+                      <span>🎉 <strong className="text-emerald-500">Shandaar!</strong> Aaj ke sabhi daily tasks verified hain. Streak 100% safe hai!</span>
+                    ) : completedCount > 0 ? (
+                      <span>🔥 <strong className="text-orange-500">{completedCount}/{totalTasks} Done!</strong> Momentum solid hai, bas {pendingCount} task bache hain.</span>
+                    ) : (
+                      <span>⚡ <strong className="text-amber-500">{pendingCount} Tasks Pending:</strong> Raat se pehle complete karein taaki streak bachi rahe!</span>
+                    )}
+                  </p>
+                </div>
 
-              {/* Reaction Buttons Matrix */}
-              <div className="w-full mt-4 pt-3 border-t border-neutral-800/80">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block mb-2 text-center">
-                  Trigger Reactions (Click to Test)
+                {/* Inline Diagnostic Pills (Wins & Alert) */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono">
+                    <CheckCircle2 className="w-3 h-3" />
+                    {streakDays}d Streak Active
+                  </span>
+
+                  {pendingCount > 0 ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-mono">
+                      <AlertCircle className="w-3 h-3" />
+                      {pendingCount} Left Today
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono">
+                      <Check className="w-3 h-3" />
+                      100% Cleared
+                    </span>
+                  )}
+
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 bg-neutral-200/60 dark:bg-neutral-800">
+                    <Shield className="w-3 h-3 text-blue-500" />
+                    {streakFreezeAvailable} Freeze Ready
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Compact Progress Bar */}
+            <div className="space-y-1.5 pt-0.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-neutral-700 dark:text-neutral-300">
+                  Daily Execution Progress
                 </span>
-                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-                  {reactionButtons.map((r) => (
+                <span className="font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
+                  {completedCount}/{totalTasks} Done ({progressPercent}%)
+                </span>
+              </div>
+              <div className="h-2 w-full bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-orange-500 via-emerald-500 to-emerald-400 transition-all duration-300 rounded-full"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Today's Tasks Section */}
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-neutral-800 dark:text-neutral-200">
+                  Today's Tasks
+                </span>
+
+                {/* Filter Pills */}
+                <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 p-0.5 rounded-lg text-[10px] font-bold">
+                  {(['all', 'pending', 'completed'] as const).map((filter) => (
                     <button
-                      key={r.key}
-                      onClick={() => triggerReaction(r.key, 900)}
-                      className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-                        activeReaction === r.key
-                          ? 'bg-neutral-800 border-neutral-500 text-white'
-                          : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-300 hover:text-white'
+                      key={filter}
+                      onClick={() => setTaskFilter(filter)}
+                      className={`px-2 py-0.5 rounded-md capitalize transition-colors cursor-pointer ${
+                        taskFilter === filter
+                          ? 'bg-white dark:bg-[#151314] text-neutral-900 dark:text-white shadow-2xs'
+                          : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
                       }`}
                     >
-                      <span className="text-xs">{r.emoji}</span>
-                      <span className="text-[11px]">{r.label}</span>
+                      {filter}
                     </button>
                   ))}
                 </div>
               </div>
-            </div>
 
-            {/* Streak Status Showcase Box */}
-            <div className="p-4 rounded-2xl bg-white dark:bg-[#252528] border border-neutral-200/90 dark:border-neutral-800 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-xs">
-                    <Flame className="w-5 h-5 fill-current" />
-                  </div>
-                  <div>
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium block">
-                      Active Streak
-                    </span>
-                    <span className="text-xl font-extrabold font-mono text-neutral-900 dark:text-white leading-none">
-                      {streakDays} Days Strong
-                    </span>
-                  </div>
-                </div>
-
-                {/* Streak Freeze Badge */}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-xs font-semibold">
-                  <Shield className="w-3.5 h-3.5" />
-                  <span>{streakFreezeAvailable} Freeze Ready</span>
-                </div>
-              </div>
-
-              {/* 7-Day Dot Tracker */}
-              <div className="pt-2 border-t border-neutral-200/80 dark:border-neutral-800">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-2">
-                  This Week's Consistency
-                </span>
-                <div className="grid grid-cols-7 gap-1.5 text-center">
-                  {weekdays.map((item, idx) => (
+              {/* Task Items */}
+              <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-0.5">
+                {displayedTasks.map((t) => {
+                  const cleanedTitle = cleanTaskTitle(t.title);
+                  return (
                     <div
-                      key={idx}
-                      className="p-1.5 rounded-xl bg-neutral-50 dark:bg-[#1e1e20] border border-neutral-200/60 dark:border-neutral-800 flex flex-col items-center gap-1"
+                      key={t.taskId}
+                      onClick={(e) => handleToggleTask(t.taskId, e)}
+                      className={`p-2.5 rounded-xl border transition-colors flex items-center justify-between gap-3 cursor-pointer select-none ${
+                        t.isCompleted
+                          ? 'bg-emerald-500/5 dark:bg-emerald-950/15 border-emerald-500/25'
+                          : 'bg-neutral-50 dark:bg-[#211F20] border-neutral-200/90 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700'
+                      }`}
                     >
-                      <span className="text-[9px] font-bold text-neutral-400">{item.day}</span>
-                      <Flame className="w-3.5 h-3.5 text-orange-500 fill-current" />
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {/* Checkbox */}
+                        <button
+                          type="button"
+                          onClick={(e) => handleToggleTask(t.taskId, e)}
+                          className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 cursor-pointer transition-colors ${
+                            t.isCompleted
+                              ? 'bg-emerald-500 border-emerald-600 text-white'
+                              : 'bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700 text-transparent hover:border-neutral-400'
+                          }`}
+                        >
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </button>
+
+                        {/* Title & Tag */}
+                        <div className="min-w-0">
+                          <p
+                            className={`text-xs leading-snug line-clamp-1 ${
+                              t.isCompleted
+                                ? 'line-through text-neutral-400 dark:text-neutral-500 font-normal'
+                                : 'font-semibold text-neutral-900 dark:text-neutral-100'
+                            }`}
+                          >
+                            {cleanedTitle}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Right: Badge & Duration */}
+                      <div className="shrink-0 flex items-center gap-1.5">
+                        <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border font-mono ${getTaskBadgeStyle(t.type)}`}>
+                          {t.type}
+                        </span>
+                        <span className="text-[10px] text-neutral-400 flex items-center gap-0.5 font-mono">
+                          <Clock className="w-2.5 h-2.5" />
+                          {t.durationText || `${t.durationMinutes}m`}
+                        </span>
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Next Milestone Card */}
-            <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center">
-                  <Trophy className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-neutral-900 dark:text-white">
-                    Day 20 Milestone: Silver Dev Badge
-                  </h4>
-                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                    {daysToMilestone > 0 ? `${daysToMilestone} days left to unlock` : 'Milestone achieved!'}
-                  </p>
-                </div>
+            {/* Bottom Strip: 7-Day Consistency & Direct Action */}
+            <div className="pt-2 border-t border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between gap-3">
+              {/* 7-Day Heat Dots */}
+              <div className="flex items-center gap-1">
+                {weekdays.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="w-5.5 h-6 rounded-md bg-neutral-100 dark:bg-neutral-800/80 flex flex-col items-center justify-center"
+                    title={item.day}
+                  >
+                    <span className="text-[7.5px] font-bold text-neutral-400">{item.day[0]}</span>
+                    <Flame className="w-2.5 h-2.5 text-orange-500 fill-current -mt-0.5" />
+                  </div>
+                ))}
               </div>
-              <button
-                onClick={triggerCelebration}
-                className="px-3 py-1.5 rounded-full text-xs font-bold bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
-              >
-                <Sparkles className="w-3 h-3" />
-                <span>{sparkClaimed ? 'Sparked! ✨' : 'Spark'}</span>
-              </button>
-            </div>
 
-            {/* Action Shortcuts */}
-            <div className="space-y-2 pt-1">
+              {/* Primary Action Button */}
               <button
                 onClick={() => {
                   setIsOpen(false);
                   navigate('/missions');
                 }}
-                className="w-full flex items-center justify-between p-3 rounded-2xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-bold hover:opacity-90 transition-opacity shadow-xs cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-bold hover:opacity-90 transition-opacity shadow-xs cursor-pointer shrink-0"
               >
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 dark:text-emerald-600" />
-                  <span>Complete Today's Mission & Protect Streak</span>
-                </div>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  navigate('/practice');
-                }}
-                className="w-full flex items-center justify-between p-3 rounded-2xl bg-neutral-100 dark:bg-[#282828] text-neutral-800 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-[#333] text-xs font-semibold transition-colors cursor-pointer"
-              >
-                <span>Solve Today's Coding Challenge (+50 XP)</span>
-                <ArrowRight className="w-4 h-4 text-neutral-400" />
+                <span>Open Full Mission</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
+
           </div>
         </div>
       )}
