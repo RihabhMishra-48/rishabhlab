@@ -230,17 +230,24 @@ CREATE TABLE IF NOT EXISTS public.hackathons (
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS public.mentors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
     title TEXT NOT NULL,
     company TEXT NOT NULL,
     avatar TEXT NOT NULL,
     topics JSONB DEFAULT '[]'::jsonb,
     experience_years INTEGER DEFAULT 5,
-    rating NUMERIC(2,1) DEFAULT 4.9,
+    rating NUMERIC(3,2) DEFAULT 4.90,
+    reviews_count INTEGER DEFAULT 48,
     bio TEXT NOT NULL,
+    hourly_rate TEXT DEFAULT 'Free for Pro',
     hourly_rate_inr INTEGER DEFAULT 0,
+    availability JSONB DEFAULT '["Tomorrow, 6:00 PM IST"]'::jsonb,
     available_days JSONB DEFAULT '[]'::jsonb,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    is_available_today BOOLEAN DEFAULT TRUE,
+    domain TEXT DEFAULT 'Full-Stack Development',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS public.mentorship_requests (
@@ -248,11 +255,16 @@ CREATE TABLE IF NOT EXISTS public.mentorship_requests (
     student_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     mentor_id UUID REFERENCES public.mentors(id) ON DELETE CASCADE,
     topic TEXT NOT NULL,
-    requested_date TEXT NOT NULL,
+    context_type TEXT DEFAULT 'general' CHECK (context_type IN ('general', 'stuck_in_coding', 'roadmap_review', 'hackathon_mvp', 'project_review')),
+    message TEXT,
     student_note TEXT,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled')),
+    preferred_slot TEXT DEFAULT 'Tomorrow, 6:00 PM IST',
+    requested_date TEXT DEFAULT (CURRENT_DATE::TEXT),
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'confirmed', 'completed', 'cancelled')),
     meeting_link TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    notes_from_mentor TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ============================================================================

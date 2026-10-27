@@ -22,6 +22,7 @@ import weeklyReviewRoutes from './routes/weeklyReviewRoutes';
 import profileRoutes from './routes/profileRoutes';
 import collegeRoutes from './routes/collegeRoutes';
 import adminRoutes from './routes/adminRoutes';
+import pycodeRoutes from './routes/pycodeRoutes';
 
 dotenv.config();
 
@@ -65,6 +66,7 @@ app.use('/api/weekly-review', weeklyReviewRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/college', collegeRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/pycode', pycodeRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

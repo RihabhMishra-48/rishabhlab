@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
 import { PricingPlan } from '../models/CollegeAndReview';
 import { Lesson } from '../models/Lesson';
@@ -702,6 +703,187 @@ router.put('/pricing/:key', async (req, res) => {
     );
 
     res.json({ success: true, plan });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ============================================================================
+// 7. USER & ROLE MANAGEMENT
+// ============================================================================
+
+// GET /api/admin/users
+router.get('/users', async (req, res) => {
+  try {
+    const { role, search } = req.query;
+    const filter: any = {};
+    if (role && role !== 'all' && role !== 'All') {
+      filter.role = role;
+    }
+    if (search && String(search).trim()) {
+      const q = String(search).trim();
+      filter.$or = [
+        { name: { $regex: q, $options: 'i' } },
+        { email: { $regex: q, $options: 'i' } },
+        { college: { $regex: q, $options: 'i' } },
+      ];
+    }
+    const users = await User.find(filter)
+      .select('-password')
+      .sort({ createdAt: -1 });
+    res.json(users);
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT /api/admin/users/:id/role - promote/demote user role
+router.put('/users/:id/role', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+    const validRoles = ['student', 'mentor', 'college_admin', 'super_admin'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ message: `Invalid role. Must be one of: ${validRoles.join(', ')}` });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.role = role as any;
+    await user.save();
+
+    // If role changed to mentor, ensure mentor record exists
+    if (role === 'mentor') {
+      const existingMentor = await Mentor.findOne({
+        $or: [{ userId: user._id }, { name: user.name }]
+      });
+      if (!existingMentor) {
+        await Mentor.create({
+          userId: user._id,
+          name: user.name,
+          title: user.targetGoal || 'Technical Specialist & Mentor',
+          company: user.mentorOrganization || user.college || 'RishabhLabs',
+          avatar: user.avatar || '/avatars/rishabh.webp',
+          rating: 5.0,
+          reviewsCount: 1,
+          bio: user.bio || `Specialist mentor at RishabhLabs focusing on ${user.fieldOfInterest || 'Full-Stack & Systems'}.`,
+          hourlyRate: 'Free for Pro',
+          topics: user.mentorExpertise && user.mentorExpertise.length > 0 ? user.mentorExpertise : ['Architecture', 'System Design', 'Roadmap'],
+          availability: ['Today, 7:00 PM IST', 'Tomorrow, 6:00 PM IST'],
+          isAvailableToday: true,
+          domain: user.fieldOfInterest || 'Full-Stack Development',
+        });
+      } else {
+        existingMentor.userId = user._id;
+        existingMentor.isAvailableToday = true;
+        await existingMentor.save();
+      }
+    }
+
+    // Sync role to Supabase if configured
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ role })
+          .eq('email', user.email);
+      } catch (sbErr) {
+        // Non-blocking sync
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `User ${user.name} role successfully updated to ${role}`,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        college: user.college,
+        degree: user.degree,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/admin/users - create new user
+router.post('/users', async (req, res) => {
+  try {
+    const { name, email, password, role = 'student', college, degree } = req.body;
+    if (!name || !email) {
+      return res.status(400).json({ message: 'Name and email are required.' });
+    }
+    const existing = await User.findOne({ email: email.toLowerCase() });
+    if (existing) {
+      return res.status(400).json({ message: 'User with this email already exists.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password || 'password123', 10);
+    const user = await User.create({
+      name,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      role,
+      college: college || '',
+      degree: degree || '',
+      isOnboarded: true,
+    });
+
+    if (role === 'mentor') {
+      await Mentor.create({
+        userId: user._id,
+        name: user.name,
+        title: 'Technical Specialist & Mentor',
+        company: college || 'RishabhLabs',
+        avatar: '/avatars/rishabh.webp',
+        rating: 5.0,
+        reviewsCount: 1,
+        bio: `Specialist mentor at RishabhLabs.`,
+        hourlyRate: 'Free for Pro',
+        topics: ['Full-Stack', 'System Design', 'Roadmap'],
+        availability: ['Today, 7:00 PM IST', 'Tomorrow, 6:00 PM IST'],
+        isAvailableToday: true,
+        domain: 'Full-Stack Development',
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        college: user.college,
+        degree: user.degree,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/admin/users/:id - delete user
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (user.email === 'admin@rishabhlabs.com' || user.email === 'rishabh@rishabhlabs.com') {
+      return res.status(400).json({ message: 'Protected master admin account cannot be deleted.' });
+    }
+
+    await User.findByIdAndDelete(id);
+    await Mentor.deleteMany({ userId: user._id });
+
+    res.json({ success: true, message: `User ${user.email} deleted.` });
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }

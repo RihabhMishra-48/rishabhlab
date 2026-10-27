@@ -80,40 +80,57 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
-// GET /api/u/:username - public Proof of Work profile
+// GET /api/profile/public/:username - public Proof of Work profile
 router.get('/public/:username', async (req, res) => {
   try {
     const { username } = req.params;
     let user = await User.findOne({
-      $or: [{ githubUsername: username }, { name: new RegExp(username, 'i') }],
+      $or: [
+        { githubUsername: username },
+        { name: new RegExp(`^${username.replace(/-/g, ' ')}$`, 'i') },
+        { email: new RegExp(`^${username}@`, 'i') },
+      ],
     });
 
-    if (!user) {
-      user = await User.findOne({});
+    if (!user && username.match(/^[0-9a-fA-F]{24}$/)) {
+      user = await User.findById(username);
     }
 
-    if (!user) return res.status(404).json({ message: 'Public profile not found' });
+    if (!user) {
+      return res.status(404).json({ message: 'User profile not found' });
+    }
 
     const profile = await StudentProfile.findOne({ userId: user._id });
-    const verifiedProjects = await Project.find({ status: 'Completed' });
+    const verifiedProjects = await Project.find({
+      $or: [{ userId: user._id }, { status: 'Completed' }],
+    }).limit(6);
+
+    const userStreak = user.streakDays ?? profile?.streakDays ?? 0;
+    const progressPct = profile?.progressPercent ?? 0;
+    const projectsDone = profile?.projectsCompleted ?? (verifiedProjects.length || 0);
 
     res.json({
       user: {
         name: user.name,
-        college: user.college,
-        degree: user.degree,
-        year: user.year,
-        avatar: user.avatar,
-        bio: user.bio,
-        githubUsername: user.githubUsername,
+        college: user.college || '',
+        degree: user.degree || '',
+        year: user.year || '',
+        avatar: user.avatar || '/avatars/rishabh.webp',
+        bio: user.bio || '',
+        githubUsername: user.githubUsername || '',
+        role: user.role,
+        targetGoal: user.targetGoal || 'Software Engineering',
       },
       stats: {
-        roadmapProgress: profile?.progressPercent ?? 41,
-        projectsCompleted: profile?.projectsCompleted ?? 2,
-        streakDays: profile?.streakDays ?? 12,
-        status: 'Active Verified Builder',
+        roadmapProgress: progressPct,
+        projectsCompleted: projectsDone,
+        streakDays: userStreak,
+        totalPoints: user.totalPoints ?? profile?.totalPoints ?? 0,
+        status: userStreak > 0 ? 'Active Verified Builder' : 'Learner',
       },
-      skills: ['HTML', 'CSS', 'JavaScript', 'React', 'Node.js', 'MongoDB'],
+      skills: profile?.verifiedSkills && profile.verifiedSkills.length > 0
+        ? profile.verifiedSkills
+        : ['Full-Stack', 'Problem Solving', 'Git'],
       verifiedProjects,
     });
   } catch (err: any) {

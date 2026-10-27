@@ -33,6 +33,8 @@ import { ProfilePage } from './pages/profile/ProfilePage';
 import { PublicPortfolioPage } from './pages/profile/PublicPortfolioPage';
 import { CollegeDashboardPage } from './pages/college/CollegeDashboardPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { MentorSessionsPage } from './pages/mentor/MentorSessionsPage';
+import { PythonHubPage } from './pages/pycode/PythonHubPage';
 
 export const App: React.FC = () => {
   return (
@@ -62,32 +64,57 @@ export const App: React.FC = () => {
           {/* Public Proof of Work Showcase */}
           <Route path="/u/:username" element={<PublicPortfolioPage />} />
 
-          {/* Authenticated Workspace with Sidebar & Command Palette */}
-          <Route
-            element={
-              <ProtectedRoute>
-                <AppLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/dashboard" element={<StudentDashboard />} />
-            <Route path="/roadmap" element={<RoadmapPage />} />
-            <Route path="/missions" element={<DailyMissionPage />} />
-            <Route path="/learn" element={<LearnCatalogPage />} />
-            <Route path="/learn/:track/:slug" element={<LessonDetailPage />} />
-            <Route path="/practice" element={<ProblemListPage />} />
-            <Route path="/practice/:slug" element={<ProblemWorkspacePage />} />
-            <Route path="/debugging-lab" element={<DebuggingLabPage />} />
-            <Route path="/projects" element={<ProjectsCatalogPage />} />
-            <Route path="/projects/:slug" element={<ProjectWorkspacePage />} />
-            <Route path="/hackathon" element={<HackathonModePage />} />
-            <Route path="/competitions" element={<HackathonModePage />} />
-            <Route path="/leaderboard" element={<HackathonModePage />} />
-            <Route path="/mentorship" element={<MentorshipPage />} />
-            <Route path="/weekly-review" element={<WeeklyReviewPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/college" element={<CollegeDashboardPage />} />
-            <Route path="/admin" element={<AdminDashboardPage />} />
+          {/* App Workspace Shell with Sidebar & Navbar */}
+          <Route element={<AppLayout />}>
+            {/* Open / Guest Accessible Hubs */}
+            <Route path="/python-hub" element={<PythonHubPage />} />
+            <Route path="/practice/python" element={<PythonHubPage />} />
+
+            {/* Authenticated Workspace with ProtectedRoute */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<StudentDashboard />} />
+              <Route path="/roadmap" element={<RoadmapPage />} />
+              <Route path="/missions" element={<DailyMissionPage />} />
+              <Route path="/learn" element={<LearnCatalogPage />} />
+              <Route path="/learn/:track/:slug" element={<LessonDetailPage />} />
+              <Route path="/practice" element={<ProblemListPage />} />
+              <Route path="/practice/:slug" element={<ProblemWorkspacePage />} />
+              <Route path="/debugging-lab" element={<DebuggingLabPage />} />
+              <Route path="/projects" element={<ProjectsCatalogPage />} />
+              <Route path="/projects/:slug" element={<ProjectWorkspacePage />} />
+              <Route path="/hackathon" element={<HackathonModePage />} />
+              <Route path="/competitions" element={<HackathonModePage />} />
+              <Route path="/leaderboard" element={<HackathonModePage />} />
+              <Route path="/mentorship" element={<MentorshipPage />} />
+              <Route path="/weekly-review" element={<WeeklyReviewPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+
+              {/* Role-Specific Workspaces */}
+              <Route
+                path="/mentor/sessions"
+                element={
+                  <ProtectedRoute allowedRoles={['mentor', 'super_admin', 'admin']}>
+                    <MentorSessionsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/college"
+                element={
+                  <ProtectedRoute allowedRoles={['college_admin', 'super_admin', 'admin']}>
+                    <CollegeDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
+                    <AdminDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
           </Route>
 
           {/* Fallback */}

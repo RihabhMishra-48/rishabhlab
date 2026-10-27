@@ -67,13 +67,84 @@ router.post('/request', requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
-// GET /api/mentorship/my-requests
+// GET /api/mentorship/my-requests (student's view)
 router.get('/my-requests', requireAuth, async (req: AuthRequest, res) => {
   try {
     const requests = await MentorshipRequest.find({ studentId: req.user?._id })
       .populate('mentorId', 'name title company avatar')
       .sort({ createdAt: -1 });
     res.json(requests);
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/mentorship/mentor/sessions (mentor / admin workspace view)
+router.get('/mentor/sessions', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const user = req.user!;
+    const isSuperAdmin = (user.role as string) === 'super_admin' || (user.role as string) === 'admin' || Boolean(user.email?.includes('admin'));
+
+    let filter: any = {};
+    if (!isSuperAdmin) {
+      if (user.role !== 'mentor') {
+        return res.status(403).json({ message: 'Access denied: Mentor privileges required' });
+      }
+
+      // Find mentor record for this user
+      const mentorRecords = await Mentor.find({
+        $or: [{ userId: user._id }, { name: user.name }]
+      });
+      const mentorIds = mentorRecords.map(m => m._id);
+
+      // Mentor can view sessions requested to their mentor profile or directly to their user ID
+      filter = {
+        $or: [
+          { mentorId: { $in: mentorIds } },
+          { mentorId: user._id }
+        ]
+      };
+    }
+
+    const sessions = await MentorshipRequest.find(filter)
+      .populate('studentId', 'name email avatar college degree year targetGoal githubUsername')
+      .populate('mentorId', 'name title company avatar')
+      .sort({ createdAt: -1 });
+
+    res.json(sessions);
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT /api/mentorship/sessions/:id (update session status, meeting link, notes)
+router.put('/sessions/:id', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { status, meetingLink, notesFromMentor, preferredSlot } = req.body;
+    const user = req.user!;
+    const isSuperAdmin = (user.role as string) === 'super_admin' || (user.role as string) === 'admin' || Boolean(user.email?.includes('admin'));
+
+    const session = await MentorshipRequest.findById(id);
+    if (!session) {
+      return res.status(404).json({ message: 'Mentorship session not found' });
+    }
+
+    if (!isSuperAdmin && user.role !== 'mentor') {
+      return res.status(403).json({ message: 'Forbidden: insufficient permissions' });
+    }
+
+    const updateFields: any = {};
+    if (status) updateFields.status = status;
+    if (meetingLink !== undefined) updateFields.meetingLink = meetingLink;
+    if (notesFromMentor !== undefined) updateFields.notesFromMentor = notesFromMentor;
+    if (preferredSlot !== undefined) updateFields.preferredSlot = preferredSlot;
+
+    const updated = await MentorshipRequest.findByIdAndUpdate(id, updateFields, { new: true })
+      .populate('studentId', 'name email avatar college degree year targetGoal githubUsername')
+      .populate('mentorId', 'name title company avatar');
+
+    res.json(updated);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }

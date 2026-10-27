@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { ShieldCheck, CheckCircle2, GitBranch, ExternalLink, ArrowLeft } from 'lucide-react';
+import { UserAvatar } from '../../components/common/UserAvatar';
 
 export const PublicPortfolioPage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
@@ -26,6 +27,31 @@ export const PublicPortfolioPage: React.FC = () => {
     return <div className="min-h-screen p-8 text-center text-sm text-neutral-400">Loading verified portfolio...</div>;
   }
 
+  if (!profile || !profile.user) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 flex items-center justify-center p-4">
+        <div className="max-w-md w-full p-8 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800 text-center space-y-4 shadow-xl">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-500">
+            <ShieldCheck className="w-6 h-6 text-neutral-400" />
+          </div>
+          <h2 className="text-xl font-extrabold text-neutral-900 dark:text-white">Profile Not Found</h2>
+          <p className="text-xs text-neutral-500 leading-relaxed">
+            No public Proof of Work portfolio was found for <span className="font-mono font-bold text-neutral-800 dark:text-neutral-200">@{username}</span>.
+          </p>
+          <div className="pt-2">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-bold"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Home</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 p-4 sm:p-8">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -41,13 +67,11 @@ export const PublicPortfolioPage: React.FC = () => {
         <div className="p-8 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xl space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
-              <img
-                src={profile?.user?.avatar || '/avatars/rishabh.webp'}
-                alt={profile?.user?.name}
-                className="w-20 h-20 rounded-3xl object-cover border-2 border-neutral-200 dark:border-neutral-700"
-                onError={(e: any) => {
-                  e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop';
-                }}
+              <UserAvatar
+                src={profile?.user?.avatar}
+                name={profile?.user?.name}
+                size={80}
+                roundedClassName="rounded-3xl"
               />
               <div className="space-y-1">
                 <div className="flex items-center gap-2">

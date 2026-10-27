@@ -5,9 +5,14 @@ import { useAuth } from '../../context/AuthContext';
 interface ProtectedRouteProps {
   children?: React.ReactNode;
   requireOnboarded?: boolean;
+  allowedRoles?: string[];
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireOnboarded = true }) => {
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  requireOnboarded = true,
+  allowedRoles,
+}) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -32,6 +37,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
   // Signed in but haven't finished onboarding -> Force Onboarding first!
   if (requireOnboarded && !user.isOnboarded && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  // Role-based authorization
+  if (allowedRoles && allowedRoles.length > 0) {
+    const isSuperAdmin = user.role === 'super_admin' || user.role === 'admin' || user.email?.includes('admin');
+    if (!isSuperAdmin && !allowedRoles.includes(user.role)) {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return children ? <>{children}</> : <Outlet />;

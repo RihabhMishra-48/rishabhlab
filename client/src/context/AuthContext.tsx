@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
 import { api } from '../services/api';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
+import { pycodeService } from '../services/pycodeService';
 
 interface AuthContextType {
   user: User | null;
@@ -271,6 +272,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     fetchCurrentUser();
   }, []);
+
+  // Sync profile avatar from PyCode if student has an existing PyCode account
+  useEffect(() => {
+    if (user?.email && (!user.avatar || user.avatar.includes('unsplash.com') || user.avatar.includes('rishabh.webp'))) {
+      pycodeService.fetchUserData(user.email).then((data) => {
+        if (data?.user?.avatar_url) {
+          setUser((prev) => (prev ? { ...prev, avatar: data.user.avatar_url || undefined } : prev));
+        }
+      }).catch(() => {});
+    }
+  }, [user?.email]);
 
   const login = async (credentials: { email: string; password: string }) => {
     let supabaseLoggedIn = false;

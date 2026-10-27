@@ -25,18 +25,22 @@ import {
   FileCode,
   Tag,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  UserCog,
+  GraduationCap,
+  UserCheck
 } from 'lucide-react';
 
-type AdminTab = 'mentors' | 'questions' | 'roadmaps' | 'tasks' | 'pricing' | 'overview';
+type AdminTab = 'users' | 'mentors' | 'questions' | 'roadmaps' | 'tasks' | 'pricing' | 'overview';
 
 export const AdminDashboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<AdminTab>('mentors');
+  const [activeTab, setActiveTab] = useState<AdminTab>('users');
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
 
   // Data states
   const [adminData, setAdminData] = useState<any>(null);
+  const [users, setUsers] = useState<any[]>([]);
   const [mentors, setMentors] = useState<any[]>([]);
   const [problems, setProblems] = useState<any[]>([]);
   const [roadmaps, setRoadmaps] = useState<any[]>([]);
@@ -46,6 +50,20 @@ export const AdminDashboardPage: React.FC = () => {
   // Search & filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
+
+  // User management states
+  const [userRoleFilter, setUserRoleFilter] = useState<string>('all');
+  const [userSearch, setUserSearch] = useState<string>('');
+  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'student',
+    college: '',
+    degree: '',
+  });
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   // Modal states
   const [mentorModalOpen, setMentorModalOpen] = useState(false);
@@ -75,13 +93,14 @@ export const AdminDashboardPage: React.FC = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [overviewData, mentorsData, problemsData, roadmapsData, missionsData, pricingData] = await Promise.all([
+      const [overviewData, mentorsData, problemsData, roadmapsData, missionsData, pricingData, usersData] = await Promise.all([
         api.getAdminOverview().catch(() => null),
         api.adminGetMentors().catch(() => []),
         api.adminGetProblems().catch(() => []),
         api.adminGetRoadmaps().catch(() => []),
         api.adminGetMissions().catch(() => []),
         api.getPricingPlans().catch(() => []),
+        api.adminGetUsers().catch(() => []),
       ]);
 
       if (overviewData) setAdminData(overviewData);
@@ -90,6 +109,7 @@ export const AdminDashboardPage: React.FC = () => {
       if (roadmapsData) setRoadmaps(roadmapsData);
       if (missionsData) setMissions(missionsData);
       if (pricingData) setPricingPlans(pricingData);
+      if (usersData) setUsers(usersData);
     } catch (err) {
       console.error('Failed to load admin data:', err);
     } finally {
@@ -100,6 +120,55 @@ export const AdminDashboardPage: React.FC = () => {
   useEffect(() => {
     fetchAllData();
   }, []);
+
+  // --------------------------------------------------------------------------
+  // USER & ROLE HANDLERS
+  // --------------------------------------------------------------------------
+  const handleUpdateUserRole = async (userId: string, newRole: string) => {
+    try {
+      setUpdatingUserId(userId);
+      const res = await api.adminUpdateUserRole(userId, newRole);
+      setUsers((prev) => prev.map((u) => (u._id === userId ? { ...u, role: newRole } : u)));
+      if (newRole === 'mentor') {
+        const freshMentors = await api.adminGetMentors().catch(() => []);
+        if (freshMentors.length > 0) setMentors(freshMentors);
+      }
+      showNotification(res.message || `Role updated to ${newRole}`);
+    } catch (err: any) {
+      showNotification(err.message || 'Failed to update user role');
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUser.name || !newUser.email) return;
+    try {
+      const res = await api.adminCreateUser(newUser);
+      setUsers((prev) => [res.user, ...prev]);
+      if (newUser.role === 'mentor') {
+        const freshMentors = await api.adminGetMentors().catch(() => []);
+        if (freshMentors.length > 0) setMentors(freshMentors);
+      }
+      setUserModalOpen(false);
+      setNewUser({ name: '', email: '', password: '', role: 'student', college: '', degree: '' });
+      showNotification(`User ${res.user.name} created successfully!`);
+    } catch (err: any) {
+      showNotification(err.message || 'Failed to create user');
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, email: string) => {
+    if (!window.confirm(`Are you sure you want to delete user ${email}? This cannot be undone.`)) return;
+    try {
+      await api.adminDeleteUser(userId);
+      setUsers((prev) => prev.filter((u) => u._id !== userId));
+      showNotification(`User ${email} deleted.`);
+    } catch (err: any) {
+      showNotification(err.message || 'Failed to delete user');
+    }
+  };
 
   // --------------------------------------------------------------------------
   // MENTOR HANDLERS
@@ -517,6 +586,15 @@ export const AdminDashboardPage: React.FC = () => {
 
         {/* Global Action Button depending on tab */}
         <div className="flex items-center gap-2">
+          {activeTab === 'users' && (
+            <button
+              onClick={() => setUserModalOpen(true)}
+              className="px-4 py-2 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-bold flex items-center gap-1.5 shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add User</span>
+            </button>
+          )}
           {activeTab === 'mentors' && (
             <button
               onClick={() => handleOpenMentorModal()}
@@ -558,6 +636,21 @@ export const AdminDashboardPage: React.FC = () => {
 
       {/* Modern Horizontal Navigation Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-neutral-200 dark:border-neutral-800 no-scrollbar">
+        <button
+          onClick={() => setActiveTab('users')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
+            activeTab === 'users'
+              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
+          }`}
+        >
+          <UserCog className="w-4 h-4" />
+          <span>Users & Roles</span>
+          <span className="px-1.5 py-0.5 rounded-md text-[10px] bg-neutral-800/20 dark:bg-neutral-200/20">
+            {users.length}
+          </span>
+        </button>
+
         <button
           onClick={() => setActiveTab('mentors')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
@@ -645,6 +738,196 @@ export const AdminDashboardPage: React.FC = () => {
           <span>Platform Metrics</span>
         </button>
       </div>
+
+      {/* ==================================================================== */}
+      {/* TAB 0: USERS & ROLES MANAGEMENT                                      */}
+      {/* ==================================================================== */}
+      {activeTab === 'users' && (
+        <div className="space-y-4">
+          {/* Quick Metrics Bar for Users */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Total Registered</span>
+              <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">{users.length}</p>
+            </div>
+            <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
+              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Super Admins</span>
+              <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">
+                {users.filter(u => u.role === 'super_admin' || u.role === 'admin').length}
+              </p>
+            </div>
+            <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
+              <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Verified Mentors</span>
+              <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">
+                {users.filter(u => u.role === 'mentor').length}
+              </p>
+            </div>
+            <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
+              <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Students</span>
+              <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">
+                {users.filter(u => u.role === 'student' || !u.role).length}
+              </p>
+            </div>
+          </div>
+
+          {/* Search & Filter Controls */}
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-neutral-400" />
+              <input
+                type="text"
+                placeholder="Search users by name, email, or college..."
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              {[
+                { id: 'all', label: 'All Roles' },
+                { id: 'student', label: 'Students' },
+                { id: 'mentor', label: 'Mentors' },
+                { id: 'college_admin', label: 'College Admins' },
+                { id: 'super_admin', label: 'Super Admins' },
+              ].map((rf) => (
+                <button
+                  key={rf.id}
+                  onClick={() => setUserRoleFilter(rf.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                    userRoleFilter === rf.id
+                      ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-2xs'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                  }`}
+                >
+                  {rf.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Users Table */}
+          <div className="overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1a1a1a]">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-neutral-50 dark:bg-[#222222] border-b border-neutral-200 dark:border-neutral-800 text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                  <tr>
+                    <th className="px-4 py-3">User</th>
+                    <th className="px-4 py-3">Institution & Goal</th>
+                    <th className="px-4 py-3">Current Role</th>
+                    <th className="px-4 py-3">Assign / Change Role</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                  {users
+                    .filter((u) => {
+                      if (userRoleFilter !== 'all' && u.role !== userRoleFilter) return false;
+                      if (userSearch.trim()) {
+                        const q = userSearch.toLowerCase();
+                        const n = (u.name || '').toLowerCase();
+                        const e = (u.email || '').toLowerCase();
+                        const c = (u.college || '').toLowerCase();
+                        return n.includes(q) || e.includes(q) || c.includes(q);
+                      }
+                      return true;
+                    })
+                    .map((u) => {
+                      const isProtected = u.email === 'admin@rishabhlabs.com' || u.email === 'rishabh@rishabhlabs.com';
+                      const isUpdating = updatingUserId === u._id;
+
+                      return (
+                        <tr key={u._id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition-colors">
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={u.avatar || '/avatars/rishabh.webp'}
+                                alt={u.name}
+                                className="w-8 h-8 rounded-lg object-cover border border-neutral-200 dark:border-neutral-700 shrink-0"
+                                onError={(e: any) => {
+                                  e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop';
+                                }}
+                              />
+                              <div className="min-w-0">
+                                <p className="font-bold text-neutral-900 dark:text-white truncate flex items-center gap-1.5">
+                                  {u.name}
+                                  {isProtected && (
+                                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-bold uppercase">
+                                      Root Master
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="text-[11px] text-neutral-500 truncate">{u.email}</p>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-3.5">
+                            <p className="font-medium text-neutral-800 dark:text-neutral-200 truncate">
+                              {u.college || 'Self-Taught / Independent'}
+                            </p>
+                            <p className="text-[11px] text-neutral-500 truncate">
+                              {u.degree || u.targetGoal || 'General Engineering'}
+                            </p>
+                          </td>
+
+                          <td className="px-4 py-3.5">
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                                u.role === 'super_admin'
+                                  ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                                  : u.role === 'mentor'
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                  : u.role === 'college_admin'
+                                  ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                                  : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700'
+                              }`}
+                            >
+                              {u.role || 'student'}
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-2">
+                              <select
+                                value={u.role || 'student'}
+                                onChange={(e) => handleUpdateUserRole(u._id, e.target.value)}
+                                disabled={isUpdating}
+                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-[#242424] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden disabled:opacity-50 cursor-pointer"
+                              >
+                                <option value="student">Student (Standard Learner)</option>
+                                <option value="mentor">Mentor (1:1 Office Hours & Reviews)</option>
+                                <option value="college_admin">College Admin (Campus Portal)</option>
+                                <option value="super_admin">Super Admin (Full Authority)</option>
+                              </select>
+                              {isUpdating && (
+                                <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0" />
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-3.5 text-right">
+                            {!isProtected ? (
+                              <button
+                                onClick={() => handleDeleteUser(u._id, u.email)}
+                                className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                                title="Delete User Account"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-neutral-400 italic">Protected</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ==================================================================== */}
       {/* TAB 1: MENTORS MANAGEMENT                                            */}
@@ -2014,6 +2297,113 @@ export const AdminDashboardPage: React.FC = () => {
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Save Mission & Tasks</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* User Create Modal */}
+      {userModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
+              <h3 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                <UserCog className="w-5 h-5 text-emerald-500" />
+                Add Platform User
+              </h3>
+              <button onClick={() => setUserModalOpen(false)} className="text-neutral-400 hover:text-neutral-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateUser} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Priya Sengupta"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#2a2a2a] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. priya@gmail.com"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#2a2a2a] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Initial Password</label>
+                <input
+                  type="text"
+                  placeholder="Defaults to password123"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#2a2a2a] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Role</label>
+                <select
+                  value={newUser.role}
+                  onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#2a2a2a] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden font-medium"
+                >
+                  <option value="student">Student (Standard Learner)</option>
+                  <option value="mentor">Mentor (1:1 Guidance & Reviews)</option>
+                  <option value="college_admin">College Admin (Campus Portal)</option>
+                  <option value="super_admin">Super Admin (Full Authority)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">College</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. IIT Delhi"
+                    value={newUser.college}
+                    onChange={(e) => setNewUser({ ...newUser, college: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#2a2a2a] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Degree</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. B.Tech CS"
+                    value={newUser.degree}
+                    onChange={(e) => setNewUser({ ...newUser, degree: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#2a2a2a] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100 dark:border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setUserModalOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-600 dark:text-neutral-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold shadow-sm"
+                >
+                  Create User
                 </button>
               </div>
             </form>

@@ -1089,908 +1089,111 @@ export const getCleanMentors = () => [
 
 export const seedDatabase = async () => {
   try {
-    const existingUser = await User.findOne({ email: 'rishabh@rishabhlabs.com' });
-    if (existingUser) {
-      console.log('[Seed] Synchronizing clean baseline, zero-progress state, and AI/ML project suite...');
-      await User.updateOne({ email: 'rishabh@rishabhlabs.com' }, { college: '' });
-      await StudentProfile.updateMany({}, {
-        streakDays: 0,
-        totalPoints: 0,
-        progressPercent: 0,
-        skillsCompleted: 0,
-        projectsCompleted: 0,
-        totalProjects: 0,
-        githubStats: { connected: false, username: '', totalCommits: 0, reposCount: 0, recentActivities: [] }
-      });
-      await DailyMission.updateMany({}, {
-        completedTasksCount: 0,
-        isAllCompleted: false,
-        'tasks.$[].isCompleted': false
-      });
-      await Project.deleteMany({});
-      await Project.create(getCleanProjects());
-      await Lesson.deleteMany({});
-      await Lesson.create(getCleanLessons());
-      await Mentor.deleteMany({});
-      await Mentor.create(getCleanMentors());
-      const sprintProb = await CodingProblem.findOne({ slug: 'high-throughput-in-memory-cache' });
-      if (!sprintProb) {
-        await CodingProblem.create({
-          title: 'Weekly Code Sprint #18: High-Throughput In-Memory Cache',
-          slug: 'high-throughput-in-memory-cache',
-          difficulty: 'Medium',
-          category: 'Algorithm Sprint',
-          descriptionMarkdown: `## Weekly Code Sprint #18: High-Throughput In-Memory Cache\n\nDesign and implement a high-performance in-memory key-value cache engine supporting **TTL expiration**, thread-safe **LRU eviction**, and sub-millisecond lookups.`,
-          examples: [{ input: '["CacheEngine", 2], ["set", "token", "xyz", 5000], ["get", "token"]', output: '[null, null, "xyz"]', explanation: 'Cache stores and retrieves token with TTL.' }],
-          constraints: ['1 <= capacity <= 10,000'],
-          hints: {
-            level1Concept: 'Maintain an ordered collection where accessing an element updates its position to the most recently used slot.',
-            level2Stronger: 'In JavaScript Map preserves insertion order. In Python collections.OrderedDict provides move_to_end().',
-            level3Approach: 'Store { val, expireAt } in each entry. On get(), check if Date.now() > expireAt.',
-            level4Mentor: 'Book a 1:1 code review session with a RishabhLabs mentor.',
-          },
-          starterCode: {
-            javascript: `class CacheEngine {\n  constructor(capacity = 1000) {\n    this.capacity = capacity;\n    this.cache = new Map();\n  }\n  set(key, value, ttlMs) {}\n  get(key) {}\n  purge() {}\n  size() {}\n}`,
-            python: `class CacheEngine:\n    def __init__(self, capacity=1000):\n        self.capacity = capacity\n    def set(self, key, value, ttl_ms=None):\n        pass\n    def get(self, key):\n        pass\n    def purge(self):\n        pass\n    def size(self):\n        pass`,
-          },
-          testCases: [{ testCaseId: 'tc-1', input: 'set("token", "xyz", 5000) -> get("token")', expectedOutput: '"xyz"', isHidden: false }],
-          tags: ['Data Structures', 'LRU Cache', 'System Design', 'Sprint #18'],
-          acceptanceRate: 64.8,
-        });
-      }
-      console.log('✅ [Seed] Project suite, curriculum, mentors, and sprint problems synchronized.');
-      return;
-    }
-
-    console.log('🌱 [Seed] Seeding Rishabh Labs database with realistic production-quality data...');
-
-    // 1. Create Users (Student, Mentor, College Admin, Super Admin)
     const passwordHash = await bcrypt.hash('password123', 10);
 
-    const studentUser = await User.create({
-      name: 'Rishabh Mishra',
-      email: 'rishabh@rishabhlabs.com',
-      password: passwordHash,
-      role: 'student',
-      college: '',
-      degree: 'BCA - Data Science',
-      year: '3rd Year',
-      avatar: '/avatars/rishabh.webp',
-      bio: 'Building full-stack software, refining algorithmic intuition, and shipping real-world products.',
-      githubUsername: 'rishabh-labs',
-      isOnboarded: true,
-    });
+    // 1. Ensure Super Admin accounts exist and have super_admin role
+    const adminUser = await User.findOne({ email: 'admin@rishabhlabs.com' });
+    if (!adminUser) {
+      await User.create({
+        name: 'RishabhLabs Admin',
+        email: 'admin@rishabhlabs.com',
+        password: passwordHash,
+        role: 'super_admin',
+        avatar: '/avatars/rishabh.webp',
+        bio: 'Super Admin with full platform authority.',
+        isOnboarded: true,
+      });
+      console.log('✅ [Seed] Initial super_admin account ready: admin@rishabhlabs.com (password: password123)');
+    }
 
-    const mentorUser = await User.create({
-      name: 'Dr. Arpit Khare',
-      email: 'mentor@rishabhlabs.com',
-      password: passwordHash,
-      role: 'mentor',
-      college: 'IIT Kanpur Alumni',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop',
-      bio: 'Staff Engineer at Stripe. Former SIH Winner. Guiding students in system design & scalable MVPs.',
-      isOnboarded: true,
-    });
+    // Also ensure rishabh@rishabhlabs.com is elevated to super_admin
+    const rishabhUser = await User.findOne({ email: 'rishabh@rishabhlabs.com' });
+    if (rishabhUser) {
+      if (rishabhUser.role !== 'super_admin') {
+        await User.updateOne({ email: 'rishabh@rishabhlabs.com' }, { role: 'super_admin' });
+        console.log('✅ [Seed] Elevating rishabh@rishabhlabs.com to super_admin role.');
+      }
+    }
 
-    const collegeAdmin = await User.create({
-      name: 'Prof. S. K. Singh',
-      email: 'admin@gla.ac.in',
-      password: passwordHash,
-      role: 'college_admin',
-      college: 'GLA University',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop',
-      bio: 'Dean of Student Placements & Academic Projects at GLA University.',
-      isOnboarded: true,
-    });
+    // Ensure dedicated mentor account exists
+    const mentorUser = await User.findOne({ email: 'mentor@rishabhlabs.com' });
+    if (!mentorUser) {
+      await User.create({
+        name: 'Dr. Arpit Khare',
+        email: 'mentor@rishabhlabs.com',
+        password: passwordHash,
+        role: 'mentor',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop',
+        bio: 'Staff Engineer & Mentor. Helping developers master scalable architectures and high-impact products.',
+        isOnboarded: true,
+      });
+    }
 
-    const superAdmin = await User.create({
-      name: 'Rishabh Labs Admin',
-      email: 'superadmin@rishabhlabs.com',
-      password: passwordHash,
-      role: 'super_admin',
-      avatar: '/avatars/rishabh.webp',
-      isOnboarded: true,
-    });
+    // Ensure student demo account exists
+    const studentUser = await User.findOne({ email: 'student@rishabhlabs.com' });
+    if (!studentUser) {
+      await User.create({
+        name: 'Aarav Sharma',
+        email: 'student@rishabhlabs.com',
+        password: passwordHash,
+        role: 'student',
+        degree: 'B.Tech - Computer Science',
+        year: '3rd Year',
+        targetGoal: 'Web Development',
+        avatar: '/avatars/rishabh.webp',
+        bio: 'Student developer learning full-stack systems and algorithmic problem solving.',
+        isOnboarded: true,
+      });
+    }
 
-    // 2. Onboarding record
-    await Onboarding.create({
-      userId: studentUser._id,
-      goal: 'Web Development',
-      currentLevel: 'Beginner',
-      availableTime: '2 hours/day',
-      desiredOutcome: 'Build projects',
-      targetDate: '90 days',
-      existingSkills: ['HTML', 'CSS', 'JavaScript basics'],
-      preferredLearningStyle: 'Hands-on Building',
-      status: 'completed',
-    });
+    // 2. Non-destructive seeding: only insert if collection is currently empty
+    const projectCount = await Project.countDocuments();
+    if (projectCount === 0) {
+      await Project.create(getCleanProjects());
+      console.log('✅ [Seed] Seeded baseline industry projects.');
+    }
 
-    // 3. Roadmap (6 Stepped 3D Nodes matching UI reference Screen 4)
-    const roadmap = await Roadmap.create({
-      title: 'Web Development Execution Track',
-      slug: 'web-development',
-      category: 'Web Development',
-      targetLevel: 'Beginner',
-      estimatedDailyTime: '2 hr/day',
-      totalDurationDays: 90,
-      totalNodes: 6,
-      completedNodes: 1,
-      userId: studentUser._id,
-      nodes: [
-        {
-          nodeId: 'node-1',
-          stepNumber: 1,
-          title: 'Foundations',
-          subtitle: 'Terminal, Git, Modern Web Architecture',
-          description: 'Build terminal fluency, configure Git remote workflows, understand DNS, client-server models, and HTTP headers.',
-          category: 'Core',
-          status: 'completed',
-          estimatedHours: 15,
-          skillsCovered: ['Git', 'GitHub', 'CLI', 'HTTP Basics'],
-          lessonsCount: 6,
-          projectsCount: 1,
-          iconName: 'Terminal',
-        },
-        {
-          nodeId: 'node-2',
-          stepNumber: 2,
-          title: 'HTML CSS JS',
-          subtitle: 'Modern ES6+, DOM & Responsive Systems',
-          description: 'Master semantic HTML5, CSS Grid/Flexbox layouts, array methods, asynchronous promises, and real-time DOM updates.',
-          category: 'Frontend Core',
-          status: 'in_progress',
-          estimatedHours: 35,
-          skillsCovered: ['HTML5', 'CSS Grid', 'ES6+ JavaScript', 'Array Methods', 'DOM APIs'],
-          lessonsCount: 12,
-          projectsCount: 2,
-          iconName: 'Code',
-        },
-        {
-          nodeId: 'node-3',
-          stepNumber: 3,
-          title: 'React',
-          subtitle: 'Component Architecture, Hooks & State',
-          description: 'Learn component composability, useState, useEffect, custom hooks, context API, and high-performance rendering.',
-          category: 'Frontend Framework',
-          status: 'locked',
-          estimatedHours: 40,
-          skillsCovered: ['React 18', 'TypeScript', 'Tailwind CSS', 'State Management'],
-          lessonsCount: 14,
-          projectsCount: 2,
-          iconName: 'Layers',
-        },
-        {
-          nodeId: 'node-4',
-          stepNumber: 4,
-          title: 'Backend',
-          subtitle: 'Node.js, Express, REST APIs & Auth',
-          description: 'Design RESTful APIs, JWT token cycles, password hashing, Express middleware pipelines, and MongoDB schemas.',
-          category: 'Backend Core',
-          status: 'locked',
-          estimatedHours: 35,
-          skillsCovered: ['Node.js', 'Express', 'JWT Authentication', 'REST Architecture', 'Mongoose'],
-          lessonsCount: 12,
-          projectsCount: 2,
-          iconName: 'Server',
-        },
-        {
-          nodeId: 'node-5',
-          stepNumber: 5,
-          title: 'Projects',
-          subtitle: 'Full-Stack Integration & Production Deployment',
-          description: 'Build end-to-end applications, configure CORS, environment secrets, cloud databases, and automated Vercel/Render deployments.',
-          category: 'Full Stack',
-          status: 'locked',
-          estimatedHours: 45,
-          skillsCovered: ['Full-Stack Integration', 'MongoDB Atlas', 'Cloud Hosting', 'CI/CD Pipelines'],
-          lessonsCount: 8,
-          projectsCount: 3,
-          iconName: 'FolderGit2',
-        },
-        {
-          nodeId: 'node-6',
-          stepNumber: 6,
-          title: 'Internship Ready',
-          subtitle: 'Proof of Work, Technical Interview & Portfolio',
-          description: 'Polish live portfolio, publish verified Proof of Work, master data structures algorithms, and clear mock interviews.',
-          category: 'Career Execution',
-          status: 'locked',
-          estimatedHours: 25,
-          skillsCovered: ['Public Portfolio', 'System Design', 'Algorithmic Problem Solving', 'Placement Ready'],
-          lessonsCount: 6,
-          projectsCount: 1,
-          iconName: 'Award',
-        },
-      ],
-    });
+    const lessonCount = await Lesson.countDocuments();
+    if (lessonCount === 0) {
+      await Lesson.create(getCleanLessons());
+      console.log('✅ [Seed] Seeded baseline lessons.');
+    }
 
-    // 4. Student Profile
-    await StudentProfile.create({
-      userId: studentUser._id,
-      targetGoal: 'AI & Machine Learning',
-      streakDays: 0,
-      totalPoints: 0,
-      activeRoadmapId: roadmap._id,
-      progressPercent: 0,
-      skillsCompleted: 0,
-      totalSkills: 18,
-      projectsCompleted: 0,
-      totalProjects: 0,
-      githubStats: {
-        connected: false,
-        username: '',
-        totalCommits: 0,
-        reposCount: 0,
-        recentActivities: [],
-      },
-    });
+    const mentorCount = await Mentor.countDocuments();
+    if (mentorCount === 0) {
+      await Mentor.create(getCleanMentors());
+      console.log('✅ [Seed] Seeded verified mentors.');
+    }
 
-    // 5. Daily Mission (Day 1 • AI & Machine Learning)
-    await DailyMission.create({
-      userId: studentUser._id,
-      dayNumber: 1,
-      trackTitle: 'AI & Machine Learning',
-      dateString: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
-      quote: 'Small steps every day lead to exponential results.',
-      tasks: [
-        {
-          taskId: 'task-1-learn',
-          type: 'learn',
-          title: 'Learn - NumPy Vectorization & Array Operations (30 min)',
-          durationMinutes: 30,
-          durationText: '30 min',
-          description: 'Master fast SIMD array operations, broadcasting rules, and memory layout in NumPy.',
-          isCompleted: false,
-          actionUrl: '/learn/ai-ml/numpy-vectorization',
-          proofRequired: false,
-        },
-        {
-          taskId: 'task-1-practice',
-          type: 'practice',
-          title: 'Practice - Solve 2 algorithmic problems (20 min)',
-          durationMinutes: 20,
-          durationText: '20 min',
-          description: 'Solve "Filter Active Users" and "Two Sum" in the interactive coding sandbox.',
-          isCompleted: false,
-          actionUrl: '/practice/filter-active-users',
-          proofRequired: false,
-        },
-        {
-          taskId: 'task-1-build',
-          type: 'build',
-          title: 'Build - Initialize ML classification pipeline (45 min)',
-          durationMinutes: 45,
-          durationText: '45 min',
-          description: 'Scaffold project repository and build data preprocessing pipeline.',
-          isCompleted: false,
-          actionUrl: '/projects/customer-churn-predictor',
-          proofRequired: false,
-        },
-        {
-          taskId: 'task-1-ship',
-          type: 'ship',
-          title: "Ship - Push Day 1 code to GitHub (10 min)",
-          durationMinutes: 10,
-          durationText: '10 min',
-          description: 'Commit your clean code with git commit -m "feat: init data ingestion pipeline" and push to remote repository.',
-          isCompleted: false,
-          actionUrl: '/projects/customer-churn-predictor',
-          proofRequired: true,
-        },
-      ],
-      completedTasksCount: 0,
-      isAllCompleted: false,
-    });
-
-    // 6. Lessons (Curated across AI/ML, Web Dev, Data Science)
-    await Lesson.create(getCleanLessons());
-
-    // 7. Coding Problems (At least 10 realistic algorithmic + Debugging "Fix the Bug" challenges)
-    await CodingProblem.create([
-      {
+    const sprintProb = await CodingProblem.findOne({ slug: 'high-throughput-in-memory-cache' });
+    if (!sprintProb) {
+      await CodingProblem.create({
         title: 'Weekly Code Sprint #18: High-Throughput In-Memory Cache',
         slug: 'high-throughput-in-memory-cache',
         difficulty: 'Medium',
         category: 'Algorithm Sprint',
-        descriptionMarkdown: `Design and implement a high-performance in-memory key-value cache engine supporting **TTL expiration**, thread-safe **LRU (Least Recently Used) eviction**, and sub-millisecond lookups.
-
-### Requirements
-Implement the \`CacheEngine\` class with the following methods:
-- \`set(key: string, value: any, ttlMs?: number): void\` — Stores the key-value pair. If capacity is exceeded, evict the least recently used, non-expired key. If \`ttlMs\` is provided, the entry expires after \`ttlMs\` milliseconds.
-- \`get(key: string): any\` — Returns the value if found and not expired. Returns \`null\` if missing or expired. Accessing a key updates its recency in the LRU order.
-- \`purge(): number\` — Purges all expired keys and returns the number of keys removed.
-- \`size(): number\` — Returns the number of currently active, non-expired keys.`,
-        examples: [
-          {
-            input: '["CacheEngine", 2], ["set", "token", "xyz", 5000], ["get", "token"], ["set", "session", "abc"], ["size"]',
-            output: '[null, null, "xyz", null, 2]',
-            explanation: 'Cache stores token with 5s TTL, retrieves it, adds session, and reports size 2.',
-          },
-        ],
-        constraints: [
-          '1 <= capacity <= 10,000',
-          '0 <= operations <= 50,000',
-          'Average time complexity: O(1) for get and set',
-        ],
+        descriptionMarkdown: `## Weekly Code Sprint #18: High-Throughput In-Memory Cache\n\nDesign and implement a high-performance in-memory key-value cache engine supporting **TTL expiration**, thread-safe **LRU eviction**, and sub-millisecond lookups.`,
+        examples: [{ input: '["CacheEngine", 2], ["set", "token", "xyz", 5000], ["get", "token"]', output: '[null, null, "xyz"]', explanation: 'Cache stores and retrieves token with TTL.' }],
+        constraints: ['1 <= capacity <= 10,000'],
         hints: {
           level1Concept: 'Maintain an ordered collection where accessing an element updates its position to the most recently used slot.',
-          level2Stronger: 'In JavaScript Map preserves insertion order. In Python collections.OrderedDict provides move_to_end(). In C++ combine std::unordered_map with std::list.',
-          level3Approach: 'Store { val, expireAt } in each entry. On get(), check if Date.now() > expireAt. If expired, delete and return null; otherwise delete and re-set to mark recency.',
-          level4Mentor: 'Book a 1:1 code review session with a RishabhLabs mentor to walk through concurrency locks and memory compaction.',
+          level2Stronger: 'In JavaScript Map preserves insertion order. In Python collections.OrderedDict provides move_to_end().',
+          level3Approach: 'Store { val, expireAt } in each entry. On get(), check if Date.now() > expireAt.',
+          level4Mentor: 'Book a 1:1 code review session with a RishabhLabs mentor.',
         },
         starterCode: {
-          javascript: `class CacheEngine {
-  constructor(capacity = 1000) {
-    this.capacity = capacity;
-    this.cache = new Map();
-  }
-
-  set(key, value, ttlMs) {
-    const expireAt = ttlMs ? Date.now() + ttlMs : null;
-    if (this.cache.has(key)) {
-      this.cache.delete(key);
-    } else if (this.cache.size >= this.capacity) {
-      const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
-    }
-    this.cache.set(key, { val: value, expireAt });
-  }
-
-  get(key) {
-    if (!this.cache.has(key)) return null;
-    const item = this.cache.get(key);
-    if (item.expireAt && Date.now() > item.expireAt) {
-      this.cache.delete(key);
-      return null;
-    }
-    this.cache.delete(key);
-    this.cache.set(key, item);
-    return item.val;
-  }
-
-  purge() {
-    let count = 0;
-    const now = Date.now();
-    for (const [key, item] of this.cache.entries()) {
-      if (item.expireAt && now > item.expireAt) {
-        this.cache.delete(key);
-        count++;
-      }
-    }
-    return count;
-  }
-
-  size() {
-    this.purge();
-    return this.cache.size;
-  }
-}`,
-          python: `import time
-from collections import OrderedDict
-
-class CacheEngine:
-    def __init__(self, capacity=1000):
-        self.capacity = capacity
-        self.cache = OrderedDict()
-
-    def set(self, key: str, value, ttl_ms: int = None):
-        expire_at = (time.time() + ttl_ms / 1000.0) if ttl_ms else None
-        if key in self.cache:
-            del self.cache[key]
-        elif len(self.cache) >= self.capacity:
-            self.cache.popitem(last=False)
-        self.cache[key] = (value, expire_at)
-
-    def get(self, key: str):
-        if key not in self.cache:
-            return None
-        val, expire_at = self.cache[key]
-        if expire_at and time.time() > expire_at:
-            del self.cache[key]
-            return None
-        self.cache.move_to_end(key)
-        return val
-
-    def purge(self) -> int:
-        now = time.time()
-        expired = [k for k, (_, exp) in self.cache.items() if exp and now > exp]
-        for k in expired:
-            del self.cache[k]
-        return len(expired)
-
-    def size(self) -> int:
-        self.purge()
-        return len(self.cache)`,
-          cpp: `// C++ implementation`,
-          java: `// Java implementation`,
+          javascript: `class CacheEngine {\n  constructor(capacity = 1000) {\n    this.capacity = capacity;\n    this.cache = new Map();\n  }\n  set(key, value, ttlMs) {}\n  get(key) {}\n  purge() {}\n  size() {}\n}`,
+          python: `class CacheEngine:\n    def __init__(self, capacity=1000):\n        self.capacity = capacity\n    def set(self, key, value, ttl_ms=None):\n        pass\n    def get(self, key):\n        pass\n    def purge(self):\n        pass\n    def size(self):\n        pass`,
         },
-        testCases: [
-          {
-            testCaseId: 'tc-1',
-            input: 'set("token", "xyz", 5000) -> get("token")',
-            expectedOutput: '"xyz"',
-            isHidden: false,
-          },
-        ],
+        testCases: [{ testCaseId: 'tc-1', input: 'set("token", "xyz", 5000) -> get("token")', expectedOutput: '"xyz"', isHidden: false }],
         tags: ['Data Structures', 'LRU Cache', 'System Design', 'Sprint #18'],
         acceptanceRate: 64.8,
-      },
-      {
-        title: 'Filter Active Users',
-        slug: 'filter-active-users',
-        difficulty: 'Easy',
-        category: 'Array Methods',
-        descriptionMarkdown: `Given an array of user objects where each user has \`id\`, \`name\`, and \`isActive\` boolean flags, return a new array containing only the users where \`isActive\` is \`true\`.
-        
-The returned array must preserve the original relative ordering of the active users.`,
-        examples: [
-          {
-            input: '[{"id":1,"name":"Rishabh","isActive":true},{"id":2,"name":"Aarav","isActive":false},{"id":3,"name":"Pooja","isActive":true}]',
-            output: '[{"id":1,"name":"Rishabh","isActive":true},{"id":3,"name":"Pooja","isActive":true}]',
-            explanation: 'Users with id 1 and 3 have isActive set to true.',
-          },
-        ],
-        constraints: [
-          '1 <= users.length <= 10^4',
-          'Each object will contain valid id, name, and isActive properties',
-        ],
-        hints: {
-          level1Concept: 'Look into the built-in JavaScript Array method that filters elements based on a predicate condition.',
-          level2Stronger: 'Array.prototype.filter() accepts a callback function and keeps elements where the callback evaluates to truthy.',
-          level3Approach: 'return users.filter(user => user.isActive === true);',
-          level4Mentor: 'Book a 15-minute 1:1 session with a mentor to review optimal array transformations and space complexity.',
-        },
-        starterCode: {
-          javascript: `function filterActiveUsers(users) {
-  // Write your code here
-  return users.filter(u => u.isActive);
-}`,
-          python: `def filter_active_users(users):
-    return [u for u in users if u.get('isActive') is True]`,
-          cpp: `// C++ implementation`,
-          java: `// Java implementation`,
-        },
-        testCases: [
-          {
-            testCaseId: 'tc-1',
-            input: '[{"id":1,"name":"Rishabh","isActive":true},{"id":2,"name":"Aarav","isActive":false}]',
-            expectedOutput: '[{"id":1,"name":"Rishabh","isActive":true}]',
-            isHidden: false,
-          },
-          {
-            testCaseId: 'tc-2',
-            input: '[{"id":10,"name":"Dev","isActive":false}]',
-            expectedOutput: '[]',
-            isHidden: false,
-          },
-          {
-            testCaseId: 'tc-3',
-            input: '[{"id":1,"name":"Alpha","isActive":true},{"id":2,"name":"Beta","isActive":true}]',
-            expectedOutput: '[{"id":1,"name":"Alpha","isActive":true},{"id":2,"name":"Beta","isActive":true}]',
-            isHidden: true,
-          },
-        ],
-        tags: ['Arrays', 'Functional Programming', 'JavaScript'],
-        acceptanceRate: 91.2,
-      },
-      {
-        title: 'Two Sum',
-        slug: 'two-sum',
-        difficulty: 'Easy',
-        category: 'Hash Map & Arrays',
-        descriptionMarkdown: `Given an array of integers \`nums\` and an integer \`target\`, return indices of the two numbers such that they add up to \`target\`.
-
-You may assume that each input would have exactly one solution, and you may not use the same element twice.`,
-        examples: [
-          {
-            input: '{"nums":[2,7,11,15],"target":9}',
-            output: '[0,1]',
-            explanation: 'Because nums[0] + nums[1] == 9, we return [0, 1].',
-          },
-        ],
-        constraints: ['2 <= nums.length <= 10^4', '-10^9 <= nums[i] <= 10^9'],
-        hints: {
-          level1Concept: 'A brute force solution checks every pair with two nested loops O(n²). Can you do it in one pass with a Hash Map?',
-          level2Stronger: 'For each number x, calculate the required complement = target - x. Check if complement already exists in your map.',
-          level3Approach: 'Create an object/map. Loop through nums: if target - nums[i] in map, return [map[target - nums[i]], i]. Else map[nums[i]] = i.',
-          level4Mentor: 'Let a mentor walk you through time-space trade-offs in technical placement rounds.',
-        },
-        starterCode: {
-          javascript: `function twoSum(nums, target) {
-  const map = {};
-  for (let i = 0; i < nums.length; i++) {
-    const complement = target - nums[i];
-    if (map[complement] !== undefined) {
-      return [map[complement], i];
+      });
     }
-    map[nums[i]] = i;
-  }
-  return [];
-}`,
-          python: `def two_sum(nums, target):
-    seen = {}
-    for i, n in enumerate(nums):
-        diff = target - n
-        if diff in seen:
-            return [seen[diff], i]
-        seen[n] = i
-    return []`,
-          cpp: '',
-          java: '',
-        },
-        testCases: [
-          {
-            testCaseId: 'ts-1',
-            input: '{"nums":[2,7,11,15],"target":9}',
-            expectedOutput: '[0,1]',
-            isHidden: false,
-          },
-          {
-            testCaseId: 'ts-2',
-            input: '{"nums":[3,2,4],"target":6}',
-            expectedOutput: '[1,2]',
-            isHidden: false,
-          },
-          {
-            testCaseId: 'ts-3',
-            input: '{"nums":[3,3],"target":6}',
-            expectedOutput: '[0,1]',
-            isHidden: true,
-          },
-        ],
-        tags: ['Arrays', 'Hash Map', 'LeetCode Classic'],
-        acceptanceRate: 84.5,
-      },
-      {
-        title: 'Fix the Bug: Off-by-One Array Accumulator',
-        slug: 'fix-the-bug-off-by-one',
-        difficulty: 'Easy',
-        category: 'Debugging Lab',
-        isDebuggingChallenge: true,
-        brokenBugExplanation: 'This function contains a subtle off-by-one boundary bug causing it to skip the final item or access undefined.',
-        descriptionMarkdown: `### Debugging Challenge: Fix the Bug
-A junior engineer wrote the following helper function to calculate the running total of invoice amounts, but the test suite is failing with incorrect totals or NaN.
-        
-**Your Mission:** Locate the bug, correct the logic, and pass all test cases!`,
-        examples: [
-          { input: '[10,20,30]', output: '60', explanation: '10 + 20 + 30 = 60' },
-        ],
-        constraints: ['Array contains positive numbers'],
-        hints: {
-          level1Concept: 'Check the loop condition. Does it evaluate index <= array.length or index < array.length?',
-          level2Stronger: 'Remember arrays are 0-indexed. Accessing array[array.length] yields undefined.',
-          level3Approach: 'Change loop from i <= items.length to i < items.length, or simply use items.reduce((a,b)=>a+b, 0).',
-          level4Mentor: 'Discuss defensive programming practices with a mentor.',
-        },
-        starterCode: {
-          javascript: `function solution(items) {
-  // BUGGY CODE:
-  let total = 0;
-  for (let i = 0; i <= items.length; i++) { // Find and fix the bug!
-    if (items[i] !== undefined) total += items[i];
-  }
-  return total;
-}`,
-          python: `def solution(items):
-    return sum(items)`,
-          cpp: '',
-          java: '',
-        },
-        testCases: [
-          { testCaseId: 'dbg-1', input: '[10,20,30]', expectedOutput: '60', isHidden: false },
-          { testCaseId: 'dbg-2', input: '[5,15,25,35]', expectedOutput: '80', isHidden: false },
-          { testCaseId: 'dbg-3', input: '[100]', expectedOutput: '100', isHidden: true },
-        ],
-        tags: ['Debugging Lab', 'Fix the Bug', 'JavaScript'],
-        acceptanceRate: 96.0,
-      },
-      {
-        title: 'Valid Palindrome',
-        slug: 'valid-palindrome',
-        difficulty: 'Easy',
-        category: 'Strings & Pointers',
-        descriptionMarkdown: 'Determine if a given string is a palindrome, considering only alphanumeric characters and ignoring cases.',
-        examples: [{ input: '"A man, a plan, a canal: Panama"', output: 'true' }],
-        constraints: ['1 <= s.length <= 2 * 10^5'],
-        hints: {
-          level1Concept: 'Clean the string with a regular expression [^a-z0-9] and lowercase it.',
-          level2Stronger: 'Compare the clean string with its reverse.',
-          level3Approach: 'const clean = s.toLowerCase().replace(/[^a-z0-9]/g, ""); return clean === clean.split("").reverse().join("");',
-          level4Mentor: 'Ask a mentor about two-pointer memory optimizations in interviews.',
-        },
-        starterCode: {
-          javascript: `function solution(s) {
-  const clean = s.toLowerCase().replace(/[^a-z0-9]/g, '');
-  return clean === clean.split('').reverse().join('');
-}`,
-          python: `def solution(s):
-    clean = [c.lower() for c in s if c.isalnum()]
-    return clean == clean[::-1]`,
-          cpp: '',
-          java: '',
-        },
-        testCases: [
-          { testCaseId: 'vp-1', input: '"A man, a plan, a canal: Panama"', expectedOutput: 'true', isHidden: false },
-          { testCaseId: 'vp-2', input: '"race a car"', expectedOutput: 'false', isHidden: false },
-          { testCaseId: 'vp-3', input: '" "', expectedOutput: 'true', isHidden: true },
-        ],
-        tags: ['Strings', 'Two Pointers'],
-        acceptanceRate: 88.0,
-      },
-      {
-        title: 'Group Anagrams',
-        slug: 'group-anagrams',
-        difficulty: 'Medium',
-        category: 'Hash Map & Sorting',
-        descriptionMarkdown: 'Given an array of strings strs, group the anagrams together. You can return the answer in any order.',
-        examples: [{ input: '["eat","tea","tan","ate","nat","bat"]', output: '[["bat"],["nat","tan"],["ate","eat","tea"]]' }],
-        constraints: ['1 <= strs.length <= 10^4'],
-        hints: {
-          level1Concept: 'Two words are anagrams if their sorted characters are identical.',
-          level2Stronger: 'Use the sorted word as a key in a hash table.',
-          level3Approach: 'Map key = word.split("").sort().join(""); push original words to corresponding key.',
-          level4Mentor: 'Review frequency array vs sorting complexities with a mentor.',
-        },
-        starterCode: {
-          javascript: `function solution(strs) {
-  const map = {};
-  for (const s of strs) {
-    const key = s.split('').sort().join('');
-    if (!map[key]) map[key] = [];
-    map[key].push(s);
-  }
-  return Object.values(map);
-}`,
-          python: `def solution(strs):
-    from collections import defaultdict
-    ans = defaultdict(list)
-    for s in strs:
-        ans[tuple(sorted(s))].append(s)
-    return list(ans.values())`,
-          cpp: '',
-          java: '',
-        },
-        testCases: [
-          { testCaseId: 'ga-1', input: '["eat","tea","tan","ate","nat","bat"]', expectedOutput: '[["eat","tea","ate"],["tan","nat"],["bat"]]', isHidden: false },
-        ],
-        tags: ['Hash Map', 'Medium', 'Strings'],
-        acceptanceRate: 74.2,
-      },
-      {
-        title: 'Fix the Bug: Async Promise Chain Drop',
-        slug: 'fix-the-bug-async-drop',
-        difficulty: 'Medium',
-        category: 'Debugging Lab',
-        isDebuggingChallenge: true,
-        brokenBugExplanation: 'A missing return or un-awaited promise causes undefined to be resolved early.',
-        descriptionMarkdown: 'Identify why the async function resolves before the nested calculation completes.',
-        examples: [{ input: '5', output: '25' }],
-        constraints: ['Async/await usage'],
-        hints: {
-          level1Concept: 'Check if all async calls have await or proper promise returns.',
-          level2Stronger: 'Make sure the outer function awaits the promise resolution.',
-          level3Approach: 'return await calculateSquare(val);',
-          level4Mentor: 'Learn microtask queue and event loop mechanisms with a mentor.',
-        },
-        starterCode: {
-          javascript: `function solution(val) {
-  return val * val;
-}`,
-          python: `def solution(val): return val * val`,
-          cpp: '',
-          java: '',
-        },
-        testCases: [
-          { testCaseId: 'adb-1', input: '5', expectedOutput: '25', isHidden: false },
-          { testCaseId: 'adb-2', input: '12', expectedOutput: '144', isHidden: true },
-        ],
-        tags: ['Debugging Lab', 'Async JavaScript'],
-        acceptanceRate: 92.0,
-      },
-      {
-        title: 'Merge Intervals',
-        slug: 'merge-intervals',
-        difficulty: 'Medium',
-        category: 'Arrays & Sorting',
-        descriptionMarkdown: 'Given an array of intervals where intervals[i] = [start_i, end_i], merge all overlapping intervals.',
-        examples: [{ input: '[[1,3],[2,6],[8,10],[15,18]]', output: '[[1,6],[8,10],[15,18]]' }],
-        constraints: ['1 <= intervals.length <= 10^4'],
-        hints: {
-          level1Concept: 'Sort intervals by their starting points first.',
-          level2Stronger: 'Compare the start of current interval with the end of previous interval.',
-          level3Approach: 'if curr[0] <= prev[1], merge: prev[1] = Math.max(prev[1], curr[1]).',
-          level4Mentor: 'Prepare interval greedy algorithms with a mentor.',
-        },
-        starterCode: {
-          javascript: `function solution(intervals) {
-  if (!intervals.length) return [];
-  intervals.sort((a,b) => a[0] - b[0]);
-  const merged = [intervals[0]];
-  for (let i = 1; i < intervals.length; i++) {
-    const prev = merged[merged.length - 1];
-    const curr = intervals[i];
-    if (curr[0] <= prev[1]) {
-      prev[1] = Math.max(prev[1], curr[1]);
-    } else {
-      merged.push(curr);
-    }
-  }
-  return merged;
-}`,
-          python: '',
-          cpp: '',
-          java: '',
-        },
-        testCases: [
-          { testCaseId: 'mi-1', input: '[[1,3],[2,6],[8,10],[15,18]]', expectedOutput: '[[1,6],[8,10],[15,18]]', isHidden: false },
-        ],
-        tags: ['Intervals', 'Medium'],
-        acceptanceRate: 69.8,
-      },
-      {
-        title: 'Longest Substring Without Repeating Characters',
-        slug: 'longest-substring-without-repeating',
-        difficulty: 'Medium',
-        category: 'Sliding Window',
-        descriptionMarkdown: 'Given a string s, find the length of the longest substring without duplicate characters.',
-        examples: [{ input: '"abcabcbb"', output: '3' }],
-        constraints: ['0 <= s.length <= 5 * 10^4'],
-        hints: {
-          level1Concept: 'Use a sliding window with two pointers (left and right).',
-          level2Stronger: 'Keep track of character last seen positions in a set or map.',
-          level3Approach: 'Slide right pointer. When duplicate occurs, advance left pointer past the previous occurrence.',
-          level4Mentor: 'Master sliding window interview patterns with a mentor.',
-        },
-        starterCode: {
-          javascript: `function solution(s) {
-  let set = new Set();
-  let left = 0;
-  let maxLen = 0;
-  for (let right = 0; right < s.length; right++) {
-    while (set.has(s[right])) {
-      set.delete(s[left]);
-      left++;
-    }
-    set.add(s[right]);
-    maxLen = Math.max(maxLen, right - left + 1);
-  }
-  return maxLen;
-}`,
-          python: '',
-          cpp: '',
-          java: '',
-        },
-        testCases: [
-          { testCaseId: 'lsw-1', input: '"abcabcbb"', expectedOutput: '3', isHidden: false },
-          { testCaseId: 'lsw-2', input: '"bbbbb"', expectedOutput: '1', isHidden: false },
-        ],
-        tags: ['Sliding Window', 'Medium'],
-        acceptanceRate: 65.4,
-      },
-      {
-        title: 'Binary Search',
-        slug: 'binary-search',
-        difficulty: 'Easy',
-        category: 'Algorithms',
-        descriptionMarkdown: 'Given an array of integers nums which is sorted in ascending order, and an integer target, write a function to search target in nums in O(log n) runtime.',
-        examples: [{ input: '{"nums":[-1,0,3,5,9,12],"target":9}', output: '4' }],
-        constraints: ['1 <= nums.length <= 10^4'],
-        hints: {
-          level1Concept: 'Divide the search range in half each step.',
-          level2Stronger: 'Calculate mid = Math.floor((left + right) / 2).',
-          level3Approach: 'if nums[mid] === target return mid; else adjust left = mid + 1 or right = mid - 1.',
-          level4Mentor: 'Discuss binary search boundary nuances with a mentor.',
-        },
-        starterCode: {
-          javascript: `function solution(input) {
-  const { nums, target } = typeof input === 'string' ? JSON.parse(input) : input;
-  let left = 0, right = nums.length - 1;
-  while (left <= right) {
-    let mid = Math.floor((left + right) / 2);
-    if (nums[mid] === target) return mid;
-    if (nums[mid] < target) left = mid + 1;
-    else right = mid - 1;
-  }
-  return -1;
-}`,
-          python: '',
-          cpp: '',
-          java: '',
-        },
-        testCases: [
-          { testCaseId: 'bs-1', input: '{"nums":[-1,0,3,5,9,12],"target":9}', expectedOutput: '4', isHidden: false },
-        ],
-        tags: ['Binary Search', 'Algorithms'],
-        acceptanceRate: 89.1,
-      },
-      {
-        title: 'Trapping Rain Water',
-        slug: 'trapping-rain-water',
-        difficulty: 'Hard',
-        category: 'Two Pointers & Dynamic Programming',
-        descriptionMarkdown: 'Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.',
-        examples: [{ input: '[0,1,0,2,1,0,1,3,2,1,2,1]', output: '6' }],
-        constraints: ['n == height.length', '1 <= n <= 2 * 10^4'],
-        hints: {
-          level1Concept: 'The water above any bar is determined by min(maxLeft, maxRight) - currentHeight.',
-          level2Stronger: 'Use two pointers from left and right moving inwards based on which max is smaller.',
-          level3Approach: 'Keep leftMax and rightMax; accumulate water = leftMax - height[left] whenever leftMax < rightMax.',
-          level4Mentor: 'Hard problems require structural proof. Review with a senior engineer.',
-        },
-        starterCode: {
-          javascript: `function solution(height) {
-  let left = 0, right = height.length - 1;
-  let leftMax = 0, rightMax = 0, water = 0;
-  while (left < right) {
-    if (height[left] < height[right]) {
-      if (height[left] >= leftMax) leftMax = height[left];
-      else water += leftMax - height[left];
-      left++;
-    } else {
-      if (height[right] >= rightMax) rightMax = height[right];
-      else water += rightMax - height[right];
-      right--;
-    }
-  }
-  return water;
-}`,
-          python: '',
-          cpp: '',
-          java: '',
-        },
-        testCases: [
-          { testCaseId: 'trw-1', input: '[0,1,0,2,1,0,1,3,2,1,2,1]', expectedOutput: '6', isHidden: false },
-        ],
-        tags: ['Two Pointers', 'Hard', 'Classic'],
-        acceptanceRate: 59.3,
-      },
-    ]);
 
-    // 8. Projects (Curated across AI/ML & Web Development)
-    await Project.create(getCleanProjects());
-
-    // 9. Mentors (Curated across Cybersecurity, AI/ML, Full-Stack)
-    await Mentor.create(getCleanMentors());
-
-    // 10. Weekly Review (Clean baseline 0% review for current week)
-    await WeeklyReview.create({
-      userId: studentUser._id,
-      weekLabel: 'Week 1',
-      dateRange: 'Current Week',
-      plannedHours: 10,
-      completedHours: 0,
-      completedMinutes: 0,
-      completionPercentage: 0,
-      completedItems: [],
-      nextWeekItems: [
-        'TCP/IP Architecture & Network Packet Fundamentals',
-        'Packet Analysis with Wireshark & Raw Sockets',
-        'Milestone 1: Network Packet Sniffer (Socket Binding & Frame Capture)',
-      ],
-      reflectionText: '',
-    });
-
-    // 11. GLA University College Profile (matching UI reference Screen 11 & Section 26)
-    await College.create({
-      name: 'GLA University',
-      code: 'GLA',
-      location: 'Mathura, Uttar Pradesh',
-      logo: '/avatars/gla.png',
-      totalStudents: 2450,
-      activeStudents: 1980,
-      averageExecutionRate: 64,
-      skillDistribution: {
-        webDev: 42,
-        aiMl: 28,
-        dataAnalytics: 18,
-        cybersecurity: 12,
-      },
-      topProjectsCount: 142,
-      activeHackathonTeamsCount: 18,
-    });
-
-    console.log('✅ [Seed] Database seeded successfully!');
+    console.log('✅ [Seed] Database synchronization verified non-destructively.');
+    return;
   } catch (err: any) {
-    console.error('❌ [Seed] Error during seeding:', err);
+    console.error('❌ [Seed] Error during database synchronization:', err.message);
   }
 };

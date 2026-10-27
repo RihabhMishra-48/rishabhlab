@@ -17,9 +17,12 @@ import {
   Flame,
   PanelLeftClose,
   PanelLeftOpen,
-  Sparkles
+  Sparkles,
+  Video,
+  Terminal
 } from 'lucide-react';
 import { BugIcon, DisplayCodeIcon } from '../icons/TrackIcons';
+import { UserAvatar } from '../common/UserAvatar';
 
 interface SidebarProps {
   isCollapsed?: boolean;
@@ -252,6 +255,95 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </NavLink>
 
+          {/* Python Hub & Arena (PyCode Engine) */}
+          <NavLink
+            to="/python-hub"
+            onClick={handleItemClick}
+            onMouseEnter={() => {
+              setHoveredItem('/python-hub');
+              setIsDismissed(false);
+            }}
+            onMouseLeave={() => setHoveredItem((curr) => (curr === '/python-hub' ? null : curr))}
+            onFocus={() => {
+              setActiveItem('/python-hub');
+              setIsDismissed(false);
+            }}
+            onBlur={() => setActiveItem((curr) => (curr === '/python-hub' ? null : curr))}
+            className={({ isActive }) =>
+              `relative group flex items-center rounded-xl text-xs font-medium transition-colors outline-none focus:outline-none ${isCollapsed
+                ? 'justify-center w-11 h-10 mx-auto'
+                : 'gap-3 px-3 py-2'
+              } ${isActive
+                ? 'bg-neutral-100 text-neutral-950 font-semibold shadow-2xs dark:bg-neutral-800 dark:text-white dark:shadow-sm'
+                : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100/70 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800/70'
+              }`
+            }
+          >
+            <Terminal className="w-4 h-4 shrink-0 text-emerald-500 dark:text-emerald-400" />
+            {!isCollapsed ? (
+              <span className="truncate">Python Arena</span>
+            ) : (
+              <div
+                className={`absolute left-full ml-3 inset-y-0 my-auto h-fit z-50 transition-all duration-150 ${isInfoBarOpen('/python-hub')
+                  ? 'opacity-100 visible'
+                  : 'opacity-0 invisible pointer-events-none'
+                  }`}
+              >
+                <div className="relative px-3 py-1.5 rounded-lg bg-neutral-900/95 dark:bg-[#262626]/95 backdrop-blur-md border border-neutral-800 dark:border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
+                  <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-neutral-900 dark:bg-[#262626] border-l border-b border-neutral-800 dark:border-neutral-700/80 rotate-45" />
+                  <span className="font-medium text-white text-xs">Python Arena</span>
+                </div>
+              </div>
+            )}
+          </NavLink>
+
+          {/* Mentor Workspace */}
+          {(user?.role === 'mentor' || user?.role === 'super_admin' || user?.role === 'admin') && (
+            <NavLink
+              to="/mentor/sessions"
+              onClick={handleItemClick}
+              onMouseEnter={() => {
+                setHoveredItem('/mentor/sessions');
+                setIsDismissed(false);
+              }}
+              onMouseLeave={() => setHoveredItem((curr) => (curr === '/mentor/sessions' ? null : curr))}
+              onFocus={() => {
+                setActiveItem('/mentor/sessions');
+                setIsDismissed(false);
+              }}
+              onBlur={() => setActiveItem((curr) => (curr === '/mentor/sessions' ? null : curr))}
+              className={({ isActive }) =>
+                `relative group flex items-center rounded-xl text-xs font-medium transition-colors outline-none focus:outline-none ${isCollapsed
+                  ? 'justify-center w-11 h-10 mx-auto'
+                  : 'gap-3 px-3 py-2'
+                } ${isActive
+                  ? 'bg-neutral-100 text-neutral-950 font-semibold shadow-2xs dark:bg-neutral-800 dark:text-white dark:shadow-sm'
+                  : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100/70 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800/70'
+                }`
+              }
+            >
+              <Video className="w-4 h-4 shrink-0 text-blue-500 dark:text-blue-400" />
+              {!isCollapsed ? (
+                <>
+                  <span className="truncate">Mentor Workspace</span>
+                  <span className="ml-auto text-[9px] text-neutral-400 dark:text-neutral-500">Office</span>
+                </>
+              ) : (
+                <div
+                  className={`absolute left-full ml-3 inset-y-0 my-auto h-fit z-50 transition-all duration-150 ${isInfoBarOpen('/mentor/sessions')
+                    ? 'opacity-100 visible'
+                    : 'opacity-0 invisible pointer-events-none'
+                    }`}
+                >
+                  <div className="relative px-3 py-1.5 rounded-lg bg-neutral-900/95 dark:bg-[#262626]/95 backdrop-blur-md border border-neutral-800 dark:border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
+                    <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-neutral-900 dark:bg-[#262626] border-l border-b border-neutral-800 dark:border-neutral-700/80 rotate-45" />
+                    <span className="font-medium text-white text-xs">Mentor Workspace</span>
+                  </div>
+                </div>
+              )}
+            </NavLink>
+          )}
+
           {/* College Admin Portal */}
           {(user?.role === 'college_admin' || user?.role === 'super_admin') && (
             <NavLink
@@ -291,7 +383,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }`}
                 >
                   <div className="relative px-3 py-1.5 rounded-lg bg-neutral-900/95 dark:bg-[#262626]/95 backdrop-blur-md border border-neutral-800 dark:border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
-                    <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-neutral-900 dark:bg-[#262626] border-l border-b border-neutral-800 dark:border-neutral-700/80 rotate-45" />
+                    <div className="absolute -left-1 inset-1 inset-y-0 my-auto h-2 w-2 bg-neutral-900 dark:bg-[#262626] border-l border-b border-neutral-800 dark:border-neutral-700/80 rotate-45" />
                     <span className="font-medium text-white text-xs">College Admin</span>
                   </div>
                 </div>
@@ -354,14 +446,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={handleItemClick}
               className="flex items-center gap-3 p-2 rounded-xl bg-neutral-50 hover:bg-neutral-100/80 dark:bg-neutral-900/60 dark:hover:bg-neutral-850 border border-neutral-200/80 dark:border-neutral-800/60 transition-colors outline-none focus:outline-none"
             >
-              <img
-                src={user.avatar || '/avatars/rishabh.webp'}
-                alt={user.name}
-                className="w-9 h-9 rounded-lg object-cover border border-neutral-200 dark:border-neutral-700 shrink-0"
-                onError={(e: any) => {
-                  e.target.src =
-                    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop';
-                }}
+              <UserAvatar
+                src={user.avatar}
+                name={user.name}
+                email={user.email}
+                size="md"
+                roundedClassName="rounded-xl"
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
@@ -404,14 +494,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onBlur={() => setActiveItem((curr) => (curr === 'user-profile' ? null : curr))}
                 className="relative cursor-pointer block"
               >
-                <img
-                  src={user.avatar || '/avatars/rishabh.webp'}
-                  alt={user.name}
-                  className="w-10 h-10 rounded-xl object-cover border border-neutral-200 dark:border-neutral-700 group-hover:border-neutral-400 dark:group-hover:border-neutral-500 transition-colors"
-                  onError={(e: any) => {
-                    e.target.src =
-                      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop';
-                  }}
+                <UserAvatar
+                  src={user.avatar}
+                  name={user.name}
+                  email={user.email}
+                  size={40}
+                  roundedClassName="rounded-xl"
+                  className="group-hover:border-neutral-400 dark:group-hover:border-neutral-500 transition-colors"
                 />
                 <div className="absolute -bottom-1 -right-1 flex items-center justify-center bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/30 dark:border-orange-500/40 rounded-full px-1 text-[8px] font-bold text-orange-600 dark:text-orange-300">
                   <Flame className="w-2.5 h-2.5 fill-orange-500 text-orange-500" />

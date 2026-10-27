@@ -254,13 +254,23 @@ export const ProblemListPage: React.FC = () => {
           </p>
         </div>
 
-        <Link
-          to="/debugging-lab"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs font-bold hover:bg-rose-500/20 transition-colors self-start sm:self-auto shadow-2xs"
-        >
-          <BugIcon className="w-3.5 h-3.5" />
-          <span>Open Debugging Lab</span>
-        </Link>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <Link
+            to="/python-hub"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold hover:bg-emerald-500/20 transition-colors shadow-2xs"
+          >
+            <Terminal className="w-3.5 h-3.5" />
+            <span>Python Hub & Arena</span>
+          </Link>
+
+          <Link
+            to="/debugging-lab"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs font-bold hover:bg-rose-500/20 transition-colors shadow-2xs"
+          >
+            <BugIcon className="w-3.5 h-3.5" />
+            <span>Open Debugging Lab</span>
+          </Link>
+        </div>
       </div>
 
       {/* Enrolled Track Bar (Allows enrolling in multiple tracks) */}

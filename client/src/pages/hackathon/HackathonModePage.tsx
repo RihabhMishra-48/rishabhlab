@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import { pycodeService } from '../../services/pycodeService';
 import { Hackathon } from '../../types';
 import {
   CURATED_COMPETITIONS,
@@ -67,6 +68,39 @@ export const HackathonModePage: React.FC = () => {
     'comp-1': true,
     'comp-2': true,
   });
+
+  // Sync live codeathons from PyCode engine into Contests & Arena
+  useEffect(() => {
+    pycodeService.fetchCodeathons('all', user?.email).then((res) => {
+      if (res.codeathons && res.codeathons.length > 0) {
+        const syncedItems: Competition[] = res.codeathons.map((c) => ({
+          id: c.id,
+          title: c.title,
+          slug: `codeathon-${c.id}`,
+          category: 'Algorithm Sprint',
+          status: c.is_live ? 'live' : c.is_upcoming ? 'upcoming' : 'completed',
+          startsAt: c.timings?.start_time ? new Date(c.timings.start_time).toLocaleDateString() : 'Live',
+          endsAt: c.timings?.end_time ? new Date(c.timings.end_time).toLocaleDateString() : 'Continuous',
+          remainingTime: c.timings?.duration_minutes ? `${c.timings.duration_minutes} Mins` : 'Timed',
+          participantsCount: 42,
+          prizePool: `${c.total_questions * 50} Pts & Badge`,
+          difficulty: c.difficulty === 'hard' ? 'Advanced' : c.difficulty === 'medium' ? 'Intermediate' : 'All Levels',
+          tags: ['Python', 'Codeathon', 'Proctored'],
+          description: c.description || 'Live algorithmic codeathon with proctored timer, test cases, and automated test execution.',
+          problemStatementBrief: `${c.total_questions} algorithmic problems with live execution & tests.`,
+          sponsors: [c.creator_name || 'Codeathon Host'],
+          isRegistered: Boolean(c.user_attempt?.has_attempted),
+          ...(c as any),
+        }));
+
+        setCompetitions((prev) => {
+          const existingIds = new Set(prev.map((p) => p.id));
+          const uniqueNew = syncedItems.filter((item) => !existingIds.has(item.id));
+          return [...uniqueNew, ...prev];
+        });
+      }
+    }).catch(() => {});
+  }, [user?.email]);
 
   // Filter & Search state for Contests & Arena
   const [selectedFilter, setSelectedFilter] = useState<
@@ -680,6 +714,29 @@ export const HackathonModePage: React.FC = () => {
                             <Sparkles className="w-3.5 h-3.5" />
                             <span>AI Studio</span>
                           </button>
+                        ) : (comp as any).attempt_url ? (
+                          (comp as any).user_attempt?.is_completed ? (
+                            <span className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700">
+                              Submitted (Score: {(comp as any).user_attempt?.score})
+                            </span>
+                          ) : (comp as any).is_live ? (
+                            <a
+                              href={(comp as any).attempt_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 transition-colors shadow-2xs"
+                            >
+                              <span>Attend Codeathon →</span>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          ) : (
+                            <button
+                              disabled
+                              className="px-4 py-2 rounded-xl text-xs font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-400 cursor-not-allowed"
+                            >
+                              {(comp as any).is_upcoming ? 'Upcoming' : 'Ended'}
+                            </button>
+                          )
                         ) : (
                           <button
                             onClick={() => handleToggleRegister(comp.id)}

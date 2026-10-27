@@ -362,5 +362,48 @@ export const api = {
     invalidateCache(/mission/);
     return res;
   },
+
+  // Admin User & Roles Management
+  adminGetUsers: (filter?: { role?: string; search?: string }) => {
+    const params = new URLSearchParams();
+    if (filter?.role && filter.role !== 'all') params.append('role', filter.role);
+    if (filter?.search) params.append('search', filter.search);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return request<any[]>(`/admin/users${qs}`);
+  },
+  adminUpdateUserRole: async (id: string, role: string) => {
+    const res = await request<any>(`/admin/users/${id}/role`, {
+      method: 'PUT',
+      body: JSON.stringify({ role }),
+    });
+    invalidateCache(/user/);
+    return res;
+  },
+  adminCreateUser: async (data: any) => {
+    const res = await request<any>('/admin/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    invalidateCache(/user/);
+    return res;
+  },
+  adminDeleteUser: async (id: string) => {
+    const res = await request<any>(`/admin/users/${id}`, {
+      method: 'DELETE',
+    });
+    invalidateCache(/user/);
+    return res;
+  },
+
+  // Mentor Workspace Sessions
+  mentorGetSessions: () => request<any[]>('/mentorship/mentor/sessions'),
+  mentorUpdateSession: async (id: string, data: { status?: string; meetingLink?: string; notesFromMentor?: string; preferredSlot?: string }) => {
+    const res = await request<any>(`/mentorship/sessions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    invalidateCache(/mentorship/);
+    return res;
+  },
 };
 

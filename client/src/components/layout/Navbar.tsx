@@ -22,6 +22,7 @@ import {
   ChevronDown,
   ArrowRight
 } from 'lucide-react';
+import { UserAvatar } from '../common/UserAvatar';
 
 interface NavbarProps {
   onOpenCommandPalette?: () => void;
@@ -154,13 +155,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
                 className="flex items-center gap-2 p-1 pr-2.5 rounded-full hover:bg-neutral-100 dark:hover:bg-[#2a2a2a] border border-neutral-200 dark:border-neutral-800 transition-colors"
               >
-                <img
-                  src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop'}
-                  alt={user.name}
-                  className="w-7 h-7 rounded-full object-cover border border-neutral-300 dark:border-neutral-700"
-                  onError={(e: any) => {
-                    e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop';
-                  }}
+                <UserAvatar
+                  src={user.avatar}
+                  name={user.name}
+                  email={user.email}
+                  size="sm"
                 />
                 <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 hidden sm:inline">
                   {user.name.split(' ')[0]}
