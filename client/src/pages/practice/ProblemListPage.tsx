@@ -535,7 +535,7 @@ export const ProblemListPage: React.FC = () => {
                 </div>
 
                 <span className="text-[11px] font-mono font-semibold text-neutral-500 shrink-0">
-                  {enrolledTracks.length} of {TRACK_CONFIGS.length} Tracks Enrolled
+                  {enrolledTracks.length} of {TRACK_CONFIGS.length}
                 </span>
               </div>
 

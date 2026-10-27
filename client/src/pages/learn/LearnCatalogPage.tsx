@@ -394,7 +394,7 @@ export const LearnCatalogPage: React.FC = () => {
                 </div>
 
                 <span className="text-[11px] font-mono font-semibold text-neutral-500 shrink-0">
-                  {enrolledTracks.length} of {tracks.length} Tracks Enrolled
+                  {enrolledTracks.length} of {tracks.length}
                 </span>
               </div>
 
