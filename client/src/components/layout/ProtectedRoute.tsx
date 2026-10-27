@@ -41,7 +41,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Role-based authorization
   if (allowedRoles && allowedRoles.length > 0) {
-    const isSuperAdmin = user.role === 'super_admin' || user.role === 'admin' || user.email?.includes('admin');
+    const isSuperAdmin = user.role === 'super_admin' || user.role === 'admin';
     if (!isSuperAdmin && !allowedRoles.includes(user.role)) {
       return <Navigate to="/dashboard" replace />;
     }

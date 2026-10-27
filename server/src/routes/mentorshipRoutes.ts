@@ -83,7 +83,7 @@ router.get('/my-requests', requireAuth, async (req: AuthRequest, res) => {
 router.get('/mentor/sessions', requireAuth, async (req: AuthRequest, res) => {
   try {
     const user = req.user!;
-    const isSuperAdmin = (user.role as string) === 'super_admin' || (user.role as string) === 'admin' || Boolean(user.email?.includes('admin'));
+    const isSuperAdmin = (user.role as string) === 'super_admin' || (user.role as string) === 'admin';
 
     let filter: any = {};
     if (!isSuperAdmin) {
@@ -123,7 +123,7 @@ router.put('/sessions/:id', requireAuth, async (req: AuthRequest, res) => {
     const { id } = req.params;
     const { status, meetingLink, notesFromMentor, preferredSlot } = req.body;
     const user = req.user!;
-    const isSuperAdmin = (user.role as string) === 'super_admin' || (user.role as string) === 'admin' || Boolean(user.email?.includes('admin'));
+    const isSuperAdmin = (user.role as string) === 'super_admin' || (user.role as string) === 'admin';
 
     const session = await MentorshipRequest.findById(id);
     if (!session) {

@@ -392,7 +392,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
 
           {/* Platform Admin */}
-          {(user?.role === 'super_admin' || user?.role === 'admin' || user?.email?.includes('admin') || user?.email?.includes('rishabh')) && (
+          {(user?.role === 'super_admin' || user?.role === 'admin') && (
             <NavLink
               to="/admin"
               onClick={handleItemClick}

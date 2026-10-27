@@ -22,11 +22,6 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
     }
 
     if (!token) {
-      const demoUser = await User.findOne({ email: 'mishrarishabh2006@gmail.com' }) || await User.findOne({});
-      if (demoUser) {
-        req.user = demoUser;
-        return next();
-      }
       return res.status(401).json({ message: 'Authentication required. Please log in.' });
     }
 

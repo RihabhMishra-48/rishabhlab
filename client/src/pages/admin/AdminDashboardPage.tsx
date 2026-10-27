@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { PricingPlan } from '../../types';
 import {
   ShieldAlert,
@@ -34,6 +35,7 @@ import {
 type AdminTab = 'users' | 'mentors' | 'questions' | 'roadmaps' | 'tasks' | 'pricing' | 'overview';
 
 export const AdminDashboardPage: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<AdminTab>('users');
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
@@ -833,7 +835,7 @@ export const AdminDashboardPage: React.FC = () => {
                       return true;
                     })
                     .map((u) => {
-                      const isProtected = u.email === 'admin@rishabhlabs.com' || u.email === 'rishabh@rishabhlabs.com';
+                      const isProtected = u.email === user?.email;
                       const isUpdating = updatingUserId === u._id;
 
                       return (

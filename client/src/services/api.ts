@@ -144,11 +144,6 @@ export const api = {
     return res;
   },
   getMe: () => cachedGet<any>('/auth/me', 60000),
-  switchDemoRole: async (role: string) => {
-    const res = await request<any>('/auth/switch-demo-role', { method: 'POST', body: JSON.stringify({ role }) });
-    invalidateCache();
-    return res;
-  },
 
   // Onboarding
   completeOnboarding: async (data: any) => {

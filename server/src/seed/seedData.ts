@@ -1089,64 +1089,7 @@ export const getCleanMentors = () => [
 
 export const seedDatabase = async () => {
   try {
-    const passwordHash = await bcrypt.hash('password123', 10);
-
-    // 1. Ensure Super Admin accounts exist and have super_admin role
-    const adminUser = await User.findOne({ email: 'admin@rishabhlabs.com' });
-    if (!adminUser) {
-      await User.create({
-        name: 'RishabhLabs Admin',
-        email: 'admin@rishabhlabs.com',
-        password: passwordHash,
-        role: 'super_admin',
-        avatar: '/avatars/rishabh.webp',
-        bio: 'Super Admin with full platform authority.',
-        isOnboarded: true,
-      });
-      console.log('✅ [Seed] Initial super_admin account ready: admin@rishabhlabs.com (password: password123)');
-    }
-
-    // Also ensure rishabh@rishabhlabs.com is elevated to super_admin
-    const rishabhUser = await User.findOne({ email: 'rishabh@rishabhlabs.com' });
-    if (rishabhUser) {
-      if (rishabhUser.role !== 'super_admin') {
-        await User.updateOne({ email: 'rishabh@rishabhlabs.com' }, { role: 'super_admin' });
-        console.log('✅ [Seed] Elevating rishabh@rishabhlabs.com to super_admin role.');
-      }
-    }
-
-    // Ensure dedicated mentor account exists
-    const mentorUser = await User.findOne({ email: 'mentor@rishabhlabs.com' });
-    if (!mentorUser) {
-      await User.create({
-        name: 'Dr. Arpit Khare',
-        email: 'mentor@rishabhlabs.com',
-        password: passwordHash,
-        role: 'mentor',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop',
-        bio: 'Staff Engineer & Mentor. Helping developers master scalable architectures and high-impact products.',
-        isOnboarded: true,
-      });
-    }
-
-    // Ensure student demo account exists
-    const studentUser = await User.findOne({ email: 'student@rishabhlabs.com' });
-    if (!studentUser) {
-      await User.create({
-        name: 'Aarav Sharma',
-        email: 'student@rishabhlabs.com',
-        password: passwordHash,
-        role: 'student',
-        degree: 'B.Tech - Computer Science',
-        year: '3rd Year',
-        targetGoal: 'Web Development',
-        avatar: '/avatars/rishabh.webp',
-        bio: 'Student developer learning full-stack systems and algorithmic problem solving.',
-        isOnboarded: true,
-      });
-    }
-
-    // 2. Non-destructive seeding: only insert if collection is currently empty
+    // Non-destructive seeding for educational content: only insert if collections are currently empty
     const projectCount = await Project.countDocuments();
     if (projectCount === 0) {
       await Project.create(getCleanProjects());

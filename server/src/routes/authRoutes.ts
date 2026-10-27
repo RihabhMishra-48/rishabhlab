@@ -136,47 +136,4 @@ router.get('/me', requireAuth, async (req: AuthRequest, res) => {
   });
 });
 
-// Demo Role Switcher (Allows instant preview of Student, Mentor, College Admin, Super Admin)
-router.post('/switch-demo-role', async (req, res) => {
-  try {
-    const { role } = req.body;
-    const targetEmail =
-      role === 'mentor'
-        ? 'mentor@rishabhlabs.com'
-        : role === 'college_admin'
-        ? 'admin@gla.ac.in'
-        : role === 'super_admin'
-        ? 'superadmin@rishabhlabs.com'
-        : 'rishabh@rishabhlabs.com';
-
-    let user = await User.findOne({ email: targetEmail });
-    if (!user) {
-      user = await User.findOne({ role: role || 'student' });
-    }
-    if (!user) {
-      user = await User.findOne({});
-    }
-
-    if (!user) {
-      return res.status(404).json({ message: 'No user found' });
-    }
-
-    const token = generateToken(user._id.toString(), user.role);
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        college: user.college,
-        avatar: user.avatar,
-        isOnboarded: user.isOnboarded,
-      },
-    });
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
 export default router;

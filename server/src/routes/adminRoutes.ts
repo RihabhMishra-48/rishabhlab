@@ -876,8 +876,8 @@ router.delete('/users/:id', async (req, res) => {
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (user.email === 'admin@rishabhlabs.com' || user.email === 'rishabh@rishabhlabs.com') {
-      return res.status(400).json({ message: 'Protected master admin account cannot be deleted.' });
+    if (user.role === 'super_admin') {
+      return res.status(400).json({ message: 'Super admin accounts cannot be deleted directly.' });
     }
 
     await User.findByIdAndDelete(id);

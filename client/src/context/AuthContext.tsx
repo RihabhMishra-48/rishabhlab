@@ -250,17 +250,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // 3. Fallback: Query backend for active session or demo user
-      try {
-        const data = await api.getMe();
-        if (data && data.id) {
-          setUser(data);
-          return;
-        }
-      } catch {
-        // Unauthenticated
-      }
-
       setUser(null);
     } catch (err) {
       localStorage.removeItem('rishabhlabs_token');
@@ -395,17 +384,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
-  const switchRole = async (role: string) => {
-    setLoading(true);
-    try {
-      const res = await api.switchDemoRole(role);
-      localStorage.setItem('rishabhlabs_token', res.token);
-      setUser(res.user);
-    } catch (err: any) {
-      console.error('Role switch failed:', err);
-    } finally {
-      setLoading(false);
-    }
+  const switchRole = async (_role: string) => {
+    console.warn('Demo role switching is disabled. Manage user roles directly in database.');
   };
 
   return (
