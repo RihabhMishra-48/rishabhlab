@@ -141,6 +141,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Listen for unauthorized 401 events from API layer to cleanly drop dead sessions
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+      localStorage.removeItem('rishabhlabs_token');
+      api.invalidateCache();
+    };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, []);
+
   const fetchCurrentUser = async () => {
     try {
       setLoading(true);
@@ -171,6 +182,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch {
           // Token expired or invalid
           localStorage.removeItem('rishabhlabs_token');
+          api.invalidateCache();
+          setUser(null);
         }
       }
 
@@ -383,6 +396,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('rishabhlabs_token');
     localStorage.removeItem('rishabhlabs_onboarded');
     localStorage.removeItem('rishabhlabs_goal');
+    api.invalidateCache();
     setUser(null);
   };
 

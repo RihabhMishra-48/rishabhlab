@@ -106,6 +106,13 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
+      if (response.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
+        localStorage.removeItem('rishabhlabs_token');
+        invalidateCache();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+        }
+      }
       throw new Error(data.message || `Request failed with status ${response.status}`);
     }
 
@@ -143,7 +150,7 @@ export const api = {
     invalidateCache();
     return res;
   },
-  getMe: () => cachedGet<any>('/auth/me', 60000),
+  getMe: () => request<any>('/auth/me'),
 
   // Onboarding
   completeOnboarding: async (data: any) => {

@@ -9,7 +9,8 @@
     "dev:server": "npm --prefix server run dev",
     "build": "npm --prefix client run build",
     "build:server": "npm --prefix server run build",
-    "start": "npm --prefix server run start"
+    "start": "npm --prefix server run start",
+    "create-admin": "npm --prefix server run create-admin --"
   },
   "devDependencies": {
     "concurrently": "^10.0.6"

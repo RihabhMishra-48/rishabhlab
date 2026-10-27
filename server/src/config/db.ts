@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
+import path from 'path';
+import fs from 'fs';
+
 let mongoMemoryServer: MongoMemoryServer | null = null;
 
 export const connectDB = async () => {
@@ -24,16 +27,25 @@ export const connectDB = async () => {
     await mongoose.connect(defaultLocalUri, { serverSelectionTimeoutMS: 2000 });
     console.log('✅ [Database] Connected to local MongoDB successfully');
   } catch (localErr: any) {
-    console.log('ℹ️ [Database] Local MongoDB daemon not running. Bootstrapping zero-config MongoMemoryServer...');
+    console.log('ℹ️ [Database] Local MongoDB daemon not running. Bootstrapping zero-config MongoMemoryServer with persistent disk storage...');
     try {
+      const dbPath = path.resolve(process.cwd(), '.mongo_data');
+      if (!fs.existsSync(dbPath)) {
+        fs.mkdirSync(dbPath, { recursive: true });
+      }
+
       mongoMemoryServer = await MongoMemoryServer.create({
+        instance: {
+          dbPath,
+          storageEngine: 'wiredTiger',
+        },
         binary: {
           version: '7.0.14',
         },
       });
       const inMemoryUri = mongoMemoryServer.getUri();
       await mongoose.connect(inMemoryUri);
-      console.log(`✅ [Database] Connected to in-memory MongoDB (${inMemoryUri})`);
+      console.log(`✅ [Database] Connected to persistent MongoDB (${inMemoryUri})`);
     } catch (memErr: any) {
       console.error('❌ [Database] Failed to initialize MongoMemoryServer:', memErr);
       throw memErr;

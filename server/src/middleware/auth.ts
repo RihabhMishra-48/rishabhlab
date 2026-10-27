@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import { User, IUser } from '../models/User';
 import { supabase } from '../config/supabase';
 
@@ -9,8 +10,8 @@ export interface AuthRequest extends Request {
 
 const JWT_SECRET = process.env.JWT_SECRET || 'rishabhlabs_super_secure_jwt_secret_2026';
 
-export const generateToken = (userId: string, role: string) => {
-  return jwt.sign({ id: userId, role }, JWT_SECRET, { expiresIn: '30d' });
+export const generateToken = (userId: string, role: string, email?: string) => {
+  return jwt.sign({ id: userId, role, email: email ? email.toLowerCase() : undefined }, JWT_SECRET, { expiresIn: '30d' });
 };
 
 export const requireAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -27,8 +28,14 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
 
     // 1. Try local JWT first (instant <0.1ms, zero network delay)
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string };
-      const user = await User.findById(decoded.id);
+      const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string; email?: string };
+      let user = null;
+      if (decoded.id && mongoose.Types.ObjectId.isValid(decoded.id)) {
+        user = await User.findById(decoded.id);
+      }
+      if (!user && decoded.email) {
+        user = await User.findOne({ email: decoded.email.toLowerCase() });
+      }
       if (user) {
         req.user = user;
         return next();
@@ -57,7 +64,7 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
             user = await User.create({
               name: sbProfile?.full_name || sbUser.user_metadata?.full_name || userEmail.split('@')[0],
               email: userEmail,
-              passwordHash: 'supabase_oauth_managed',
+              password: 'supabase_oauth_managed',
               role: sbProfile?.role || 'student',
               college: sbProfile?.college_name || '',
               streakDays: sbProfile?.streak_days || 0,

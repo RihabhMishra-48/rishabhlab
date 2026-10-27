@@ -31,6 +31,8 @@ pnpm-debug.log*
 # Cache & Temporary files
 .cache/
 */.cache/
+.mongo_data/
+*/.mongo_data/
 tmp/
 */tmp/
 .temp/

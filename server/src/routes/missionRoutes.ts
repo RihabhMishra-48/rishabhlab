@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { DailyMission } from '../models/DailyMission';
 import { StudentProfile } from '../models/StudentProfile';
@@ -49,9 +50,12 @@ router.post('/:missionId/task/:taskId/toggle', requireAuth, async (req: AuthRequ
     const { missionId, taskId } = req.params;
     const { isCompleted } = req.body;
 
-    let mission = await DailyMission.findById(missionId);
+    let mission = null;
+    if (mongoose.Types.ObjectId.isValid(missionId)) {
+      mission = await DailyMission.findById(missionId);
+    }
     if (!mission) {
-      mission = await DailyMission.findOne({});
+      mission = await DailyMission.findOne({ userId: req.user?._id }) || await DailyMission.findOne({});
     }
     if (!mission) return res.status(404).json({ message: 'Mission not found' });
 
@@ -87,9 +91,12 @@ router.post('/:missionId/ship', requireAuth, async (req: AuthRequest, res) => {
     const { missionId } = req.params;
     const { proofUrl, commitMessage } = req.body;
 
-    let mission = await DailyMission.findById(missionId);
+    let mission = null;
+    if (mongoose.Types.ObjectId.isValid(missionId)) {
+      mission = await DailyMission.findById(missionId);
+    }
     if (!mission) {
-      mission = await DailyMission.findOne({});
+      mission = await DailyMission.findOne({ userId: req.user?._id }) || await DailyMission.findOne({});
     }
     if (!mission) return res.status(404).json({ message: 'Mission not found' });
 
