@@ -314,7 +314,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (data?.user?.avatar_url) {
             setUser((prev) => (prev ? { ...prev, avatar: data.user.avatar_url || undefined } : prev));
           }
-        }).catch(() => {});
+        }).catch(() => { });
       }
     }
   }, [user?.email]);
