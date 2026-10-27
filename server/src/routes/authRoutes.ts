@@ -34,13 +34,13 @@ router.post('/register', async (req, res) => {
     await StudentProfile.create({
       userId: user._id,
       targetGoal: 'Web Development',
-      streakDays: 1,
-      totalPoints: 100,
+      streakDays: 0,
+      totalPoints: 0,
       progressPercent: 0,
       skillsCompleted: 0,
-      totalSkills: 18,
+      totalSkills: 0,
       projectsCompleted: 0,
-      totalProjects: 4,
+      totalProjects: 0,
     });
 
     const token = generateToken(user._id.toString(), user.role, user.email);

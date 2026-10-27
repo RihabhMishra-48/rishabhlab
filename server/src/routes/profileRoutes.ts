@@ -3,6 +3,7 @@ import { requireAuth, AuthRequest } from '../middleware/auth';
 import { User } from '../models/User';
 import { StudentProfile } from '../models/StudentProfile';
 import { Project } from '../models/Project';
+import { Roadmap } from '../models/Roadmap';
 
 const router = Router();
 
@@ -26,10 +27,25 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
       });
     }
 
+    // Query actual roadmap for this user
+    const roadmap = await Roadmap.findOne({ userId: user._id });
+    const completedNodes = roadmap ? (roadmap.completedNodes || 0) : 0;
+    const totalNodes = roadmap?.nodes?.length || 0;
+    const progressPct = totalNodes > 0 ? Math.round((completedNodes / totalNodes) * 100) : 0;
+
+    // Real projects calculation
+    const actualProjectsCount = await Project.countDocuments({ userId: user._id });
+    const completedProjectsCount = await Project.countDocuments({ userId: user._id, status: 'Completed' });
+
+    // Heal profile progressPercent and projects with actual verified numbers
+    if (profile.progressPercent !== progressPct || profile.totalProjects !== actualProjectsCount || profile.projectsCompleted !== completedProjectsCount) {
+      profile.progressPercent = progressPct;
+      profile.totalProjects = actualProjectsCount;
+      profile.projectsCompleted = completedProjectsCount;
+      await profile.save();
+    }
+
     const streakCount = user.streakDays ?? profile.streakDays ?? 0;
-    const progressPct = profile.progressPercent ?? 0;
-    const projectsDone = profile.projectsCompleted ?? 0;
-    const projectsTotal = profile.totalProjects ?? 0;
 
     const userSkills = (profile.verifiedSkills || []).map((s: string) => ({
       name: s,
@@ -52,7 +68,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
       },
       stats: {
         roadmapProgress: progressPct,
-        projectsCount: `${projectsDone} / ${projectsTotal}`,
+        projectsCount: actualProjectsCount > 0 ? `${completedProjectsCount} / ${actualProjectsCount}` : '0',
         streakDays: `${streakCount} days`,
         status: streakCount > 0 ? 'Active' : 'Getting Started',
         totalPoints: user.totalPoints ?? profile.totalPoints ?? 0,
@@ -128,9 +144,7 @@ router.get('/public/:username', async (req, res) => {
         totalPoints: user.totalPoints ?? profile?.totalPoints ?? 0,
         status: userStreak > 0 ? 'Active Verified Builder' : 'Learner',
       },
-      skills: profile?.verifiedSkills && profile.verifiedSkills.length > 0
-        ? profile.verifiedSkills
-        : ['Full-Stack', 'Problem Solving', 'Git'],
+      skills: profile?.verifiedSkills || [],
       verifiedProjects,
     });
   } catch (err: any) {

@@ -103,9 +103,9 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
       stats: {
         progressPercent: profile?.progressPercent ?? 0,
         skillsCompleted: profile?.skillsCompleted ?? 0,
-        totalSkills: profile?.totalSkills ?? 10,
+        totalSkills: profile?.totalSkills ?? 0,
         projectsCompleted: profile?.projectsCompleted ?? 0,
-        totalProjects: profile?.totalProjects ?? 4,
+        totalProjects: profile?.totalProjects ?? inProgressProjects.length,
         streakDays: profile?.streakDays ?? 0,
         totalPoints: profile?.totalPoints ?? 0,
       },

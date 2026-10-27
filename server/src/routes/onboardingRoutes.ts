@@ -140,9 +140,9 @@ router.post('/complete', requireAuth, async (req: AuthRequest, res) => {
       {
         targetGoal: selectedGoal,
         activeRoadmapId: roadmap._id,
-        progressPercent: chosenRole === 'mentor' ? 100 : 5,
+        progressPercent: chosenRole === 'mentor' ? 100 : 0,
         skillsCompleted: chosenRole === 'mentor' ? 10 : 0,
-        streakDays: 1,
+        streakDays: 0,
       },
       { upsert: true }
     );

@@ -83,9 +83,9 @@ export const StudentDashboard: React.FC = () => {
   const stats = dashboardData?.stats || {
     progressPercent: 0,
     skillsCompleted: 0,
-    totalSkills: 10,
+    totalSkills: 0,
     projectsCompleted: 0,
-    totalProjects: 4,
+    totalProjects: 0,
     streakDays: 0,
     totalPoints: 0,
   };

@@ -118,7 +118,10 @@ router.post('/node/:nodeId/status', requireAuth, async (req: AuthRequest, res) =
     const { nodeId } = req.params;
     const { status } = req.body; // 'completed' | 'in_progress' | 'locked'
 
-    const roadmap = await Roadmap.findOne({});
+    let roadmap = await Roadmap.findOne({ userId: req.user?._id });
+    if (!roadmap) {
+      roadmap = await Roadmap.findOne({});
+    }
     if (!roadmap) return res.status(404).json({ message: 'Roadmap not found' });
 
     const node = roadmap.nodes.find((n) => n.nodeId === nodeId);
@@ -129,11 +132,18 @@ router.post('/node/:nodeId/status', requireAuth, async (req: AuthRequest, res) =
     roadmap.completedNodes = roadmap.nodes.filter((n) => n.status === 'completed').length;
     await roadmap.save();
 
-    // Update student profile progress
+    // Update student profile progress and real verified skills
     const progressPercent = Math.round((roadmap.completedNodes / roadmap.nodes.length) * 100);
+    const updateOps: any = {
+      progressPercent,
+      skillsCompleted: roadmap.completedNodes,
+    };
+    if (status === 'completed' && node.title) {
+      updateOps.$addToSet = { verifiedSkills: node.title };
+    }
     await StudentProfile.findOneAndUpdate(
       { userId: req.user?._id },
-      { progressPercent, skillsCompleted: roadmap.completedNodes * 3 }
+      updateOps
     );
 
     res.json({ success: true, roadmap });

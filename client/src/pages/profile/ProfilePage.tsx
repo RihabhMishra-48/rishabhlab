@@ -184,7 +184,7 @@ export const ProfilePage: React.FC = () => {
 
   const stats = {
     roadmapProgress: profileData?.stats?.roadmapProgress ?? 0,
-    projectsCount: profileData?.stats?.projectsCount ?? '0 / 0',
+    projectsCount: profileData?.stats?.projectsCount ?? '0',
     streakDays: profileData?.stats?.streakDays ?? `${(user as any)?.streak_days ?? (user as any)?.streakDays ?? 0} days`,
     status: profileData?.stats?.status ?? (((user as any)?.streak_days ?? (user as any)?.streakDays ?? 0) > 0 ? 'Active' : 'Getting Started'),
   };
@@ -484,72 +484,44 @@ export const ProfilePage: React.FC = () => {
       )}
 
       {activeTab === 'Skills' && (() => {
-        const goal = (user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'Web Development').toLowerCase();
-        let defaultSkills = [
-          { name: 'React 18 & Hooks', category: 'Frontend', level: 'Advanced', verified: true },
-          { name: 'TypeScript', category: 'Language', level: 'Proficient', verified: true },
-          { name: 'Node.js & Express', category: 'Backend', level: 'Advanced', verified: true },
-          { name: 'PostgreSQL', category: 'Database', level: 'Intermediate', verified: true },
-          { name: 'Tailwind CSS', category: 'Design', level: 'Expert', verified: true },
-          { name: 'Next.js 14', category: 'Framework', level: 'Intermediate', verified: false },
-          { name: 'REST & GraphQL', category: 'Architecture', level: 'Advanced', verified: true },
-          { name: 'Git & CI/CD', category: 'DevOps', level: 'Proficient', verified: true },
-        ];
+        const skillsToDisplay = profileData?.skills || [];
 
-        if (goal.includes('ai') || goal.includes('ml')) {
-          defaultSkills = [
-            { name: 'Python OOP', category: 'Core Language', level: 'Advanced', verified: true },
-            { name: 'NumPy & Pandas', category: 'Data Analysis', level: 'Advanced', verified: true },
-            { name: 'PyTorch Tensors', category: 'Deep Learning', level: 'Proficient', verified: true },
-            { name: 'Scikit-Learn', category: 'Classic ML', level: 'Advanced', verified: true },
-            { name: 'Neural Networks', category: 'Architecture', level: 'Intermediate', verified: true },
-            { name: 'Vector Databases', category: 'GenAI & RAG', level: 'Intermediate', verified: false },
-            { name: 'LLM Prompt Tuning', category: 'GenAI', level: 'Proficient', verified: true },
-            { name: 'Docker & Model Serving', category: 'MLOps', level: 'Intermediate', verified: false },
-          ];
-        } else if (goal.includes('cyber') || goal.includes('sec')) {
-          defaultSkills = [
-            { name: 'TCP/IP Packet Analysis', category: 'Networking', level: 'Advanced', verified: true },
-            { name: 'Linux Hardening', category: 'OS & Kernel', level: 'Proficient', verified: true },
-            { name: 'Wireshark & Nmap', category: 'Tooling', level: 'Advanced', verified: true },
-            { name: 'OWASP Top 10', category: 'Web Defense', level: 'Advanced', verified: true },
-            { name: 'Cryptography Ciphers', category: 'Security Math', level: 'Intermediate', verified: true },
-            { name: 'Burp Suite Pro', category: 'Pentesting', level: 'Intermediate', verified: false },
-            { name: 'Security Automation', category: 'Python', level: 'Intermediate', verified: true },
-            { name: 'Reverse Engineering', category: 'Binaries', level: 'Beginner', verified: false },
-          ];
-        } else if (goal.includes('app') || goal.includes('mobile')) {
-          defaultSkills = [
-            { name: 'Flutter & Dart', category: 'Cross-Platform', level: 'Proficient', verified: true },
-            { name: 'React Native', category: 'Mobile Framework', level: 'Intermediate', verified: true },
-            { name: 'State Management', category: 'Architecture', level: 'Advanced', verified: true },
-            { name: 'Mobile UI/UX', category: 'Design Systems', level: 'Advanced', verified: true },
-            { name: 'SQLite & Offline State', category: 'Storage', level: 'Intermediate', verified: true },
-            { name: 'Device Hardware APIs', category: 'Native Bridge', level: 'Intermediate', verified: false },
-            { name: 'Push Notifications', category: 'Services', level: 'Intermediate', verified: false },
-            { name: 'App Store Guidelines', category: 'Release', level: 'Intermediate', verified: true },
-          ];
-        } else if (goal.includes('data') || goal.includes('analyt')) {
-          defaultSkills = [
-            { name: 'SQL Window Functions', category: 'Database', level: 'Advanced', verified: true },
-            { name: 'Pandas & Polars', category: 'Data Wrangling', level: 'Advanced', verified: true },
-            { name: 'Exploratory Data Analysis', category: 'Statistics', level: 'Proficient', verified: true },
-            { name: 'ETL Pipeline Design', category: 'Engineering', level: 'Intermediate', verified: true },
-            { name: 'Data Warehousing', category: 'Architecture', level: 'Intermediate', verified: false },
-            { name: 'Apache Spark', category: 'Big Data', level: 'In Progress', verified: false },
-            { name: 'Power BI & Dashboards', category: 'Visualization', level: 'Intermediate', verified: true },
-            { name: 'Hypothesis Testing', category: 'Math', level: 'Intermediate', verified: true },
-          ];
+        if (skillsToDisplay.length === 0) {
+          return (
+            <div className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-[#212121] border border-dashed border-neutral-200 dark:border-neutral-800 text-center space-y-3 shadow-2xs">
+              <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mx-auto text-neutral-400">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+                No Verified Skills Yet
+              </h3>
+              <p className="text-xs text-neutral-500 max-w-md mx-auto leading-relaxed">
+                You have freshly initialized your profile. As you complete lessons in your {user?.targetGoal || 'Cybersecurity'} Roadmap, ship daily missions, and pass coding labs, your verified skills will be recorded here.
+              </p>
+              <div className="pt-2 flex items-center justify-center gap-3">
+                <Link
+                  to="/roadmap"
+                  className="px-4 py-2 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-bold hover:opacity-90 transition-opacity"
+                >
+                  Start Roadmap →
+                </Link>
+                <Link
+                  to="/missions"
+                  className="px-4 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 text-xs font-bold hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                >
+                  Today's Mission
+                </Link>
+              </div>
+            </div>
+          );
         }
-
-        const skillsToDisplay = (profileData?.skills && profileData.skills.length > 0) ? profileData.skills : defaultSkills;
 
         return (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {skillsToDisplay.map((sk: any) => (
               <div
                 key={sk.name}
-                className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-1.5 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-1.5 shadow-2xs"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">{sk.category}</span>
@@ -569,88 +541,39 @@ export const ProfilePage: React.FC = () => {
       })()}
 
       {activeTab === 'Projects' && (() => {
-        const goal = (user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'Web Development').toLowerCase();
-        let defaultProjects = [
-          {
-            title: 'College Event Platform & Ticketing System',
-            description: 'Scalable campus event booking platform with QR code check-in, real-time analytics, and role-based access.',
-            techStack: ['React', 'TypeScript', 'Node.js', 'PostgreSQL', 'Tailwind CSS'],
-            status: 'In Progress',
-            slug: 'college-event-platform',
-          },
-          {
-            title: 'Full Stack Collaborative Document Editor',
-            description: 'WebSocket-powered real-time text synchronization and markdown preview with version history.',
-            techStack: ['Next.js', 'Socket.io', 'Node.js', 'MongoDB'],
-            status: 'Ready to Start',
-            slug: 'college-event-platform',
-          },
-        ];
+        const projectsToDisplay = profileData?.projects || [];
 
-        if (goal.includes('ai') || goal.includes('ml')) {
-          defaultProjects = [
-            {
-              title: 'Customer Churn Predictor (Production ML Pipeline)',
-              description: 'End-to-end machine learning system with feature engineering, model training, and REST API deployment.',
-              techStack: ['Python', 'Scikit-Learn', 'Pandas', 'FastAPI', 'Docker'],
-              status: 'In Progress',
-              slug: 'customer-churn-predictor',
-            },
-            {
-              title: 'Neural Style & Embedding Similarity Engine',
-              description: 'Vector search and semantic text classification using pre-trained sentence transformers.',
-              techStack: ['PyTorch', 'HuggingFace', 'ChromaDB', 'Python'],
-              status: 'Ready to Start',
-              slug: 'customer-churn-predictor',
-            },
-          ];
-        } else if (goal.includes('cyber') || goal.includes('sec')) {
-          defaultProjects = [
-            {
-              title: 'Network Packet Sniffer & Payload Analyzer',
-              description: 'Lightweight raw socket packet capture tool that parses IP, TCP, and UDP headers in real-time.',
-              techStack: ['Python', 'Raw Sockets', 'Wireshark', 'Linux Kernel'],
-              status: 'In Progress',
-              slug: 'network-packet-sniffer',
-            },
-            {
-              title: 'Automated Port Scanner & Vulnerability Profiler',
-              description: 'Concurrent socket scanner detecting open service banners and matching against known CVE registries.',
-              techStack: ['Python', 'AsyncIO', 'Bash', 'Nmap'],
-              status: 'Ready to Start',
-              slug: 'network-packet-sniffer',
-            },
-          ];
-        } else if (goal.includes('app') || goal.includes('mobile')) {
-          defaultProjects = [
-            {
-              title: 'Offline-First Fitness & Activity Tracker',
-              description: 'Mobile health tracking application with local SQLite caching, background step counting, and cloud sync.',
-              techStack: ['React Native / Flutter', 'SQLite', 'Device Sensors'],
-              status: 'In Progress',
-              slug: 'mobile-fitness-tracker',
-            },
-          ];
-        } else if (goal.includes('data') || goal.includes('analyt')) {
-          defaultProjects = [
-            {
-              title: 'Automated E-Commerce ETL Pipeline & Dashboard',
-              description: 'Scheduled multi-source ingestion pipeline performing data cleaning, schema validation, and reporting.',
-              techStack: ['Python', 'SQL', 'Pandas', 'PostgreSQL', 'Airflow'],
-              status: 'In Progress',
-              slug: 'automated-etl-pipeline',
-            },
-          ];
+        if (projectsToDisplay.length === 0) {
+          return (
+            <div className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-[#212121] border border-dashed border-neutral-200 dark:border-neutral-800 text-center space-y-3 shadow-2xs">
+              <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mx-auto text-neutral-400">
+                <FolderGit2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+                No Projects Started Yet
+              </h3>
+              <p className="text-xs text-neutral-500 max-w-md mx-auto leading-relaxed">
+                You haven't enrolled in any project yet. Choose an industry project from your track to write code, submit proof of work, and build your portfolio.
+              </p>
+              <div className="pt-2">
+                <Link
+                  to="/projects"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-bold hover:opacity-90 transition-opacity"
+                >
+                  <span>Browse Track Projects</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          );
         }
-
-        const projectsToDisplay = (profileData?.projects && profileData.projects.length > 0) ? profileData.projects : defaultProjects;
 
         return (
           <div className="space-y-4">
             {projectsToDisplay.map((p: any) => (
               <div
                 key={p.title}
-                className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs"
               >
                 <div className="space-y-1.5 min-w-0">
                   <div className="flex items-center gap-2">
@@ -670,7 +593,7 @@ export const ProfilePage: React.FC = () => {
                 </div>
 
                 <Link
-                  to={`/projects/${p.slug || 'customer-churn-predictor'}`}
+                  to={`/projects/${p.slug || ''}`}
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-bold hover:opacity-90 transition-opacity shrink-0 shadow-2xs"
                 >
                   <span>Open Workspace</span>
@@ -683,58 +606,68 @@ export const ProfilePage: React.FC = () => {
       })()}
 
       {activeTab === 'Achievements' && (() => {
-        const defaultAchievements = [
+        const earnedAchievements = profileData?.achievements || [
           {
-            title: '90-Day Engineering Sprint Enrolled',
-            desc: `Committed to personalized curriculum for ${user?.targetGoal || 'Web Development'} track.`,
-            date: 'Sprint 1',
-            badge: '',
-          },
-          {
-            title: 'Diagnostic Benchmark Completed',
-            desc: 'Completed technical self-assessment and diagnostic profile evaluation.',
+            title: 'Day 1 Explorer',
+            desc: `Registered on Rishabh Labs and set your learning path.`,
             date: 'Day 1',
             badge: '⚡',
-          },
-          {
-            title: 'Algorithmic Problem Solver',
-            desc: 'Successfully executed code sandbox test suites with 100% test passage.',
-            date: 'Active',
-            badge: '',
-          },
-          {
-            title: 'Verified Proof of Work',
-            desc: 'Public developer profile configured with skills and college verification.',
-            date: 'Active',
-            badge: '',
-          },
-          {
-            title: 'First Milestone Accomplished',
-            desc: 'Submitted project milestone task with verified architecture guide.',
-            date: 'Sprint 1',
-            badge: '',
-          },
-          {
-            title: '1:1 Expert Mentorship Ready',
-            desc: 'Eligible for direct code review and career direction sessions with industry leads.',
-            date: 'Available',
-            badge: '',
+            unlocked: true,
           },
         ];
 
-        const achievementsToDisplay = (profileData?.achievements && profileData.achievements.length > 0) ? profileData.achievements : defaultAchievements;
+        const streak = (user as any)?.streak_days ?? (user as any)?.streakDays ?? 0;
+        const progress = profileData?.stats?.roadmapProgress ?? 0;
+
+        const milestones = [
+          ...earnedAchievements.map((a: any) => ({ ...a, unlocked: true })),
+          {
+            title: '7-Day Consistency Master',
+            desc: 'Maintain a 7-day learning streak without missing a daily mission.',
+            date: 'Locked',
+            badge: '🔥',
+            unlocked: streak >= 7,
+          },
+          {
+            title: 'Curriculum Midpoint Achiever',
+            desc: 'Complete 50% of your personalized track roadmap.',
+            date: 'Locked',
+            badge: '🎯',
+            unlocked: progress >= 50,
+          },
+          {
+            title: 'First Verified Project Shipped',
+            desc: 'Complete all milestones for a capstone project and pass mentor evaluation.',
+            date: 'Locked',
+            badge: '🚀',
+            unlocked: false,
+          },
+        ];
 
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {achievementsToDisplay.map((a: any, i: number) => (
+            {milestones.map((a: any, i: number) => (
               <div
                 key={i}
-                className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-2 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                className={`p-5 rounded-2xl border space-y-2 shadow-2xs ${
+                  a.unlocked
+                    ? 'bg-white dark:bg-[#212121] border-neutral-200/80 dark:border-neutral-800'
+                    : 'bg-neutral-50/50 dark:bg-neutral-900/30 border-dashed border-neutral-200 dark:border-neutral-800/80 opacity-70'
+                }`}
               >
-                <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-lg">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${
+                  a.unlocked ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100' : 'bg-neutral-200/50 dark:bg-neutral-800/40 text-neutral-400'
+                }`}>
                   {a.badge || '🏆'}
                 </div>
-                <h3 className="text-xs font-bold text-neutral-900 dark:text-white">{a.title}</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-neutral-900 dark:text-white">{a.title}</h3>
+                  <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                    a.unlocked ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400'
+                  }`}>
+                    {a.unlocked ? 'Unlocked' : 'Goal'}
+                  </span>
+                </div>
                 <p className="text-[11px] text-neutral-500 leading-snug">{a.desc}</p>
                 <span className="text-[10px] text-neutral-400 block font-mono pt-1">{a.date}</span>
               </div>
