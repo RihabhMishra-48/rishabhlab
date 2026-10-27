@@ -91,10 +91,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Left: Brand Logo */}
         <div className="flex items-center gap-4 sm:gap-6">
           <Link to={user ? '/dashboard' : '/'} className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-neutral-950 dark:bg-white flex items-center justify-center text-white dark:text-neutral-950 shadow-xs">
-              {/* Geometric Diamond Emblem matching reference */}
-              <div className="w-3.5 h-3.5 border-2 border-current rotate-45 transform"></div>
-            </div>
+            <img
+              src="/logo-circle.webp"
+              alt="Rishabh Labs"
+              className="w-8 h-8 rounded-full object-cover ring-1 ring-neutral-200 dark:ring-neutral-700 shadow-xs"
+            />
             <span className="font-bold text-lg tracking-tight text-neutral-900 dark:text-white">
               Rishabh<span className="font-medium text-neutral-500 dark:text-neutral-400">Labs</span>
             </span>
