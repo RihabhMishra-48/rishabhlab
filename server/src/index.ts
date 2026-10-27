@@ -82,14 +82,18 @@ const startServer = async () => {
     await connectDB();
     await seedDatabase();
 
-    if (isSupabaseConfigured()) {
-      console.log('⚡ [Supabase] Syncing initial schema & curriculum data with live Supabase...');
-      await seedSupabase();
-    }
-
+    // Listen immediately so Vite client proxy (/api/auth/me) connects without ECONNREFUSED
     app.listen(PORT, () => {
       console.log(`🚀 [Rishabh Labs Backend] Server running on http://localhost:${PORT}`);
       console.log(`📡 [Rishabh Labs Backend] Core API mounted at http://localhost:${PORT}/api`);
+
+      // Sync Supabase non-blockingly in the background
+      if (isSupabaseConfigured()) {
+        console.log('⚡ [Supabase] Syncing initial schema & curriculum data with live Supabase in background...');
+        seedSupabase().catch((err: any) => {
+          console.error('❌ [Supabase Seed Error]:', err?.message || err);
+        });
+      }
     });
   } catch (error) {
     console.error('Failed to start server:', error);
