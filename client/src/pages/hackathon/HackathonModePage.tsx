@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { pycodeService } from '../../services/pycodeService';
+import { LeaderboardModal } from '../../components/pycode/LeaderboardModal';
 import { Hackathon } from '../../types';
 import {
   CURATED_COMPETITIONS,
@@ -52,6 +53,7 @@ export const HackathonModePage: React.FC = () => {
   const [activeMainTab, setActiveMainTab] = useState<'competitions' | 'leaderboard' | 'builder'>(
     initialTab as any
   );
+  const [selectedLeaderboard, setSelectedLeaderboard] = useState<{ id: string; title?: string } | null>(null);
 
   const [hackathon, setHackathon] = useState<Hackathon | null>(null);
   const [activeTool, setActiveTool] = useState<string>('ideas');
@@ -715,28 +717,39 @@ export const HackathonModePage: React.FC = () => {
                             <span>AI Studio</span>
                           </button>
                         ) : (comp as any).attempt_url ? (
-                          (comp as any).user_attempt?.is_completed ? (
-                            <span className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700">
-                              Submitted (Score: {(comp as any).user_attempt?.score})
-                            </span>
-                          ) : (comp as any).is_live ? (
-                            <a
-                              href={(comp as any).attempt_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 transition-colors shadow-2xs"
-                            >
-                              <span>Attend Codeathon →</span>
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </a>
-                          ) : (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {(comp as any).user_attempt?.is_completed ? (
+                              <span className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700">
+                                Submitted (Score: {(comp as any).user_attempt?.score})
+                              </span>
+                            ) : (comp as any).is_live ? (
+                              <a
+                                href={(comp as any).attempt_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 transition-colors shadow-2xs"
+                              >
+                                <span>Attend Codeathon →</span>
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            ) : (
+                              <button
+                                disabled
+                                className="px-4 py-2 rounded-xl text-xs font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-400 cursor-not-allowed"
+                              >
+                                {(comp as any).is_upcoming ? 'Upcoming' : 'Ended'}
+                              </button>
+                            )}
+
                             <button
-                              disabled
-                              className="px-4 py-2 rounded-xl text-xs font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-400 cursor-not-allowed"
+                              onClick={() => setSelectedLeaderboard({ id: comp.id, title: comp.title })}
+                              className="px-3 py-2 rounded-xl text-xs font-semibold border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5 transition-colors"
+                              title="View Leaderboard"
                             >
-                              {(comp as any).is_upcoming ? 'Upcoming' : 'Ended'}
+                              <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                              <span>Leaderboard</span>
                             </button>
-                          )
+                          </div>
                         ) : (
                           <button
                             onClick={() => handleToggleRegister(comp.id)}
@@ -1146,6 +1159,17 @@ export const HackathonModePage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Live PyCode Codeathon Leaderboard Modal */}
+      {selectedLeaderboard && (
+        <LeaderboardModal
+          codeathonId={selectedLeaderboard.id}
+          codeathonTitle={selectedLeaderboard.title}
+          onClose={() => setSelectedLeaderboard(null)}
+          currentUserEmail={user?.email}
+          currentUsername={user?.email?.split('@')[0]}
+        />
       )}
     </div>
   );

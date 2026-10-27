@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { pycodeService } from '../../services/pycodeService';
 import { AvailableCodeathon, CodeathonAttempt } from '../../types/pycode';
+import { LeaderboardModal } from './LeaderboardModal';
 import {
   Trophy,
   Clock,
@@ -28,6 +29,7 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
   const [activeTab, setActiveTab] = useState<'codeathons' | 'results'>('codeathons');
   const [codeathons, setCodeathons] = useState<AvailableCodeathon[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedLeaderboard, setSelectedLeaderboard] = useState<{ id: string; title?: string } | null>(null);
 
   useEffect(() => {
     loadCodeathons();
@@ -193,8 +195,8 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
                       </div>
                     </div>
 
-                    {/* Action Button */}
-                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800/80">
+                    {/* Action Buttons Row */}
+                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800/80 space-y-2">
                       {isDisqualified ? (
                         <div className="w-full py-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs font-bold flex items-center justify-center gap-1.5">
                           <XCircle className="w-4 h-4" />
@@ -231,6 +233,15 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
                           Codeathon Ended
                         </button>
                       )}
+
+                      {/* View Leaderboard Button */}
+                      <button
+                        onClick={() => setSelectedLeaderboard({ id: c.id, title: c.title })}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition-colors"
+                      >
+                        <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                        <span>View Leaderboard</span>
+                      </button>
                     </div>
                   </div>
                 );
@@ -299,17 +310,27 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
                         {attempt.score_percentage}%
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                            attempt.status === 'completed'
-                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                              : attempt.status === 'disqualified'
-                              ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
-                              : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                          }`}
-                        >
-                          {attempt.status}
-                        </span>
+                        <div className="flex items-center justify-end gap-2.5">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                              attempt.status === 'completed'
+                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                : attempt.status === 'disqualified'
+                                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                            }`}
+                          >
+                            {attempt.status}
+                          </span>
+
+                          <button
+                            onClick={() => setSelectedLeaderboard({ id: attempt.test_id, title: attempt.test_title })}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition-colors"
+                          >
+                            <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                            <span>View Leaderboard</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -318,6 +339,16 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
             </div>
           )}
         </div>
+      )}
+
+      {/* Codeathon Leaderboard Modal */}
+      {selectedLeaderboard && (
+        <LeaderboardModal
+          codeathonId={selectedLeaderboard.id}
+          codeathonTitle={selectedLeaderboard.title}
+          onClose={() => setSelectedLeaderboard(null)}
+          currentUserEmail={userEmail}
+        />
       )}
     </div>
   );

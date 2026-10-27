@@ -23,6 +23,15 @@ export interface WorkspaceFile {
   folder: string | null;
   code: string;
   last_modified: string;
+  open_editor_url?: string;
+  share_url?: string;
+}
+
+export interface FolderDetail {
+  name: string;
+  files_count: number;
+  open_editor_url?: string;
+  share_url?: string;
 }
 
 export interface FileTreeNode {
@@ -31,6 +40,8 @@ export interface FileTreeNode {
   path?: string;
   code?: string;
   last_modified?: string;
+  open_editor_url?: string;
+  share_url?: string;
   children?: FileTreeNode[];
 }
 
@@ -59,6 +70,7 @@ export interface CodeathonAttempt {
   started_at: string;
   completed_at: string;
   questions_answered: number;
+  leaderboard_url?: string;
 }
 
 export interface AvailableCodeathon {
@@ -80,12 +92,44 @@ export interface AvailableCodeathon {
   is_ended?: boolean;
   has_already_attempted?: boolean;
   attempt_url: string;
+  leaderboard_url?: string;
   user_attempt?: {
     has_attempted: boolean;
     score?: number;
     is_completed?: boolean;
     is_disqualified?: boolean;
   } | null;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  user_id: string;
+  full_name: string;
+  username: string;
+  avatar_url?: string | null;
+  roll_number?: string;
+  course?: string;
+  section?: string;
+  score: number;
+  score_percentage: number;
+  accuracy?: number;
+  passed_cases: number;
+  total_cases: number;
+  time_taken_formatted: string;
+  warnings_count: number;
+  is_disqualified: boolean;
+}
+
+export interface CodeathonLeaderboardResponse {
+  success: boolean;
+  error?: string;
+  codeathon: {
+    id: string;
+    title: string;
+    total_participants: number;
+    total_questions: number;
+  };
+  leaderboard: LeaderboardEntry[];
 }
 
 export interface MentorshipSyncPayload {
@@ -97,6 +141,7 @@ export interface MentorshipSyncPayload {
   workspace: {
     total_files: number;
     folders: string[];
+    folder_details?: FolderDetail[];
     files: WorkspaceFile[];
     file_tree: FileTreeNode[];
   };

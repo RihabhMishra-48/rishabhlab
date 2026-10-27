@@ -1,4 +1,10 @@
-import { MentorshipSyncPayload, PracticeQuestion, QuestionCategory, AvailableCodeathon } from '../types/pycode';
+import {
+  MentorshipSyncPayload,
+  PracticeQuestion,
+  QuestionCategory,
+  AvailableCodeathon,
+  CodeathonLeaderboardResponse,
+} from '../types/pycode';
 import { pycodeCache } from './pycodeCache';
 
 const VITE_PYCODE_BASE_URL = import.meta.env.VITE_PYCODE_BASE_URL || 'https://pycode-student.vercel.app';
@@ -100,7 +106,7 @@ class PyCodeService {
     const cacheKey = `${params.topic || 'core-python'}_${params.category || 'all'}_${params.difficulty || 'all'}_${params.search || ''}`;
 
     // 1. Check client cache first unless explicitly skipped
-    if (!params.skipCache && !params.search) {
+    if (!params.search && !params.skipCache) {
       const cached = pycodeCache.getQuestions(cacheKey);
       if (cached && cached.questions && cached.questions.length > 0) {
         return {
@@ -166,6 +172,37 @@ class PyCodeService {
 
     // 2. Direct PyCode upstream fallback
     const directUrl = `${VITE_PYCODE_BASE_URL}/api/codeathons?${qs.toString()}`;
+    const res = await fetch(directUrl, { headers: this.getHeaders() });
+    return await res.json();
+  }
+
+  /**
+   * Fetch real-time codeathon leaderboard rankings and participant breakdown.
+   * Position continuously updates so it is always fetched live.
+   */
+  async fetchLeaderboard(codeathonId: string): Promise<CodeathonLeaderboardResponse> {
+    const cleanId = codeathonId.trim();
+    if (!cleanId) {
+      return {
+        success: false,
+        error: 'Codeathon ID is required',
+        codeathon: { id: '', title: '', total_participants: 0, total_questions: 0 },
+        leaderboard: [],
+      };
+    }
+
+    try {
+      // 1. Try server proxy
+      const proxyRes = await fetch(`/api/pycode/codeathons/${encodeURIComponent(cleanId)}/leaderboard`);
+      if (proxyRes.ok) {
+        return await proxyRes.json();
+      }
+    } catch {
+      // Fall through
+    }
+
+    // 2. Direct PyCode upstream fallback
+    const directUrl = `${VITE_PYCODE_BASE_URL}/api/codeathons/${encodeURIComponent(cleanId)}/leaderboard`;
     const res = await fetch(directUrl, { headers: this.getHeaders() });
     return await res.json();
   }

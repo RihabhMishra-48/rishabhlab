@@ -99,4 +99,13 @@ router.get('/codeathons', async (req: Request, res: Response) => {
   return forwardToPyCode(`/api/codeathons?${query.toString()}`, res);
 });
 
+// 4. GET /api/pycode/codeathons/:id/leaderboard
+router.get('/codeathons/:id/leaderboard', async (req: Request, res: Response) => {
+  const codeathonId = req.params.id;
+  if (!codeathonId) {
+    return res.status(400).json({ success: false, error: 'Codeathon ID is required.' });
+  }
+  return forwardToPyCode(`/api/codeathons/${encodeURIComponent(codeathonId)}/leaderboard`, res);
+});
+
 export default router;
