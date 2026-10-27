@@ -155,7 +155,7 @@ export const LoginPage: React.FC = () => {
               }}
               className="px-2.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 text-center transition-colors"
             >
-              🎓 Student
+              Student
             </button>
             <button
               type="button"
@@ -165,7 +165,7 @@ export const LoginPage: React.FC = () => {
               }}
               className="px-2.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 text-center transition-colors"
             >
-              💼 Mentor
+              Mentor
             </button>
             <button
               type="button"
@@ -175,7 +175,7 @@ export const LoginPage: React.FC = () => {
               }}
               className="px-2.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 text-center transition-colors"
             >
-              🏛️ College
+              Admin
             </button>
           </div>
         </div>
