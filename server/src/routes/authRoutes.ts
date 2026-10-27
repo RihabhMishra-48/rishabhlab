@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
 import { generateToken, requireAuth, AuthRequest } from '../middleware/auth';
 import { StudentProfile } from '../models/StudentProfile';
+import { supabase, isSupabaseConfigured } from '../config/supabase';
 
 const router = Router();
 
@@ -74,15 +75,46 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const cleanEmail = email.toLowerCase().trim();
+    let user = await User.findOne({ email: cleanEmail });
+
+    // Check if account exists in Supabase profiles (e.g. signed up with Google)
+    if (!user && isSupabaseConfigured() && supabase) {
+      const { data: sbProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', cleanEmail)
+        .maybeSingle();
+
+      if (sbProfile) {
+        return res.status(400).json({
+          code: 'GOOGLE_AUTH_REQUIRED',
+          message: 'This account was created with Google. Please click "Continue with Google" to sign in.',
+        });
+      }
+    }
+
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password credentials.' });
+      return res.status(404).json({
+        code: 'USER_NOT_FOUND',
+        message: 'No account found with this email. Please sign up first.',
+      });
+    }
+
+    if (user.password === 'supabase_oauth_managed') {
+      return res.status(400).json({
+        code: 'GOOGLE_AUTH_REQUIRED',
+        message: 'This account was created with Google. Please click "Continue with Google" to sign in.',
+      });
     }
 
     if (user.password) {
       const match = await bcrypt.compare(password, user.password);
       if (!match) {
-        return res.status(401).json({ message: 'Invalid email or password credentials.' });
+        return res.status(401).json({
+          code: 'INVALID_PASSWORD',
+          message: 'Incorrect password. Please verify your credentials or reset password.',
+        });
       }
     }
 

@@ -50,7 +50,7 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
         const { data: sbData, error: sbError } = await supabase.auth.getUser(token);
         if (sbData?.user && !sbError) {
           const sbUser = sbData.user;
-          const userEmail = sbUser.email || '';
+          const userEmail = (sbUser.email || '').toLowerCase().trim();
 
           const { data: sbProfile } = await supabase
             .from('profiles')
@@ -61,18 +61,23 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
           const hasChosenGoal = Boolean(sbProfile?.target_goal && sbProfile.target_goal.trim() !== '' && sbProfile.target_goal !== 'Not Set');
           let user = await User.findOne({ email: userEmail });
           if (!user && userEmail) {
-            user = await User.create({
-              name: sbProfile?.full_name || sbUser.user_metadata?.full_name || userEmail.split('@')[0],
-              email: userEmail,
-              password: 'supabase_oauth_managed',
-              role: sbProfile?.role || 'student',
-              college: sbProfile?.college_name || '',
-              streakDays: sbProfile?.streak_days || 0,
-              totalPoints: sbProfile?.total_points || 0,
-              skillsCompleted: sbProfile?.skills_completed || 0,
-              targetGoal: sbProfile?.target_goal || undefined,
-              isOnboarded: hasChosenGoal,
-            });
+            try {
+              user = await User.create({
+                name: sbProfile?.full_name || sbUser.user_metadata?.full_name || userEmail.split('@')[0],
+                email: userEmail,
+                password: 'supabase_oauth_managed',
+                role: sbProfile?.role || 'student',
+                college: sbProfile?.college_name || '',
+                streakDays: sbProfile?.streak_days || 0,
+                totalPoints: sbProfile?.total_points || 0,
+                skillsCompleted: sbProfile?.skills_completed || 0,
+                targetGoal: sbProfile?.target_goal || undefined,
+                isOnboarded: hasChosenGoal,
+              });
+            } catch {
+              // Handle race condition if concurrently created by another request
+              user = await User.findOne({ email: userEmail });
+            }
           } else if (user && sbProfile) {
             user.isOnboarded = hasChosenGoal;
             (user as any).targetGoal = sbProfile.target_goal || '';
@@ -89,9 +94,39 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
           }
         }
       } catch (sbErr) {
-        // Fall through
+        // Fall through to decoded token check
       }
     }
+
+    // 3. Fallback: decode Supabase JWT directly if network or service role had a temporary hiccup
+    try {
+      const decoded = jwt.decode(token) as any;
+      if (decoded && decoded.email && (!decoded.exp || decoded.exp * 1000 > Date.now())) {
+        const userEmail = String(decoded.email).toLowerCase().trim();
+        let user = await User.findOne({ email: userEmail });
+        if (!user && userEmail) {
+          try {
+            user = await User.create({
+              name: decoded.user_metadata?.full_name || userEmail.split('@')[0],
+              email: userEmail,
+              password: 'supabase_oauth_managed',
+              role: 'student',
+              college: '',
+              streakDays: 0,
+              totalPoints: 0,
+              skillsCompleted: 0,
+              isOnboarded: false,
+            });
+          } catch {
+            user = await User.findOne({ email: userEmail });
+          }
+        }
+        if (user) {
+          req.user = user;
+          return next();
+        }
+      }
+    } catch {}
 
     return res.status(401).json({ message: 'Invalid or expired authentication token.' });
   } catch (err: any) {

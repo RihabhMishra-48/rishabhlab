@@ -168,11 +168,38 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      if (response.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
-        localStorage.removeItem('rishabhlabs_token');
-        invalidateCache();
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+      if (response.status === 401) {
+        // Only drop session if /auth/me itself reports unauthorized
+        if (endpoint === '/auth/me') {
+          localStorage.removeItem('rishabhlabs_token');
+          invalidateCache();
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+          }
+        } else if (!endpoint.includes('/auth/')) {
+          // For auxiliary endpoints (missions, roadmap, etc.), attempt a silent Supabase token refresh and retry once
+          try {
+            const { supabase, isSupabaseConfigured } = await import('./supabase');
+            if (isSupabaseConfigured) {
+              const { data: refreshData } = await supabase.auth.refreshSession();
+              if (refreshData?.session?.access_token) {
+                localStorage.setItem('rishabhlabs_token', refreshData.session.access_token);
+                const retryResponse = await fetch(`${API_BASE}${endpoint}`, {
+                  ...options,
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${refreshData.session.access_token}`,
+                    ...options.headers,
+                  },
+                });
+                if (retryResponse.ok) {
+                  return (await retryResponse.json()) as T;
+                }
+              }
+            }
+          } catch {
+            // Ignore retry error and throw original message below
+          }
         }
       }
       throw new Error(data.message || `Request failed with status ${response.status}`);

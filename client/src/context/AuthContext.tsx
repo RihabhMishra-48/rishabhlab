@@ -194,14 +194,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // 2. Try Supabase Auth with a fast 1.5-second timeout race
+      // 2. Try Supabase Auth
       if (isSupabaseConfigured) {
         try {
-          const sessionPromise = supabase.auth.getSession();
-          const timeoutPromise = new Promise<{ data: { session: any } }>((resolve) =>
-            setTimeout(() => resolve({ data: { session: null } }), 1500)
-          );
-          let { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+          let { data: { session } } = await supabase.auth.getSession();
 
           // Proactively refresh if token is expired or within 60 seconds of expiring
           if (session?.expires_at && session.expires_at * 1000 - Date.now() < 60000) {
