@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ArrowRight, Sparkles, Users, Building2, ShieldAlert } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user, login, loginWithGoogle, switchRole } = useAuth();
+  const { user, login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,15 +28,6 @@ export const LoginPage: React.FC = () => {
       setError(err.message || 'Login failed. Please verify your credentials.');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleQuickDemo = async (role: string) => {
-    try {
-      await switchRole(role);
-      navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.message);
     }
   };
 
@@ -141,44 +132,6 @@ export const LoginPage: React.FC = () => {
           </button>
         </form>
 
-        {/* 1-Click Fast Demo Credentials */}
-        <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800/80">
-          <p className="text-[11px] font-medium text-neutral-500 text-center mb-2.5">
-            Instant 1-Click Demo Access
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('rishabh@rishabhlabs.com');
-                setPassword('password123');
-              }}
-              className="px-2.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 text-center transition-colors"
-            >
-              Student
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('mentor@rishabhlabs.com');
-                setPassword('password123');
-              }}
-              className="px-2.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 text-center transition-colors"
-            >
-              Mentor
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('admin@gla.ac.in');
-                setPassword('password123');
-              }}
-              className="px-2.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 text-center transition-colors"
-            >
-              Admin
-            </button>
-          </div>
-        </div>
 
         <p className="text-center text-xs text-neutral-500 pt-2 border-t border-neutral-100 dark:border-neutral-800">
           Don't have an account?{' '}

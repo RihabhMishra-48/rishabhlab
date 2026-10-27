@@ -228,7 +228,7 @@ export const HackathonModePage: React.FC = () => {
     }));
   };
 
-  const currentLeaderboard = CAMPUS_LEADERBOARDS[selectedCampus] || CAMPUS_LEADERBOARDS['Global'] || CAMPUS_LEADERBOARDS['GLA University'];
+  const currentLeaderboard = CAMPUS_LEADERBOARDS[selectedCampus] || CAMPUS_LEADERBOARDS['Global'] || [];
   const topThree = currentLeaderboard.slice(0, 3);
   const remainingRankings = currentLeaderboard.slice(3);
 
@@ -263,22 +263,19 @@ export const HackathonModePage: React.FC = () => {
           <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono font-bold text-neutral-900 dark:text-white bg-neutral-100 dark:bg-[#1a1a1a] px-2 py-0.5 rounded-md border border-neutral-200/80 dark:border-neutral-800">
-                #14
+                #--
               </span>
               <div className="flex items-center gap-1">
                 <Building2 className="w-3.5 h-3.5 text-neutral-400" />
-                <span className="text-xs font-bold text-neutral-900 dark:text-white truncate max-w-[120px]">{userCollege}</span>
+                <span className="text-xs font-bold text-neutral-900 dark:text-white truncate max-w-[120px]">{userCollege || 'Campus'}</span>
               </div>
-              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
-                Top 4%
-              </span>
             </div>
             <span className="text-neutral-300 dark:text-neutral-700">•</span>
             <div className="flex items-center gap-1.5 text-xs font-mono text-neutral-500 dark:text-neutral-400">
               <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
-              <span>17d</span>
+              <span>{user?.streakDays ?? (user as any)?.streak_days ?? 0}d</span>
               <span className="text-neutral-300 dark:text-neutral-700">•</span>
-              <span className="text-neutral-900 dark:text-neutral-200 font-bold">1,450 XP</span>
+              <span className="text-neutral-900 dark:text-neutral-200 font-bold">{user?.totalPoints ?? (user as any)?.points ?? 0} XP</span>
             </div>
           </div>
         </div>
@@ -373,7 +370,7 @@ export const HackathonModePage: React.FC = () => {
                   </div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-mono font-semibold shadow-2xs">
                     <Users className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
-                    <span>428 GLA Coders Active</span>
+                    <span>Active Builders Enrolled</span>
                   </div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-mono font-semibold shadow-2xs">
                     <Trophy className="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" />
@@ -405,7 +402,7 @@ export const HackathonModePage: React.FC = () => {
                 <div
                   onClick={() => handleTabChange('leaderboard')}
                   className="p-4 sm:p-5 rounded-2xl bg-white/95 dark:bg-[#242424] border border-neutral-200/90 dark:border-neutral-700 shadow-md space-y-3 cursor-pointer hover:border-neutral-300 dark:hover:border-neutral-600 transition-colors"
-                  title="Click to view full GLA & Global Leaderboards"
+                  title="Click to view full Leaderboard"
                 >
                   <div className="flex items-center justify-between pb-2.5 border-b border-neutral-200/60 dark:border-neutral-700/80">
                     <div className="flex items-center gap-2">
@@ -725,7 +722,7 @@ export const HackathonModePage: React.FC = () => {
 
             {/* Campus Selector Toggle */}
             <div className="flex items-center gap-1.5 p-1 rounded-full bg-neutral-100 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-xs font-bold">
-              {userCollege && userCollege !== 'GLA University' && (
+              {userCollege && (
                 <button
                   onClick={() => setSelectedCampus(userCollege)}
                   className={`px-4 py-1.5 rounded-full transition-colors cursor-pointer ${selectedCampus === userCollege
@@ -736,15 +733,6 @@ export const HackathonModePage: React.FC = () => {
                   🎓 {userCollege}
                 </button>
               )}
-              <button
-                onClick={() => setSelectedCampus('GLA University')}
-                className={`px-4 py-1.5 rounded-full transition-colors cursor-pointer ${selectedCampus === 'GLA University'
-                  ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-2xs border border-neutral-200/60 dark:border-neutral-700/60'
-                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-                  }`}
-              >
-                🏫 GLA University
-              </button>
               <button
                 onClick={() => setSelectedCampus('Global')}
                 className={`px-4 py-1.5 rounded-full transition-colors cursor-pointer ${selectedCampus === 'Global'

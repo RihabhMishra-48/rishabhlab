@@ -174,9 +174,9 @@ export const MascotCompanion: React.FC = () => {
   const lastBoopAtRef = useRef(0);
 
   // User streak stats
-  const streakDays = user?.streakDays || user?.streak_days || 17;
-  const streakFreezeAvailable = 1;
-  const nextMilestone = 20;
+  const streakDays = user?.streakDays ?? (user as any)?.streak_days ?? 0;
+  const streakFreezeAvailable = (user as any)?.streakFreezeAvailable ?? (user as any)?.streak_freeze_available ?? 0;
+  const nextMilestone = streakDays >= 30 ? 60 : streakDays >= 14 ? 30 : streakDays >= 7 ? 14 : 7;
   const daysToMilestone = Math.max(0, nextMilestone - streakDays);
 
   // Current track and cached mission
@@ -335,15 +335,15 @@ export const MascotCompanion: React.FC = () => {
     }
   };
 
-  const weekdays = [
-    { day: 'Mon', completed: true },
-    { day: 'Tue', completed: true },
-    { day: 'Wed', completed: true },
-    { day: 'Thu', completed: true },
-    { day: 'Fri', completed: true },
-    { day: 'Sat', completed: true },
-    { day: 'Sun', completed: true },
-  ];
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const todayDayIdx = (new Date().getDay() + 6) % 7;
+  const weekdays = dayNames.map((day, idx) => {
+    const isCompleted =
+      isAllDone && idx === todayDayIdx
+        ? true
+        : streakDays > 0 && idx <= todayDayIdx && todayDayIdx - idx < streakDays;
+    return { day, completed: isCompleted, isToday: idx === todayDayIdx };
+  });
 
   return (
     <>
@@ -474,7 +474,7 @@ export const MascotCompanion: React.FC = () => {
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono">
                     <CheckCircle2 className="w-3 h-3" />
-                    {streakDays}d Streak Active
+                    {streakDays > 0 ? `${streakDays}d Streak Active` : 'Start Streak Today'}
                   </span>
 
                   {pendingCount > 0 ? (
@@ -489,10 +489,12 @@ export const MascotCompanion: React.FC = () => {
                     </span>
                   )}
 
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 bg-neutral-200/60 dark:bg-neutral-800">
-                    <Shield className="w-3 h-3 text-blue-500" />
-                    {streakFreezeAvailable} Freeze Ready
-                  </span>
+                  {streakFreezeAvailable > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 bg-neutral-200/60 dark:bg-neutral-800">
+                      <Shield className="w-3 h-3 text-blue-500" />
+                      {streakFreezeAvailable} Freeze Ready
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -605,11 +607,21 @@ export const MascotCompanion: React.FC = () => {
                 {weekdays.map((item, idx) => (
                   <div
                     key={idx}
-                    className="w-5.5 h-6 rounded-md bg-neutral-100 dark:bg-neutral-800/80 flex flex-col items-center justify-center"
-                    title={item.day}
+                    className={`w-5.5 h-6 rounded-md flex flex-col items-center justify-center ${
+                      item.isToday
+                        ? 'bg-orange-500/10 border border-orange-500/30'
+                        : 'bg-neutral-100 dark:bg-neutral-800/80'
+                    }`}
+                    title={`${item.day}: ${item.completed ? 'Completed' : 'Pending'}`}
                   >
-                    <span className="text-[7.5px] font-bold text-neutral-400">{item.day[0]}</span>
-                    <Flame className="w-2.5 h-2.5 text-orange-500 fill-current -mt-0.5" />
+                    <span className={`text-[7.5px] font-bold ${item.isToday ? 'text-orange-500' : 'text-neutral-400'}`}>
+                      {item.day[0]}
+                    </span>
+                    {item.completed ? (
+                      <Flame className="w-2.5 h-2.5 text-orange-500 fill-current -mt-0.5" />
+                    ) : (
+                      <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 dark:bg-neutral-700 my-0.5" />
+                    )}
                   </div>
                 ))}
               </div>

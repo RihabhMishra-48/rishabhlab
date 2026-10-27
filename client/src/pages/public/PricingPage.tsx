@@ -195,10 +195,10 @@ export const PricingPage: React.FC = () => {
         <div className="p-8 rounded-2xl bg-neutral-100 dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800 text-center max-w-2xl mx-auto space-y-3">
           <h3 className="font-bold text-sm text-neutral-900 dark:text-white">Looking for Campus or University Partnerships?</h3>
           <p className="text-xs text-neutral-600 dark:text-neutral-400">
-            We partner directly with institutions like GLA University to provide cohort-wide execution tracking, faculty dashboards, and hackathon incubation.
+            We partner directly with leading institutions to provide cohort-wide execution tracking, faculty dashboards, and hackathon incubation.
           </p>
           <Link to="/college" className="inline-block text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-            View College Admin Demo →
+            Explore Institutional Portal →
           </Link>
         </div>
       </div>

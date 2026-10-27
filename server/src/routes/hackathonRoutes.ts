@@ -136,10 +136,10 @@ router.post('/ai-tool', async (req, res) => {
           { slide: '1. Title & Hook', content: 'Rishabh Labs: Stop asking "What should I learn?", know what to do next.' },
           { slide: '2. The Problem', content: 'College students waste 6+ months watching tutorial hell without shipping.' },
           { slide: '3. The Solution', content: 'Adaptive roadmaps + daily missions + sandboxed code practice + verified proof of work.' },
-          { slide: '4. Live Product Demo', content: 'Execute Day 17 mission, run LeetCode test suite, inspect Hackathon Mode countdown.' },
-          { slide: '5. Architecture & Tech', content: 'React/Vite, Express/TypeScript, MongoDB, sandboxed isolated code runner.' },
-          { slide: '6. Traction & Feedback', content: 'Piloted with GLA University student developers; 64% daily execution rate.' },
-          { slide: '7. The Ask / Future', content: 'Rollout across 10 partner engineering colleges; open for mentor signups.' },
+          { slide: '4. Live Product Demo', content: 'Execute daily curated mission, run isolated code test runner, inspect Hackathon sprint arena.' },
+          { slide: '5. Architecture & Tech', content: 'React/Vite, Express/TypeScript, Supabase/MongoDB, sandboxed isolated code runner.' },
+          { slide: '6. Traction & Feedback', content: 'Validated with student builders across engineering colleges with consistent execution rates.' },
+          { slide: '7. The Ask / Future', content: 'Rollout across partner engineering institutions; open for mentor and campus partnerships.' },
         ],
       });
     }

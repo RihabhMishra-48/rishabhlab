@@ -672,11 +672,11 @@ export const OnboardingPage: React.FC = () => {
                         type="text"
                         value={college}
                         onChange={(e) => setCollege(e.target.value)}
-                        placeholder="e.g. GLA University"
+                        placeholder="e.g. Indian Institute of Technology / BITS / SRM"
                         className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none"
                       />
                       <div className="flex flex-wrap gap-1.5 mt-2">
-                        {['GLA University', 'IIT / NIT', 'State Technical Univ', 'Autonomous Institute'].map((c) => (
+                        {['IIT / NIT', 'State Technical University', 'Autonomous Institute', 'Deemed University'].map((c) => (
                           <button
                             key={c}
                             type="button"
@@ -776,7 +776,7 @@ export const OnboardingPage: React.FC = () => {
                           type="text"
                           value={mentorOrg}
                           onChange={(e) => setMentorOrg(e.target.value)}
-                          placeholder="e.g. GLA University / Google"
+                          placeholder="e.g. Microsoft / Tech Institute / Google"
                           className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none"
                         />
                       </div>

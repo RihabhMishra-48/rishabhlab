@@ -7,24 +7,24 @@ const router = Router();
 // GET /api/college/overview
 router.get('/overview', async (req, res) => {
   try {
-    let college = await College.findOne({ code: 'GLA' });
+    let college = await College.findOne({});
     if (!college) {
       college = await College.create({
-        name: 'GLA University',
-        code: 'GLA',
-        location: 'Mathura, Uttar Pradesh',
-        logo: '/avatars/gla.png',
-        totalStudents: 2450,
-        activeStudents: 1980,
-        averageExecutionRate: 64,
+        name: 'Partner Institution',
+        code: 'CAMPUS',
+        location: 'Campus Analytics Hub',
+        logo: '',
+        totalStudents: 0,
+        activeStudents: 0,
+        averageExecutionRate: 0,
         skillDistribution: {
-          webDev: 42,
-          aiMl: 28,
-          dataAnalytics: 18,
-          cybersecurity: 12,
+          webDev: 0,
+          aiMl: 0,
+          dataAnalytics: 0,
+          cybersecurity: 0,
         },
-        topProjectsCount: 142,
-        activeHackathonTeamsCount: 18,
+        topProjectsCount: 0,
+        activeHackathonTeamsCount: 0,
       });
     }
 
@@ -33,15 +33,8 @@ router.get('/overview', async (req, res) => {
     res.json({
       college,
       topProjects,
-      departmentStats: [
-        { name: 'Computer Science & Engineering', students: 1280, executionRate: 72 },
-        { name: 'Information Technology', students: 640, executionRate: 68 },
-        { name: 'Data Science & AI', students: 530, executionRate: 81 },
-      ],
-      recentAchievements: [
-        { title: 'Smart India Hackathon Finalists', team: 'Team Innovators (GLA)', date: 'Oct 2026' },
-        { title: '840+ Daily Missions Completed this week', metric: 'Record Execution', date: 'This Week' },
-      ],
+      departmentStats: [],
+      recentAchievements: [],
     });
   } catch (err: any) {
     res.status(500).json({ message: err.message });

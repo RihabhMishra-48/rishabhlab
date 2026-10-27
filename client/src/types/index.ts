@@ -19,6 +19,9 @@ export interface User {
   isOnboarded: boolean;
   streakDays?: number;
   streak_days?: number;
+  totalPoints?: number;
+  points?: number;
+  streakFreezeAvailable?: number;
 }
 
 export interface MissionTask {

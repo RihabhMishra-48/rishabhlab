@@ -879,7 +879,7 @@ export const ProfilePage: React.FC = () => {
                     value={formData.college}
                     onChange={(e) => setFormData({ ...formData, college: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
-                    placeholder="e.g. GLA University"
+                    placeholder="e.g. Your College / University"
                   />
                 </div>
 

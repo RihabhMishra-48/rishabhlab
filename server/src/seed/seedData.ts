@@ -691,7 +691,7 @@ export const getCleanLessons = () => [
       'UDP trades reliability for low latency and zero connection overhead.',
       'IP header time-to-live (TTL) decrements at each router hop to prevent routing loops.',
     ],
-        contentSections: [
+    contentSections: [
       {
         heading: '1. The Network Mental Model: OSI vs. The TCP/IP Protocol Stack',
         bodyMarkdown: `Every digital communication over the internet relies on modular protocol layering. While academic computer science teaches the theoretical 7-Layer OSI Model, the modern internet runs entirely on the pragmatic 4-Layer TCP/IP Model:
@@ -1091,7 +1091,7 @@ export const seedDatabase = async () => {
   try {
     const existingUser = await User.findOne({ email: 'rishabh@rishabhlabs.com' });
     if (existingUser) {
-      console.log('ℹ️ [Seed] Synchronizing clean baseline, zero-progress state, and AI/ML project suite...');
+      console.log('[Seed] Synchronizing clean baseline, zero-progress state, and AI/ML project suite...');
       await User.updateOne({ email: 'rishabh@rishabhlabs.com' }, { college: '' });
       await StudentProfile.updateMany({}, {
         streakDays: 0,
@@ -1132,8 +1132,6 @@ export const seedDatabase = async () => {
           starterCode: {
             javascript: `class CacheEngine {\n  constructor(capacity = 1000) {\n    this.capacity = capacity;\n    this.cache = new Map();\n  }\n  set(key, value, ttlMs) {}\n  get(key) {}\n  purge() {}\n  size() {}\n}`,
             python: `class CacheEngine:\n    def __init__(self, capacity=1000):\n        self.capacity = capacity\n    def set(self, key, value, ttl_ms=None):\n        pass\n    def get(self, key):\n        pass\n    def purge(self):\n        pass\n    def size(self):\n        pass`,
-            cpp: `// C++ implementation`,
-            java: `// Java implementation`,
           },
           testCases: [{ testCaseId: 'tc-1', input: 'set("token", "xyz", 5000) -> get("token")', expectedOutput: '"xyz"', isHidden: false }],
           tags: ['Data Structures', 'LRU Cache', 'System Design', 'Sprint #18'],

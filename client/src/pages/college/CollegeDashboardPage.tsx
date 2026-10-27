@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { College } from '../../types';
 import {
   Building2,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 
 export const CollegeDashboardPage: React.FC = () => {
+  const { user } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,20 +32,20 @@ export const CollegeDashboardPage: React.FC = () => {
   }, []);
 
   const college: College = data?.college || {
-    name: 'GLA University',
-    code: 'GLA',
-    location: 'Mathura, Uttar Pradesh',
-    totalStudents: 2450,
-    activeStudents: 1980,
-    averageExecutionRate: 64,
+    name: user?.college || 'Partner Institution',
+    code: user?.college ? user.college.slice(0, 3).toUpperCase() : 'CAMPUS',
+    location: 'Campus Analytics Hub',
+    totalStudents: 0,
+    activeStudents: 0,
+    averageExecutionRate: 0,
     skillDistribution: {
-      webDev: 42,
-      aiMl: 28,
-      dataAnalytics: 18,
-      cybersecurity: 12,
+      webDev: 0,
+      aiMl: 0,
+      dataAnalytics: 0,
+      cybersecurity: 0,
     },
-    topProjectsCount: 142,
-    activeHackathonTeamsCount: 18,
+    topProjectsCount: 0,
+    activeHackathonTeamsCount: 0,
   };
 
   return (
@@ -52,7 +54,7 @@ export const CollegeDashboardPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-neutral-900 border border-neutral-700 flex items-center justify-center text-white shadow-md font-bold text-lg">
-            GLA
+            {college.code || 'COL'}
           </div>
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
@@ -87,7 +89,9 @@ export const CollegeDashboardPage: React.FC = () => {
           <p className="text-2xl sm:text-3xl font-extrabold text-blue-500 font-mono">
             {college.activeStudents.toLocaleString()}
           </p>
-          <span className="text-[11px] text-emerald-500 font-semibold">80.8% Active Ratio</span>
+          <span className="text-[11px] text-emerald-500 font-semibold">
+            {college.totalStudents > 0 ? `${Math.round((college.activeStudents / college.totalStudents) * 100)}% Active Ratio` : '0% Active Ratio'}
+          </span>
         </div>
 
         <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
