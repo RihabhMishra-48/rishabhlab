@@ -6,7 +6,7 @@ import crypto from 'crypto';
 
 export interface IExecutionRequest {
   code: string;
-  language: 'javascript' | 'python' | 'cpp' | 'java';
+  language: 'javascript' | 'python';
   testCases: Array<{
     testCaseId: string;
     input: string;
@@ -177,13 +177,9 @@ class CodeExecutionService {
 
     if (language === 'python') {
       return this.runPython(runId, code, input);
-    } else if (language === 'javascript') {
-      return this.runNodeJs(runId, code, input);
-    } else if (language === 'cpp') {
-      return this.runCpp(runId, code, input);
     }
 
-    // Default to JavaScript
+    // Default to JavaScript (Node.js)
     return this.runNodeJs(runId, code, input);
   }
 
@@ -320,42 +316,6 @@ ${code}
       if (fs.existsSync(filePath)) {
         try { fs.unlinkSync(filePath); } catch {}
       }
-    }
-  }
-
-  /**
-   * Real C++ execution harness
-   */
-  private async runCpp(
-    runId: string,
-    code: string,
-    input: string
-  ): Promise<{ output: string; stdout?: string; error?: string; compileError?: string; memoryMb?: number }> {
-    const srcPath = path.join(this.tempDir, `solution_${runId}.cpp`);
-    const binPath = path.join(this.tempDir, `solution_${runId}.bin`);
-
-    fs.writeFileSync(srcPath, code);
-
-    // Compile step
-    try {
-      const compileRes = await this.spawnProcess('g++', ['-O2', '-std=c++17', srcPath, '-o', binPath]);
-      if (compileRes.error || compileRes.stdout?.includes('error:')) {
-        return {
-          output: '',
-          compileError: compileRes.error || compileRes.stdout,
-        };
-      }
-    } catch (cErr: any) {
-      return { output: '', compileError: cErr.message };
-    }
-
-    // Run step
-    try {
-      const runRes = await this.spawnProcess(binPath, [], input);
-      return runRes;
-    } finally {
-      if (fs.existsSync(srcPath)) try { fs.unlinkSync(srcPath); } catch {}
-      if (fs.existsSync(binPath)) try { fs.unlinkSync(binPath); } catch {}
     }
   }
 

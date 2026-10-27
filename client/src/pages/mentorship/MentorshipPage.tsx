@@ -165,7 +165,7 @@ export const MentorshipPage: React.FC = () => {
           message: bookingMessage,
           preferredSlot,
         });
-      } catch {}
+      } catch { }
 
       setBookingSuccess(true);
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
@@ -212,11 +212,10 @@ export const MentorshipPage: React.FC = () => {
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-sm font-bold">Your Mentor Profile</h3>
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                  user.verificationStatus === 'pending'
-                    ? 'bg-neutral-800 text-neutral-300 border border-neutral-700'
-                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                }`}>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${user.verificationStatus === 'pending'
+                  ? 'bg-neutral-800 text-neutral-300 border border-neutral-700'
+                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  }`}>
                   {user.verificationStatus === 'pending' ? 'Advance Verification: In Progress' : 'Verified Industry Mentor'}
                 </span>
               </div>
@@ -267,7 +266,7 @@ export const MentorshipPage: React.FC = () => {
             </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200/90 dark:border-neutral-700/80 shadow-2xs font-medium">
               <Video className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
-              <span>Instant Google Meet</span>
+              <span>Instant Online Meet</span>
             </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300 font-semibold shadow-2xs">
               <Check className="w-3.5 h-3.5 text-emerald-500" />
@@ -336,10 +335,10 @@ export const MentorshipPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Bottom-right Floating Google Meet Chip */}
+            {/* Bottom-right Floating Meet Chip */}
             <div className="absolute -bottom-2 -right-2 px-3 py-1 rounded-full bg-white dark:bg-neutral-800 border border-neutral-200/90 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 font-semibold text-[10px] shadow-sm flex items-center gap-1.5 z-20">
               <Video className="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" />
-              <span>Google Meet</span>
+              <span>Online Meet</span>
             </div>
           </div>
         </div>
@@ -362,11 +361,10 @@ export const MentorshipPage: React.FC = () => {
                   setSelectedTopic(topic.id);
                   setBookingModalOpen(true);
                 }}
-                className={`p-4 rounded-2xl border text-center transition-colors flex flex-col items-center justify-center gap-2 group ${
-                  isSelected
-                    ? 'border-neutral-950 dark:border-white bg-white dark:bg-[#212121] shadow-sm'
-                    : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-[#262626] hover:border-neutral-300'
-                }`}
+                className={`p-4 rounded-2xl border text-center transition-colors flex flex-col items-center justify-center gap-2 group ${isSelected
+                  ? 'border-neutral-950 dark:border-white bg-white dark:bg-[#212121] shadow-sm'
+                  : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-[#262626] hover:border-neutral-300'
+                  }`}
               >
                 <div className="w-8 h-8 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center p-1.5">
                   {(topic as any).customGraphic ? (
@@ -402,11 +400,10 @@ export const MentorshipPage: React.FC = () => {
               <button
                 key={dom}
                 onClick={() => setSelectedDomain(dom)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                  selectedDomain === dom
-                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-xs'
-                    : 'bg-white dark:bg-[#262626] border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'
-                }`}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${selectedDomain === dom
+                  ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-xs'
+                  : 'bg-white dark:bg-[#262626] border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'
+                  }`}
               >
                 {dom}
               </button>
@@ -564,7 +561,7 @@ export const MentorshipPage: React.FC = () => {
                   Session Confirmed!
                 </h4>
                 <p className="text-xs text-neutral-500">
-                  Google Meet link: <strong className="text-blue-500">meet.google.com/rsh-labs-mentor</strong>
+                  Online Meet link: <strong className="text-blue-500">meet.google.com/rsh-labs-mentor</strong>
                 </p>
               </div>
             ) : (

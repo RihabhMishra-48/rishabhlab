@@ -30,8 +30,6 @@ import {
 const LANGUAGE_OPTIONS: DropdownOption[] = [
   { value: 'javascript', label: 'JavaScript (Node 20)' },
   { value: 'python', label: 'Python 3.11' },
-  { value: 'cpp', label: 'C++ (GCC 12)' },
-  { value: 'java', label: 'Java 17' },
 ];
 
 export const ProblemWorkspacePage: React.FC = () => {
@@ -43,7 +41,7 @@ export const ProblemWorkspacePage: React.FC = () => {
   const initialLang = initialCurated?.starterCode?.['python'] ? 'python' : 'javascript';
 
   const [problem, setProblem] = useState<CodingProblem | null>(initialCurated);
-  const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python' | 'cpp' | 'java'>(initialLang);
+  const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python'>(initialLang);
   const [code, setCode] = useState(initialCurated?.starterCode?.[initialLang] || '');
   const [loading, setLoading] = useState(!initialCurated);
 
@@ -110,7 +108,7 @@ export const ProblemWorkspacePage: React.FC = () => {
   }, [slug]);
 
   // When language switches, update code if untouched
-  const handleLanguageChange = (newLang: 'javascript' | 'python' | 'cpp' | 'java') => {
+  const handleLanguageChange = (newLang: 'javascript' | 'python') => {
     setSelectedLanguage(newLang);
     if (problem?.starterCode?.[newLang]) {
       setCode(problem.starterCode[newLang]);
@@ -301,7 +299,7 @@ export const ProblemWorkspacePage: React.FC = () => {
           <CustomDropdown
             options={LANGUAGE_OPTIONS}
             value={selectedLanguage}
-            onChange={(val) => handleLanguageChange(val as 'javascript' | 'python' | 'cpp' | 'java')}
+            onChange={(val) => handleLanguageChange(val as 'javascript' | 'python')}
             ariaLabel="Select programming language"
           />
 
@@ -489,7 +487,7 @@ export const ProblemWorkspacePage: React.FC = () => {
           <div className="flex-1 min-h-[320px]">
             <Editor
               height="100%"
-              language={selectedLanguage === 'cpp' ? 'cpp' : selectedLanguage}
+              language={selectedLanguage}
               theme={isDarkMode ? 'vs-dark' : 'light'}
               value={code}
               onChange={(val) => setCode(val || '')}

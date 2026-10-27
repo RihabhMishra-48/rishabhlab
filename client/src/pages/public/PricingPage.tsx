@@ -51,7 +51,7 @@ export const PricingPage: React.FC = () => {
               'Adaptive AI personalization engine',
               'Complete project workspaces with GitHub sync',
               'Hackathon Mode with 48-hour MVP planner',
-              'Full LeetCode-style multi-language compiler',
+              'LeetCode-style JavaScript & Python code runner',
               'Debugging Lab ("Fix the Bug" challenges)',
               'Progressive AI hints',
               'Verified public Proof of Work portfolio',
