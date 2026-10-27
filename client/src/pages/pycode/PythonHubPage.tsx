@@ -33,10 +33,18 @@ export const PythonHubPage: React.FC = () => {
   }, [user?.email]);
 
   const loadUserData = async (email: string) => {
-    try {
+    // 1. Instant Cache Hydration: Render cached profile picture, name, and workspace files with 0ms latency
+    const cached = pycodeService.getCachedUserData(email);
+    if (cached) {
+      setUserData(cached);
+    } else {
       setLoadingUserData(true);
-      const data = await pycodeService.fetchUserData(email);
-      setUserData(data);
+    }
+
+    // 2. Network Revalidation: Fetch fresh live data (real-time position, streak, codeathon results)
+    try {
+      const freshData = await pycodeService.fetchUserData(email);
+      setUserData(freshData);
     } catch (err) {
       console.error('Failed to load PyCode user data:', err);
     } finally {

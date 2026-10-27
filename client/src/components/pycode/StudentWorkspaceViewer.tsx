@@ -73,7 +73,7 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (loading) {
+  if (loading && (!workspace || files.length === 0)) {
     return (
       <div className="p-6 rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 animate-pulse space-y-4">
         <div className="w-56 h-5 rounded-md bg-neutral-200 dark:bg-neutral-800" />

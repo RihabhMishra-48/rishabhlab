@@ -91,6 +91,7 @@ export interface AvailableCodeathon {
 export interface MentorshipSyncPayload {
   success: boolean;
   not_found?: boolean;
+  is_cached_snapshot?: boolean;
   error?: string;
   user: PyCodeUser;
   workspace: {

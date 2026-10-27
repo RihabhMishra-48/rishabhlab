@@ -3,6 +3,7 @@ import { User } from '../types';
 import { api } from '../services/api';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
 import { pycodeService } from '../services/pycodeService';
+import { pycodeCache } from '../services/pycodeCache';
 
 interface AuthContextType {
   user: User | null;
@@ -275,12 +276,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sync profile avatar from PyCode if student has an existing PyCode account
   useEffect(() => {
-    if (user?.email && (!user.avatar || user.avatar.includes('unsplash.com') || user.avatar.includes('rishabh.webp'))) {
-      pycodeService.fetchUserData(user.email).then((data) => {
-        if (data?.user?.avatar_url) {
-          setUser((prev) => (prev ? { ...prev, avatar: data.user.avatar_url || undefined } : prev));
-        }
-      }).catch(() => {});
+    if (user?.email) {
+      // 1. Instant cache check: if cached avatar exists, set it immediately!
+      const cachedAvatar = pycodeCache.getAvatar(user.email);
+      if (cachedAvatar && (!user.avatar || user.avatar.includes('unsplash.com') || user.avatar.includes('rishabh.webp'))) {
+        setUser((prev) => (prev ? { ...prev, avatar: cachedAvatar } : prev));
+      }
+
+      // 2. Network revalidation: Fetch fresh user data (which updates avatar, name, files in cache, while position remains live)
+      if (!user.avatar || user.avatar.includes('unsplash.com') || user.avatar.includes('rishabh.webp')) {
+        pycodeService.fetchUserData(user.email).then((data) => {
+          if (data?.user?.avatar_url) {
+            setUser((prev) => (prev ? { ...prev, avatar: data.user.avatar_url || undefined } : prev));
+          }
+        }).catch(() => {});
+      }
     }
   }, [user?.email]);
 

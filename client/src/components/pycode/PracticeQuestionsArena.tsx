@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { pycodeService } from '../../services/pycodeService';
+import { pycodeCache } from '../../services/pycodeCache';
 import { PracticeQuestion, QuestionCategory } from '../../types/pycode';
 import {
   Search,
@@ -134,8 +135,20 @@ export const PracticeQuestionsArena: React.FC = () => {
   }, [selectedCategory, selectedDifficulty]);
 
   const loadQuestions = async () => {
-    try {
+    const cacheKey = `core-python_${selectedCategory}_${selectedDifficulty}_`;
+    const cached = pycodeCache.getQuestions(cacheKey);
+
+    if (cached && cached.questions && cached.questions.length > 0) {
+      if (cached.categories && cached.categories.length > 0) {
+        setCategories(cached.categories);
+      }
+      setQuestions(cached.questions);
+      setLoading(false);
+    } else {
       setLoading(true);
+    }
+
+    try {
       const res = await pycodeService.fetchQuestions({
         topic: 'core-python',
         category: selectedCategory !== 'all' ? selectedCategory : undefined,

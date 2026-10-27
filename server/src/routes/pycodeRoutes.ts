@@ -43,6 +43,13 @@ router.get('/user-data', async (req: Request, res: Response) => {
   return forwardToPyCode(`/api/mentorship/user-data?email=${encodeURIComponent(email)}`, res);
 });
 
+// In-memory cache for static practice questions (10 minute TTL)
+interface ServerCacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+const serverQuestionsCache = new Map<string, ServerCacheEntry<any>>();
+
 // 2. GET /api/pycode/questions?topic=core-python&category=...&difficulty=...&search=...&limit=...&offset=...
 router.get('/questions', async (req: Request, res: Response) => {
   const query = new URLSearchParams();
@@ -53,7 +60,34 @@ router.get('/questions', async (req: Request, res: Response) => {
   if (req.query.limit) query.set('limit', req.query.limit as string);
   if (req.query.offset) query.set('offset', req.query.offset as string);
 
-  return forwardToPyCode(`/api/questions?${query.toString()}`, res);
+  const cacheKey = query.toString();
+  const cached = serverQuestionsCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return res.json(cached.data);
+  }
+
+  try {
+    const url = `${PYCODE_BASE_URL}/api/questions?${query.toString()}`;
+    const response = await fetch(url, {
+      headers: {
+        'x-api-key': PYCODE_API_KEY,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (response.ok && data?.questions) {
+      serverQuestionsCache.set(cacheKey, {
+        data,
+        expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+      });
+    }
+
+    return res.status(response.status).json(data);
+  } catch (err: any) {
+    console.error(`[PyCode Proxy Error] Failed calling /api/questions:`, err.message);
+    return res.status(500).json({ success: false, error: 'PyCode upstream proxy failed: ' + err.message });
+  }
 });
 
 // 3. GET /api/pycode/codeathons?status=all&email=...

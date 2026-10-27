@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { pycodeCache } from '../../services/pycodeCache';
 
 interface UserAvatarProps {
   src?: string | null;
@@ -41,16 +42,21 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 }) => {
   const [imageError, setImageError] = useState(false);
 
-  const displayName = name || email?.split('@')[0] || 'User';
+  // Check cache for avatar and name if not directly supplied
+  const cachedAvatar = email ? pycodeCache.getAvatar(email) : null;
+  const cachedName = email ? pycodeCache.getName(email) : null;
+
+  const effectiveSrc = src || cachedAvatar;
+  const displayName = name || cachedName || email?.split('@')[0] || 'User';
   const initial = displayName.trim().charAt(0).toUpperCase() || 'U';
   const colorClass = getColorForName(displayName);
 
   // Filter out unwanted legacy defaults
   const isValidSrc =
-    src &&
+    effectiveSrc &&
     !imageError &&
-    !src.includes('rishabh.webp') &&
-    !src.includes('unsplash.com');
+    !effectiveSrc.includes('rishabh.webp') &&
+    !effectiveSrc.includes('unsplash.com');
 
   const sizeClasses = {
     xs: 'w-6 h-6 text-[10px]',
@@ -63,10 +69,10 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   const currentSizeClass = typeof size === 'string' ? sizeClasses[size] : '';
   const customStyle = typeof size === 'number' ? { width: `${size}px`, height: `${size}px`, fontSize: `${Math.round(size * 0.45)}px` } : undefined;
 
-  if (isValidSrc) {
+  if (isValidSrc && effectiveSrc) {
     return (
       <img
-        src={src}
+        src={effectiveSrc}
         alt={displayName}
         onError={() => setImageError(true)}
         style={customStyle}

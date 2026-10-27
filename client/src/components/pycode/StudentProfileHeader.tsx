@@ -14,8 +14,8 @@ export const StudentProfileHeader: React.FC<StudentProfileHeaderProps> = ({
   loading,
   email,
 }) => {
-  // 1. Loading Skeleton State
-  if (loading) {
+  // 1. Loading Skeleton State (Only show if no cached data exists)
+  if (loading && !data) {
     return (
       <div className="p-6 rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 animate-pulse space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
