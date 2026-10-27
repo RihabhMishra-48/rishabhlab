@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
 import { getCuratedMission } from '../../data/curatedMissions';
 import { normalizeTrackName } from '../../data/curatedRoadmaps';
-import { api } from '../../services/api';
+import { api, hasAuthToken } from '../../services/api';
 import { DailyMission } from '../../types';
 import {
   Flame,
@@ -189,6 +189,11 @@ export const MascotCompanion: React.FC = () => {
   useEffect(() => {
     setMission(getCuratedMission(targetTrack));
 
+    // Only sync with backend if user is authenticated and token is available
+    if (!user || !hasAuthToken()) {
+      return;
+    }
+
     const syncBackend = async () => {
       try {
         const data = await api.getTodayMission();
@@ -200,7 +205,7 @@ export const MascotCompanion: React.FC = () => {
       }
     };
     syncBackend();
-  }, [targetTrack, isOpen]);
+  }, [targetTrack, isOpen, user]);
 
   // Derived task metrics
   const tasks = mission?.tasks || [];

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
-import { api } from '../services/api';
+import { api, getAuthToken } from '../services/api';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
 import { pycodeService } from '../services/pycodeService';
 import { pycodeCache } from '../services/pycodeCache';
@@ -46,7 +46,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isSupabaseConfigured) return;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT' || (!session && event !== 'INITIAL_SESSION')) {
+        localStorage.removeItem('rishabhlabs_token');
+        setUser(null);
+        return;
+      }
+
       if (session?.user) {
+        // ALWAYS store access_token first so synchronous queries immediately have authorization
+        if (session.access_token) {
+          localStorage.setItem('rishabhlabs_token', session.access_token);
+        }
+
         // Fetch or create profile in Supabase profiles
         try {
           const { data: profile } = await supabase
@@ -110,9 +121,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isOnboarded: localOnboarded,
             });
           }
-          if (session.access_token) {
-            localStorage.setItem('rishabhlabs_token', session.access_token);
-          }
 
           // Auto-redirect to dashboard/onboarding if returning from OAuth or on landing/auth pages
           const isOAuthCallback = window.location.hash.includes('access_token');
@@ -157,7 +165,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
 
       // 1. Check local backend REST API auth first (instant <50ms)
-      const token = localStorage.getItem('rishabhlabs_token');
+      const token = getAuthToken();
       if (token) {
         try {
           const data = await api.getMe();
@@ -183,19 +191,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Token expired or invalid
           localStorage.removeItem('rishabhlabs_token');
           api.invalidateCache();
-          setUser(null);
         }
       }
 
-      // 2. Try Supabase Auth with a fast 1-second timeout race
+      // 2. Try Supabase Auth with a fast 1.5-second timeout race
       if (isSupabaseConfigured) {
         try {
           const sessionPromise = supabase.auth.getSession();
           const timeoutPromise = new Promise<{ data: { session: any } }>((resolve) =>
-            setTimeout(() => resolve({ data: { session: null } }), 1000)
+            setTimeout(() => resolve({ data: { session: null } }), 1500)
           );
-          const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
-          if (session?.user) {
+          let { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+
+          // Proactively refresh if token is expired or within 60 seconds of expiring
+          if (session?.expires_at && session.expires_at * 1000 - Date.now() < 60000) {
+            try {
+              const refreshed = await supabase.auth.refreshSession();
+              if (refreshed.data?.session) {
+                session = refreshed.data.session;
+              }
+            } catch {
+              // Ignore refresh error
+            }
+          }
+
+          if (session?.user && session?.access_token) {
+            // ALWAYS store access token first
+            localStorage.setItem('rishabhlabs_token', session.access_token);
+
             const { data: profile } = await supabase
               .from('profiles')
               .select('*')
@@ -254,6 +277,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 bio: '',
                 githubUsername: '',
                 targetGoal: localGoal,
+                fieldOfInterest: localGoal,
+                verificationStatus: 'approved',
                 isOnboarded: localOnboarded,
               });
               setLoading(false);

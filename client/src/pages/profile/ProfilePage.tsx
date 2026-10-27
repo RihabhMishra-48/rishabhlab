@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Link
 } from 'react-router-dom';
-import { api } from '../../services/api';
+import { api, hasAuthToken } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { UserAvatar } from '../../components/common/UserAvatar';
 import {
@@ -86,15 +86,19 @@ export const ProfilePage: React.FC = () => {
       const data = await api.getProfile();
       setProfileData(data);
     } catch (err) {
-      console.error(err);
+      // Handled silently
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    if (!hasAuthToken()) {
+      setLoading(false);
+      return;
+    }
     fetchProfile();
-  }, []);
+  }, [user]);
 
   const handleCopyPublicLink = () => {
     const handle = user?.githubUsername || (user?.name ? user.name.toLowerCase().replace(/\s+/g, '-') : 'profile');

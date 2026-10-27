@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../../services/api';
+import { api, hasAuthToken } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { UserAvatar } from '../../components/common/UserAvatar';
 import { PricingPlan } from '../../types';
@@ -94,6 +94,11 @@ export const AdminDashboardPage: React.FC = () => {
   };
 
   const fetchAllData = async () => {
+    if (!hasAuthToken() || user?.role !== 'super_admin') {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const [overviewData, mentorsData, problemsData, roadmapsData, missionsData, pricingData, usersData] = await Promise.all([
@@ -122,7 +127,7 @@ export const AdminDashboardPage: React.FC = () => {
 
   useEffect(() => {
     fetchAllData();
-  }, []);
+  }, [user]);
 
   // --------------------------------------------------------------------------
   // USER & ROLE HANDLERS

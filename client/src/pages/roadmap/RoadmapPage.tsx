@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useSearchParams } from 'react-router-dom';
-import { api } from '../../services/api';
+import { api, hasAuthToken } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Roadmap, RoadmapNode } from '../../types';
 import {
@@ -203,6 +203,17 @@ export const RoadmapPage: React.FC = () => {
       trackName || activeTrack || user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'Web Development'
     );
     const fallbackRoadmap = applySavedStatuses(getCuratedRoadmap(target), target);
+
+    if (!hasAuthToken()) {
+      setRoadmap(fallbackRoadmap);
+      const active =
+        fallbackRoadmap.nodes.find((n: RoadmapNode) => n.status === 'in_progress') ||
+        fallbackRoadmap.nodes[0];
+      setSelectedNode((prev) => (prev && fallbackRoadmap.nodes.some((n: RoadmapNode) => n.nodeId === prev.nodeId) ? prev : active));
+      setLoading(false);
+      setRegenerating(false);
+      return;
+    }
 
     try {
       if (shouldRegenerate) {

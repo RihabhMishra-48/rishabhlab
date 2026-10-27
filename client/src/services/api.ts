@@ -81,12 +81,74 @@ function saveToCache<T>(key: string, data: T, ttlMs: number): void {
   }
 }
 
-function getAuthHeader(): Record<string, string> {
+export function getAuthToken(): string | null {
   const token = localStorage.getItem('rishabhlabs_token');
+  if (token) return token;
+
+  // Fallback: recover token from Supabase cached session in localStorage if present
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.access_token) {
+            localStorage.setItem('rishabhlabs_token', parsed.access_token);
+            return parsed.access_token;
+          }
+        }
+      }
+    }
+  } catch {
+    // Ignore JSON parsing or storage access errors
+  }
+
+  return null;
+}
+
+export function hasAuthToken(): boolean {
+  return Boolean(getAuthToken());
+}
+
+function getAuthHeader(): Record<string, string> {
+  const token = getAuthToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+const PUBLIC_PREFIXES = [
+  '/auth/login',
+  '/auth/register',
+  '/health',
+  '/pricing',
+  '/college/overview',
+  '/mentors',
+  '/lessons',
+  '/problems',
+  '/projects',
+];
+
+function isProtectedEndpoint(endpoint: string): boolean {
+  // If explicitly matching public prefix without authenticated sub-actions
+  const matchesPublic = PUBLIC_PREFIXES.some((prefix) => endpoint.startsWith(prefix));
+  const isAction =
+    endpoint.includes('/toggle') ||
+    endpoint.includes('/submit') ||
+    endpoint.includes('/book') ||
+    endpoint.includes('/verify') ||
+    endpoint.includes('/task');
+
+  return !matchesPublic || isAction;
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const token = getAuthToken();
+
+  // Guard: Avoid firing doomed HTTP requests that predictably 401 when no session exists
+  if (isProtectedEndpoint(endpoint) && !token) {
+    throw new Error('Authentication required. Please log in.');
+  }
+
   const headers = {
     'Content-Type': 'application/json',
     ...getAuthHeader(),

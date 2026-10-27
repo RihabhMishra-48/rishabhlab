@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
-import { api } from '../../services/api';
+import { api, hasAuthToken } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { DailyMission } from '../../types';
 import { getCuratedMission } from '../../data/curatedMissions';
@@ -31,6 +31,12 @@ export const DailyMissionPage: React.FC = () => {
 
   const fetchMission = async () => {
     const fallback = getCuratedMission(track);
+    if (!hasAuthToken()) {
+      setMission(fallback);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const data = await api.getTodayMission();
@@ -40,7 +46,6 @@ export const DailyMissionPage: React.FC = () => {
         setMission(fallback);
       }
     } catch (err) {
-      console.warn('Using curated daily mission for', track);
       setMission(fallback);
     } finally {
       setLoading(false);

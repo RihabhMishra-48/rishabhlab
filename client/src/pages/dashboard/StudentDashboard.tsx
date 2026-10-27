@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api } from '../../services/api';
+import { api, hasAuthToken } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { getCuratedMission } from '../../data/curatedMissions';
 import { normalizeTrackName } from '../../data/curatedRoadmaps';
@@ -26,24 +26,33 @@ import {
 } from 'lucide-react';
 
 export const StudentDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
+
+    if (!user || !hasAuthToken()) {
+      setLoading(false);
+      return;
+    }
+
     const fetchDashboard = async () => {
       try {
         const data = await api.getDashboard();
         setDashboardData(data);
-      } catch (err) {
-        console.error('Failed to load dashboard:', err);
+      } catch (err: any) {
+        if (!err?.message?.includes('Authentication required')) {
+          console.error('Failed to load dashboard:', err);
+        }
       } finally {
         setLoading(false);
       }
     };
     fetchDashboard();
-  }, []);
+  }, [user, authLoading]);
 
   const targetTrack = normalizeTrackName(user?.targetGoal || localStorage.getItem('rishabhlabs_goal') || 'App Development');
   const mission = dashboardData?.todayMission || getCuratedMission(targetTrack);
