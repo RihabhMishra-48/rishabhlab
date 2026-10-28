@@ -64,14 +64,14 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Modern Segmented Tabs Header */}
-      <div className="inline-flex p-1.5 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 gap-1.5 shadow-2xs">
+      {/* 2 Tabs Header */}
+      <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-2">
         <button
           onClick={() => setActiveTab('codeathons')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
             activeTab === 'codeathons'
-              ? 'bg-white dark:bg-[#282828] text-neutral-900 dark:text-white shadow-xs'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+              : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
           }`}
         >
           <Trophy className="w-4 h-4 text-amber-500" />
@@ -83,10 +83,10 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
 
         <button
           onClick={() => setActiveTab('results')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
             activeTab === 'results'
-              ? 'bg-white dark:bg-[#282828] text-neutral-900 dark:text-white shadow-xs'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+              : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
           }`}
         >
           <FileCheck2 className="w-4 h-4 text-blue-500" />
@@ -133,7 +133,7 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
                 return (
                   <div
                     key={c.id}
-                    className="p-6 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xs hover:border-[#D4704B]/40 dark:hover:border-[#D4704B]/40 transition-colors flex flex-col justify-between space-y-5"
+                    className="p-6 rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-2xs flex flex-col justify-between space-y-5"
                   >
                     <div className="space-y-3">
                       {/* Status Badge + Difficulty */}
@@ -145,11 +145,11 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
                           </span>
                         ) : c.is_upcoming ? (
                           <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                            Upcoming
+                            Coming Soon
                           </span>
                         ) : (
-                          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 dark:bg-neutral-800/80 text-neutral-500 border border-neutral-200/80 dark:border-neutral-700/80">
-                            Codeathon Ended
+                          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 dark:bg-neutral-800 text-neutral-500 border border-neutral-200 dark:border-neutral-700">
+                            Quiz Ended
                           </span>
                         )}
 
@@ -203,7 +203,7 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
                           <span>Disqualified (3 Warnings Exceeded)</span>
                         </div>
                       ) : isCompleted ? (
-                        <div className="w-full py-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center justify-center gap-1.5">
+                        <div className="w-full py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 text-xs font-bold flex items-center justify-center gap-1.5">
                           <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                           <span>Submitted (Score: {userAttempt?.score ?? 0})</span>
                         </div>
@@ -212,26 +212,32 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
                           href={c.attempt_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full py-2.5 rounded-xl bg-[#D4704B] hover:bg-[#C2623F] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-colors"
+                          className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors"
                         >
                           <Play className="w-4 h-4 fill-current" />
                           <span>Attend Codeathon →</span>
                           <ExternalLink className="w-3.5 h-3.5" />
                         </a>
                       ) : c.is_upcoming ? (
-                        <div className="w-full py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800/80 text-neutral-400 text-xs font-semibold text-center border border-neutral-200/60 dark:border-neutral-800">
+                        <button
+                          disabled
+                          className="w-full py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-400 text-xs font-semibold cursor-not-allowed text-center"
+                        >
                           Starts at {formatDateTime(c.timings?.start_time)}
-                        </div>
+                        </button>
                       ) : (
-                        <div className="w-full py-2.5 rounded-xl bg-neutral-100/80 dark:bg-neutral-800/60 text-neutral-400 text-xs font-medium text-center border border-neutral-200/60 dark:border-neutral-800">
+                        <button
+                          disabled
+                          className="w-full py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-400 text-xs font-semibold cursor-not-allowed text-center"
+                        >
                           Codeathon Ended
-                        </div>
+                        </button>
                       )}
 
                       {/* View Leaderboard Button */}
                       <button
                         onClick={() => setSelectedLeaderboard({ id: c.id, title: c.title })}
-                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-neutral-50 dark:bg-[#202020] border border-neutral-200 dark:border-neutral-700/80 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 text-xs font-bold text-neutral-800 dark:text-neutral-200 transition-colors cursor-pointer"
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition-colors"
                       >
                         <Trophy className="w-3.5 h-3.5 text-amber-500" />
                         <span>View Leaderboard</span>

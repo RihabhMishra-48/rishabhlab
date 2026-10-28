@@ -279,16 +279,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }`
             }
           >
-            <div className="w-4 h-4 rounded-full bg-[#D4704B] flex items-center justify-center text-white font-mono font-bold text-[8px] shrink-0">
-              &gt;_
-            </div>
+            <Terminal className="w-4 h-4 shrink-0 text-emerald-500 dark:text-emerald-400" />
             {!isCollapsed ? (
-              <>
-                <span className="truncate">Python Arena</span>
-                <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-sm bg-[#D4704B]/10 text-[#D4704B]">
-                  PyCode
-                </span>
-              </>
+              <span className="truncate">Python Arena</span>
             ) : (
               <div
                 className={`absolute left-full ml-3 inset-y-0 my-auto h-fit z-50 transition-all duration-150 ${isInfoBarOpen('/python-hub')
@@ -298,7 +291,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               >
                 <div className="relative px-3 py-1.5 rounded-lg bg-neutral-900/95 dark:bg-[#262626]/95 backdrop-blur-md border border-neutral-800 dark:border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
                   <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-neutral-900 dark:bg-[#262626] border-l border-b border-neutral-800 dark:border-neutral-700/80 rotate-45" />
-                  <span className="font-medium text-white text-xs">Python Arena (PyCode)</span>
+                  <span className="font-medium text-white text-xs">Python Arena</span>
                 </div>
               </div>
             )}

@@ -3,7 +3,6 @@ import Editor from '@monaco-editor/react';
 import { WorkspaceFile, FileTreeNode } from '../../types/pycode';
 import { STARTER_PYTHON_WORKSPACE } from '../../data/starterPythonWorkspace';
 import { useAuth } from '../../context/AuthContext';
-import { PyCodeBrandBadge } from './PyCodeBrandBadge';
 import {
   Folder,
   FolderOpen,
@@ -218,13 +217,11 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
   return (
     <div className="rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-2xs overflow-hidden">
       {/* Workspace Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-[#202020]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-5 h-5 rounded-full bg-[#D4704B] flex items-center justify-center text-white font-mono font-bold text-[9px] shrink-0">
-            &gt;_
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-[#252525]">
+        <div className="flex items-center gap-2">
+          <Code2 className="w-4 h-4 text-emerald-500" />
           <h3 className="text-xs font-bold text-neutral-900 dark:text-white">
-            PyCode Terminal Workspace ({effectiveWorkspace?.total_files || files.length} Python Scripts)
+            Saved Terminal Workspace ({effectiveWorkspace?.total_files || files.length} Python Scripts)
           </h3>
           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             Synced
@@ -244,9 +241,9 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
             href="https://pycode-student.vercel.app/editor"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#D4704B] hover:bg-[#C2623F] text-white text-xs font-bold transition-colors shadow-2xs"
+            className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
           >
-            <span>Launch PyCode Workspace</span>
+            <span>Launch PyCode IDE</span>
             <ExternalLink className="w-3 h-3" />
           </a>
         </div>
