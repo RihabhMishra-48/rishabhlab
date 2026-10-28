@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Flame, Zap } from 'lucide-react';
+import { Flame, Zap, ExternalLink } from 'lucide-react';
 
 interface ActivityHeatmapProps {
   dailyCounts?: Record<string, number>;
@@ -146,26 +146,60 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* Subtle Companion Stats Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
-            Python Practice Submissions
-          </span>
-          <span className="text-xs px-2.5 py-0.5 rounded-full bg-neutral-200/60 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-medium">
-            {totalSubmissions} problems solved
-          </span>
+      {/* PyCode Official Promotion & Activity Companion Card */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-xs">
+        {/* Left: Official PyCode Promotion Branding */}
+        <div className="flex items-center gap-3.5">
+          <a
+            href="https://pycode-student.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-3.5 cursor-pointer"
+            title="Launch Official PyCode Workspace"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-[#D4704B] flex items-center justify-center text-white font-mono font-bold text-sm shadow-xs shrink-0 ring-4 ring-[#D4704B]/15">
+              &gt;_
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm sm:text-base font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50 group-hover:text-[#D4704B] transition-colors">
+                  PyCode
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#D4704B]/10 text-[#D4704B] border border-[#D4704B]/20">
+                  Workspace
+                </span>
+                <span className="text-neutral-300 dark:text-neutral-700">·</span>
+                <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">
+                  {totalSubmissions} Problems Solved
+                </span>
+              </div>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5 flex items-center gap-1.5">
+                <span>Synchronized live coding activity, monthly streaks & submissions</span>
+                <ExternalLink className="w-3 h-3 text-neutral-400 group-hover:text-[#D4704B] transition-colors" />
+              </p>
+            </div>
+          </a>
         </div>
 
-        <div className="flex items-center gap-3 text-xs">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold border border-amber-500/20">
-            <Flame className="w-3.5 h-3.5 text-amber-500" />
+        {/* Right: Streaks & Direct Action Button */}
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs shrink-0">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold border border-amber-500/20 shadow-2xs">
+            <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
             <span>{currentStreak} Day Streak</span>
           </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-400 font-semibold border border-purple-500/20">
-            <Zap className="w-3.5 h-3.5 text-purple-500" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-400 font-bold border border-purple-500/20 shadow-2xs">
+            <Zap className="w-3.5 h-3.5 text-purple-500 fill-purple-500" />
             <span>Best: {longestStreak} Days</span>
           </span>
+          <a
+            href="https://pycode-student.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#D4704B] hover:bg-[#C2623F] active:bg-[#B35634] text-white text-xs font-bold shadow-xs transition-colors shrink-0"
+          >
+            <span>Open PyCode</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
       </div>
 
