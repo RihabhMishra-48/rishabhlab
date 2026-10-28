@@ -78,6 +78,12 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 const startServer = async () => {
+  // In Vercel serverless environment, connect non-blockingly and do not bind app.listen()
+  if (process.env.VERCEL) {
+    connectDB().catch((err) => console.warn('DB connect notice:', err?.message || err));
+    return;
+  }
+
   try {
     await connectDB();
     await seedDatabase();
@@ -85,7 +91,7 @@ const startServer = async () => {
     console.error('Database connection notice:', error);
   }
 
-  // Always listen on configured PORT so both local dev and Vercel/container services stay active
+  // Local development / standalone container mode
   const server = app.listen(PORT, () => {
     console.log(`🚀 [Rishabh Labs Backend] Server running on http://localhost:${PORT}`);
     console.log(`📡 [Rishabh Labs Backend] Core API mounted at http://localhost:${PORT}/api`);

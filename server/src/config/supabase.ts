@@ -1,6 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
-import ws from 'ws';
 
 dotenv.config();
 
@@ -22,9 +21,6 @@ if (isValidUrl(supabaseUrl) && supabaseKey && !supabaseKey.includes('your-supaba
       auth: {
         autoRefreshToken: false,
         persistSession: false,
-      },
-      realtime: {
-        transport: ws as any,
       },
     });
     console.log('⚡ [Supabase] Connected to live Supabase project:', supabaseUrl);

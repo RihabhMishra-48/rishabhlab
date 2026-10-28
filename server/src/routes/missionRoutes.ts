@@ -51,14 +51,68 @@ router.get('/today', requireAuth, async (req: AuthRequest, res) => {
         targetDayNumber = Math.max(1, daysElapsed + 1);
       }
 
-      const generated = await aiService.generateDailyMission(targetDayNumber, userGoal);
+      let generated: any;
+      try {
+        generated = await aiService.generateDailyMission(targetDayNumber, userGoal);
+      } catch (genErr) {
+        generated = {
+          quote: 'Small steps every day lead to big results.',
+          tasks: [
+            {
+              taskId: `task-${targetDayNumber}-learn`,
+              type: 'learn',
+              title: `Learn - Foundations of ${userGoal} (25 min)`,
+              durationMinutes: 25,
+              durationText: '25 min',
+              description: `Master core concepts and fundamentals in ${userGoal}.`,
+              isCompleted: false,
+              actionUrl: '/learn',
+              proofRequired: false,
+            },
+            {
+              taskId: `task-${targetDayNumber}-practice`,
+              type: 'practice',
+              title: 'Practice - Solve Coding Challenges (20 min)',
+              durationMinutes: 20,
+              durationText: '20 min',
+              description: 'Implement solution in the browser editor.',
+              isCompleted: false,
+              actionUrl: '/practice',
+              proofRequired: false,
+            },
+            {
+              taskId: `task-${targetDayNumber}-build`,
+              type: 'build',
+              title: 'Build - Feature Implementation (40 min)',
+              durationMinutes: 40,
+              durationText: '40 min',
+              description: 'Implement core functionality in your project.',
+              isCompleted: false,
+              actionUrl: '/projects',
+              proofRequired: false,
+            },
+            {
+              taskId: `task-${targetDayNumber}-ship`,
+              type: 'ship',
+              title: 'Ship - Git Commit & Push (10 min)',
+              durationMinutes: 10,
+              durationText: '10 min',
+              description: 'Push your tested code to GitHub.',
+              isCompleted: false,
+              actionUrl: '/projects',
+              proofRequired: true,
+            },
+          ],
+        };
+      }
+
       const payload = {
-        userId: user._id,
+        userId: user?._id || (user as any)?.id || 'student-user',
         dayNumber: targetDayNumber,
         trackTitle: userGoal,
         dateString: todayDateString,
-        quote: generated.quote,
-        tasks: generated.tasks,
+        quote: generated?.quote || 'Small steps every day lead to big results.',
+        tasks: Array.isArray(generated?.tasks) ? generated.tasks : [],
         completedTasksCount: 0,
         isAllCompleted: false,
       };

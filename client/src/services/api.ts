@@ -119,6 +119,9 @@ function getAuthHeader(): Record<string, string> {
 const PUBLIC_PREFIXES = [
   '/auth/login',
   '/auth/register',
+  '/auth/send-otp',
+  '/auth/verify-otp',
+  '/auth/confirm-signup',
   '/health',
   '/pricing',
   '/college/overview',
@@ -156,7 +159,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   };
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
     const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -206,6 +209,11 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     }
 
     return data as T;
+  } catch (err: any) {
+    if (err.name === 'AbortError' || err.message?.toLowerCase().includes('aborted')) {
+      throw new Error('Connection timed out. Please check your network and try again.');
+    }
+    throw err;
   } finally {
     clearTimeout(timeoutId);
   }
@@ -229,6 +237,28 @@ export const api = {
   invalidateCache,
 
   // Auth
+  sendOtp: async (data: { email: string; type?: 'signup' | 'login'; name?: string; password?: string; role?: string; college?: string }) => {
+    return request<{ success: boolean; message: string; email: string }>('/auth/send-otp', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  verifyOtp: async (data: { email: string; otp: string; type?: 'signup' | 'login' }) => {
+    const res = await request<any>('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    invalidateCache();
+    return res;
+  },
+  confirmSignup: async (email: string, otp: string) => {
+    const res = await request<any>('/auth/confirm-signup', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp, type: 'signup' }),
+    });
+    invalidateCache();
+    return res;
+  },
   login: async (credentials: any) => {
     const res = await request<any>('/auth/login', { method: 'POST', body: JSON.stringify(credentials) });
     invalidateCache();

@@ -21,6 +21,7 @@ export interface IUser extends Document {
   streakDays?: number;
   totalPoints?: number;
   skillsCompleted?: number;
+  isEmailVerified?: boolean;
   isOnboarded: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -56,6 +57,7 @@ const UserSchema = new Schema<IUser>(
     streakDays: { type: Number, default: 0 },
     totalPoints: { type: Number, default: 0 },
     skillsCompleted: { type: Number, default: 0 },
+    isEmailVerified: { type: Boolean, default: false },
     isOnboarded: { type: Boolean, default: false },
   },
   { timestamps: true }

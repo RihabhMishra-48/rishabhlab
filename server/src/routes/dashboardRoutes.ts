@@ -113,8 +113,14 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
       isAllCompleted: false,
     };
 
+    const nodes = Array.isArray(roadmap?.nodes) ? roadmap.nodes : [];
+    const currentStep = nodes.find((n: any) => n?.status === 'in_progress')?.title || nodes[0]?.title || 'Foundations';
+    const totalNodes = nodes.length > 0 ? nodes.length : 6;
+    const completedNodes = nodes.filter((n: any) => n?.status === 'completed').length;
+    const userName = (user?.name || user?.email || 'Student').split(' ')[0];
+
     res.json({
-      greeting: `Good Morning, ${user.name.split(' ')[0]}`,
+      greeting: `Good Morning, ${userName}`,
       subGreeting: "Keep going. Every day of focused execution compounds!",
       todayMission: mission || defaultDay1Mission,
       stats: {
@@ -122,16 +128,16 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
         skillsCompleted: profile?.skillsCompleted ?? 0,
         totalSkills: profile?.totalSkills ?? 0,
         projectsCompleted: profile?.projectsCompleted ?? 0,
-        totalProjects: profile?.totalProjects ?? inProgressProjects.length,
-        streakDays: profile?.streakDays ?? 0,
-        totalPoints: profile?.totalPoints ?? 0,
+        totalProjects: profile?.totalProjects ?? (inProgressProjects?.length || 0),
+        streakDays: profile?.streakDays ?? (user as any)?.streakDays ?? 0,
+        totalPoints: profile?.totalPoints ?? (user as any)?.totalPoints ?? 0,
       },
       roadmapSummary: {
-        id: roadmap?._id,
+        id: roadmap?._id || 'default-roadmap',
         title: roadmap?.title || `${userGoal} Track`,
-        currentStep: roadmap?.nodes.find((n: any) => n.status === 'in_progress')?.title || 'Foundations',
-        totalNodes: roadmap?.nodes.length || 6,
-        completedNodes: roadmap?.nodes.filter((n: any) => n.status === 'completed').length || 0,
+        currentStep,
+        totalNodes,
+        completedNodes,
       },
       nextRecommendedAction: {
         title: 'Start Day 1 Foundations Mission',
@@ -140,10 +146,11 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
         durationText: '25 min',
         linkUrl: '/learn',
       },
-      inProgressProjects,
+      inProgressProjects: Array.isArray(inProgressProjects) ? inProgressProjects : [],
     });
   } catch (err: any) {
-    res.status(500).json({ message: 'Error loading dashboard: ' + err.message });
+    console.error('Error in /api/dashboard:', err);
+    res.status(500).json({ message: 'Error loading dashboard: ' + (err?.message || 'Server error') });
   }
 });
 

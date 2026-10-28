@@ -108,8 +108,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Link to="/features" className={`hover:text-neutral-950 dark:hover:text-white transition-colors ${location.pathname === '/features' ? 'text-neutral-950 dark:text-white font-semibold' : ''}`}>Features</Link>
               <Link to="/pricing" className={`hover:text-neutral-950 dark:hover:text-white transition-colors ${location.pathname === '/pricing' ? 'text-neutral-950 dark:text-white font-semibold' : ''}`}>Pricing</Link>
               <Link to="/about" className={`hover:text-neutral-950 dark:hover:text-white transition-colors ${location.pathname === '/about' ? 'text-neutral-950 dark:text-white font-semibold' : ''}`}>About</Link>
-              <Link to="/mentor/login" className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 transition-colors">Mentor Portal</Link>
-              <Link to="/college/login" className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors">College Portal</Link>
             </nav>
           )}
         </div>
@@ -283,13 +281,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           <Link to="/features" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Features</Link>
           <Link to="/pricing" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Pricing</Link>
           <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">About</Link>
-          {!user && (
-            <>
-              <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800"></div>
-              <Link to="/mentor/login" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-amber-600 dark:text-amber-400 font-semibold">Mentor Portal Login</Link>
-              <Link to="/college/login" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-emerald-600 dark:text-emerald-400 font-semibold">College Portal Login</Link>
-            </>
-          )}
           {user && (
             <>
               <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800"></div>

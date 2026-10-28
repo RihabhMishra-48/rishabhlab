@@ -13,6 +13,8 @@ interface AuthContextType {
   toggleDarkMode: () => void;
   login: (credentials: { email: string; password: string }) => Promise<void>;
   register: (data: any) => Promise<void>;
+  sendOtp: (data: { email: string; type?: 'signup' | 'login'; name?: string; password?: string; role?: string; college?: string }) => Promise<{ success: boolean; message: string; email: string }>;
+  verifyOtpAndLogin: (data: { email: string; otp: string; type?: 'signup' | 'login' }) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   switchRole: (role: string) => Promise<void>;
@@ -386,6 +388,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(res.user);
   };
 
+  const sendOtp = async (data: { email: string; type?: 'signup' | 'login'; name?: string; password?: string; role?: string; college?: string }) => {
+    return api.sendOtp(data);
+  };
+
+  const verifyOtpAndLogin = async (data: { email: string; otp: string; type?: 'signup' | 'login' }) => {
+    const res = await api.verifyOtp(data);
+    if (res.token) {
+      localStorage.setItem('rishabhlabs_token', res.token);
+      localStorage.removeItem('rishabhlabs_onboarded');
+      localStorage.removeItem('rishabhlabs_goal');
+      api.invalidateCache();
+      setUser(res.user);
+    }
+  };
+
   const loginWithGoogle = async () => {
     if (isSupabaseConfigured) {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -438,6 +455,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toggleDarkMode,
         login,
         register,
+        sendOtp,
+        verifyOtpAndLogin,
         loginWithGoogle,
         logout,
         switchRole,
