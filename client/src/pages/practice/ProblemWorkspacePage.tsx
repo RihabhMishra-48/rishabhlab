@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import confetti from 'canvas-confetti';
@@ -61,6 +61,8 @@ export const ProblemWorkspacePage: React.FC = () => {
   const [activeHintData, setActiveHintData] = useState<any>(null);
   const [loadingHint, setLoadingHint] = useState(false);
 
+  const descriptionPanelRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && hintModalOpen) {
@@ -72,6 +74,16 @@ export const ProblemWorkspacePage: React.FC = () => {
   }, [hintModalOpen]);
 
   useEffect(() => {
+    // Strictly reset scroll positions to top when opening problem workspace
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTop = 0;
+    }
+    if (descriptionPanelRef.current) {
+      descriptionPanelRef.current.scrollTop = 0;
+    }
+
     const currentSlug = slug || 'tensor-reshape-normalization';
     const fallback = getCuratedProblemBySlug(currentSlug) || getCuratedProblemBySlug('two-sum');
     if (fallback) {
@@ -254,7 +266,7 @@ export const ProblemWorkspacePage: React.FC = () => {
   const cleanProblemTitle = problem.title.replace(/^Weekly Code Sprint\s*(?:#?\d+)?:\s*/i, '');
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 overflow-hidden">
+    <div className="h-full w-full flex flex-col bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 overflow-hidden">
       <header className="h-12 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#171717] px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           <Link
@@ -371,9 +383,12 @@ export const ProblemWorkspacePage: React.FC = () => {
       )}
 
       {/* Main Split Layout: Left Problem Spec (5 cols), Right Monaco Editor + Test Cases (7 cols) */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
         {/* Left Column: Problem Statement & Examples (5 cols) */}
-        <div className="lg:col-span-5 h-full overflow-y-auto border-r border-neutral-200 dark:border-neutral-800 p-6 space-y-6 bg-white dark:bg-[#171717]">
+        <div
+          ref={descriptionPanelRef}
+          className="lg:col-span-5 h-full overflow-y-auto border-r border-neutral-200 dark:border-neutral-800 p-6 space-y-6 bg-white dark:bg-[#171717]"
+        >
           {problem.isDebuggingChallenge && (
             <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs space-y-1">
               <div className="flex items-center gap-2 font-bold">
@@ -491,6 +506,10 @@ export const ProblemWorkspacePage: React.FC = () => {
               theme={isDarkMode ? 'vs-dark' : 'light'}
               value={code}
               onChange={(val) => setCode(val || '')}
+              onMount={(editor) => {
+                editor.setScrollTop(0);
+                editor.setPosition({ lineNumber: 1, column: 1 });
+              }}
               options={{
                 fontSize: 13,
                 fontFamily: 'JetBrains Mono, monospace',

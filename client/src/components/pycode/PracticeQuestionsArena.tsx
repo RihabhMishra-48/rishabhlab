@@ -44,13 +44,12 @@ export const QuestionReviewModal: React.FC<QuestionReviewModalProps> = ({ questi
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-[#202020]">
           <div className="flex items-center gap-3">
             <span
-              className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                question.difficulty === 'easy'
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                  : question.difficulty === 'medium'
+              className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${question.difficulty === 'easy'
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                : question.difficulty === 'medium'
                   ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                   : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
-              }`}
+                }`}
             >
               {question.difficulty}
             </span>
@@ -81,7 +80,7 @@ export const QuestionReviewModal: React.FC<QuestionReviewModalProps> = ({ questi
               {question.title}
             </h2>
             <p className="text-xs text-neutral-500 mt-1">
-              PyCode Python Sandbox Problem #{question.id}
+              Python Problem #{question.id}
             </p>
           </div>
 
@@ -243,11 +242,10 @@ export const PracticeQuestionsArena: React.FC = () => {
       <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
         <button
           onClick={() => setSelectedCategory('all')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
-            selectedCategory === 'all'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-              : 'bg-neutral-100 dark:bg-[#1f1f1f] text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-          }`}
+          className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${selectedCategory === 'all'
+            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+            : 'bg-neutral-100 dark:bg-[#1f1f1f] text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+            }`}
         >
           All Arena Problems ({categories.reduce((acc, c) => acc + (c.total_questions || 0), 0) || allPyCodeQuestions.length || 280})
         </button>
@@ -257,11 +255,10 @@ export const PracticeQuestionsArena: React.FC = () => {
           <button
             key={cat.id}
             onClick={() => setSelectedCategory(cat.id)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer ${
-              selectedCategory === cat.id
-                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-                : 'bg-neutral-100 dark:bg-[#1f1f1f] text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-            }`}
+            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer ${selectedCategory === cat.id
+              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+              : 'bg-neutral-100 dark:bg-[#1f1f1f] text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+              }`}
           >
             <span>{cat.name}</span>
             <span className="px-1.5 py-0.2 rounded-md text-[10px] bg-neutral-200 dark:bg-neutral-800">
@@ -343,13 +340,12 @@ export const PracticeQuestionsArena: React.FC = () => {
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          question.difficulty === 'easy'
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                            : question.difficulty === 'medium'
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${question.difficulty === 'easy'
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                          : question.difficulty === 'medium'
                             ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                             : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
-                        }`}
+                          }`}
                       >
                         {question.difficulty}
                       </span>
