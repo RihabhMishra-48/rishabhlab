@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ArrowRight, GraduationCap, Video, Building2, ShieldAlert } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export type PortalType = 'student' | 'mentor' | 'college' | 'admin';
 
@@ -57,40 +57,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
   // Portal metadata
   const portalMeta = {
     student: {
-      badge: 'Student Trajectory',
       title: 'Student Workspace',
       desc: 'Sign in to execute your daily curated missions, algorithmic coding challenges, and career roadmap.',
       emailPlaceholder: 'student@college.edu',
-      icon: GraduationCap,
-      color: 'text-neutral-900 dark:text-white',
     },
     mentor: {
-      badge: 'Mentor Network',
       title: 'Mentor Workspace',
       desc: 'Sign in to review student GitHub proof of work, schedule 1:1 office hours, and provide strategic code reviews.',
       emailPlaceholder: 'mentor@rishabhlabs.com',
-      icon: Video,
-      color: 'text-blue-600 dark:text-blue-400',
     },
     college: {
-      badge: 'Campus Partner',
       title: 'College Portal',
       desc: 'Sign in to monitor institutional student cohorts, verify student projects, and review department placement readiness.',
       emailPlaceholder: 'dean@college.edu',
-      icon: Building2,
-      color: 'text-emerald-600 dark:text-emerald-400',
     },
     admin: {
-      badge: 'Super Admin',
       title: 'Platform Command Center',
       desc: 'Authorized access for platform management, mentor assignments, college partners, and system monitoring.',
       emailPlaceholder: 'admin@rishabhlabs.com',
-      icon: ShieldAlert,
-      color: 'text-neutral-900 dark:text-white',
     },
   }[portal];
-
-  const PortalIcon = portalMeta.icon;
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 flex items-center justify-center p-4">
@@ -105,12 +91,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
               RishabhLabs
             </span>
           </Link>
-          <div className="flex items-center justify-center gap-1.5">
-            <PortalIcon className={`w-4 h-4 ${portalMeta.color}`} />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-              {portalMeta.badge}
-            </span>
-          </div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
             {portalMeta.title}
           </h1>
