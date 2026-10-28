@@ -361,12 +361,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             },
           },
         });
-        if (!error && data.session?.access_token) {
+        if (error) {
+          if (
+            error.message?.toLowerCase().includes('already') ||
+            (error as any).status === 422
+          ) {
+            throw new Error('An account with this email already exists. Please sign in.');
+          }
+        } else if (data.session?.access_token) {
           localStorage.setItem('rishabhlabs_token', data.session.access_token);
           await fetchCurrentUser();
           return;
         }
-      } catch (sbErr) {
+      } catch (sbErr: any) {
+        if (sbErr?.message?.toLowerCase().includes('already')) {
+          throw sbErr;
+        }
         console.warn('Supabase auth signup fallback:', sbErr);
       }
     }

@@ -10,9 +10,9 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const initialPortal = (defaultPortal || searchParams.get('portal') || 'student') as PortalType;
-  const [portal, setPortal] = useState<PortalType>(
+  const [portal] = useState<PortalType>(
     ['student', 'mentor', 'college', 'admin'].includes(initialPortal) ? initialPortal : 'student'
   );
 
@@ -22,13 +22,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
-
-  // Sync portal query param
-  const handlePortalChange = (newPortal: PortalType) => {
-    setPortal(newPortal);
-    setError('');
-    setSearchParams({ portal: newPortal });
-  };
 
   useEffect(() => {
     if (user) {
@@ -124,58 +117,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
           <p className="text-xs text-neutral-500 max-w-sm mx-auto leading-relaxed">
             {portalMeta.desc}
           </p>
-        </div>
-
-        {/* Segmented Portal Switcher */}
-        <div className="grid grid-cols-4 gap-1 p-1 bg-neutral-100 dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 text-xs font-semibold">
-          <button
-            type="button"
-            onClick={() => handlePortalChange('student')}
-            className={`py-2 px-1.5 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 text-[11px] ${
-              portal === 'student'
-                ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-            }`}
-          >
-            <GraduationCap className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Student</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handlePortalChange('mentor')}
-            className={`py-2 px-1.5 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 text-[11px] ${
-              portal === 'mentor'
-                ? 'bg-white dark:bg-neutral-800 text-blue-600 dark:text-blue-400 shadow-xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-            }`}
-          >
-            <Video className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Mentor</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handlePortalChange('college')}
-            className={`py-2 px-1.5 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 text-[11px] ${
-              portal === 'college'
-                ? 'bg-white dark:bg-neutral-800 text-emerald-600 dark:text-emerald-400 shadow-xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-            }`}
-          >
-            <Building2 className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">College</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handlePortalChange('admin')}
-            className={`py-2 px-1.5 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 text-[11px] ${
-              portal === 'admin'
-                ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-            }`}
-          >
-            <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Admin</span>
-          </button>
         </div>
 
         {error && (

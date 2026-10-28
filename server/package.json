@@ -2,7 +2,7 @@
   "name": "rishabhlabs-server",
   "version": "1.0.0",
   "description": "Backend API for Rishabh Labs - Student Execution Platform",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",

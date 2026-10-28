@@ -92,6 +92,16 @@ router.post('/register', async (req, res) => {
           user_metadata: { full_name: name, role },
         });
 
+        if (sbAuthErr) {
+          console.warn('Supabase admin.createUser notice:', sbAuthErr.message);
+          if (
+            sbAuthErr.message?.toLowerCase().includes('already') ||
+            (sbAuthErr as any).status === 422
+          ) {
+            return res.status(400).json({ message: 'An account with this email already exists. Please sign in.' });
+          }
+        }
+
         const userId = sbAuthUser?.user?.id || crypto.randomUUID();
 
         // Ensure profile row exists
@@ -119,10 +129,11 @@ router.post('/register', async (req, res) => {
             verificationStatus: 'approved',
           },
         });
-      } catch (adminErr) {
+      } catch (adminErr: any) {
+        console.warn('Supabase auth fallback:', adminErr?.message || adminErr);
         // Direct profile insert fallback
         const userId = crypto.randomUUID();
-        await supabase.from('profiles').insert({
+        await supabase.from('profiles').upsert({
           id: userId,
           email: cleanEmail,
           full_name: name,

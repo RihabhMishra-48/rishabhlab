@@ -81,30 +81,31 @@ const startServer = async () => {
   try {
     await connectDB();
     await seedDatabase();
-
-    // In local development or container mode, start listening
-    if (!process.env.VERCEL) {
-      app.listen(PORT, () => {
-        console.log(`🚀 [Rishabh Labs Backend] Server running on http://localhost:${PORT}`);
-        console.log(`📡 [Rishabh Labs Backend] Core API mounted at http://localhost:${PORT}/api`);
-
-        // Sync Supabase non-blockingly in the background
-        if (isSupabaseConfigured()) {
-          console.log('⚡ [Supabase] Syncing initial schema & curriculum data with live Supabase in background...');
-          seedSupabase().catch((err: any) => {
-            console.error('❌ [Supabase Seed Error]:', err?.message || err);
-          });
-        }
-      });
-    }
   } catch (error) {
     console.error('Database connection notice:', error);
-    if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
-      process.exit(1);
-    }
   }
+
+  // Always listen on configured PORT so both local dev and Vercel/container services stay active
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 [Rishabh Labs Backend] Server running on http://localhost:${PORT}`);
+    console.log(`📡 [Rishabh Labs Backend] Core API mounted at http://localhost:${PORT}/api`);
+
+    // Sync Supabase non-blockingly in the background
+    if (isSupabaseConfigured()) {
+      console.log('⚡ [Supabase] Syncing initial schema & curriculum data with live Supabase in background...');
+      seedSupabase().catch((err: any) => {
+        console.error('❌ [Supabase Seed Error]:', err?.message || err);
+      });
+    }
+  });
+
+  return server;
 };
 
 startServer();
 
 export default app;
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = app;
+  (module.exports as any).default = app;
+}
