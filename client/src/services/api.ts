@@ -377,6 +377,8 @@ export const api = {
 
   // Hackathon Mode
   getHackathon: () => cachedGet<any>('/hackathon', 120000),
+  getHackathonLeaderboard: (campus = 'Global') =>
+    cachedGet<any>(`/hackathon/leaderboard?campus=${encodeURIComponent(campus)}`, 30000),
   runHackathonAITool: (toolName: string, problemStatement?: string) =>
     request<any>('/hackathon/ai-tool', { method: 'POST', body: JSON.stringify({ toolName, problemStatement }) }),
 

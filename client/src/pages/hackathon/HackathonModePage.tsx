@@ -7,7 +7,6 @@ import { LeaderboardModal } from '../../components/pycode/LeaderboardModal';
 import { Hackathon } from '../../types';
 import {
   CURATED_COMPETITIONS,
-  CAMPUS_LEADERBOARDS,
   Competition,
   LeaderboardUser
 } from '../../data/curatedCompetitions';
@@ -112,6 +111,50 @@ export const HackathonModePage: React.FC = () => {
 
   // Leaderboard state
   const [selectedCampus, setSelectedCampus] = useState<string>(user?.college || 'Global');
+  const [leaderboardUsers, setLeaderboardUsers] = useState<LeaderboardUser[]>([]);
+  const [cohortAverages, setCohortAverages] = useState<{
+    totalCoders: number;
+    averageXP: number;
+    averageStreak: number;
+    averageSolved: number;
+    topScore: number;
+  } | null>(null);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState<boolean>(true);
+  const [availableCampuses, setAvailableCampuses] = useState<string[]>(['Global', user?.college || 'GLA University']);
+
+  // Fetch verified database leaderboard dynamically
+  useEffect(() => {
+    let isMounted = true;
+    setLoadingLeaderboard(true);
+    api.getHackathonLeaderboard(selectedCampus)
+      .then((res) => {
+        if (!isMounted) return;
+        if (res && res.leaderboard) {
+          const withCurrentUser = res.leaderboard.map((u: any) => ({
+            ...u,
+            isCurrentUser: Boolean(
+              (user?.email && u.email?.toLowerCase() === user.email.toLowerCase()) ||
+              (user?.name && u.name?.toLowerCase() === user.name.toLowerCase())
+            ),
+          }));
+          setLeaderboardUsers(withCurrentUser);
+          if (res.cohortAverages) setCohortAverages(res.cohortAverages);
+          if (res.availableCampuses && res.availableCampuses.length > 0) {
+            setAvailableCampuses(res.availableCampuses);
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn('Leaderboard API note:', err);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingLeaderboard(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedCampus, user?.email, user?.name]);
 
   // Track match helper for dynamic filtering & badge highlighting
   const isTrackMatch = (comp: Competition) => {
@@ -264,9 +307,13 @@ export const HackathonModePage: React.FC = () => {
     }));
   };
 
-  const currentLeaderboard = CAMPUS_LEADERBOARDS[selectedCampus] || CAMPUS_LEADERBOARDS['Global'] || [];
-  const topThree = currentLeaderboard.slice(0, 3);
-  const remainingRankings = currentLeaderboard.slice(3);
+  const currentUserEntry = leaderboardUsers.find((u) => u.isCurrentUser);
+  const currentUserRank = currentUserEntry?.rank || 1;
+  const currentUserPoints = currentUserEntry?.points ?? (user?.totalPoints ?? 0);
+  const currentUserStreak = currentUserEntry?.streakDays ?? (user?.streakDays ?? 0);
+
+  const topThree = leaderboardUsers.slice(0, 3);
+  const remainingRankings = leaderboardUsers.slice(3);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
@@ -299,19 +346,21 @@ export const HackathonModePage: React.FC = () => {
           <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono font-bold text-neutral-900 dark:text-white bg-neutral-100 dark:bg-[#1a1a1a] px-2 py-0.5 rounded-md border border-neutral-200/80 dark:border-neutral-800">
-                #--
+                #{currentUserRank}
               </span>
               <div className="flex items-center gap-1">
                 <Building2 className="w-3.5 h-3.5 text-neutral-400" />
-                <span className="text-xs font-bold text-neutral-900 dark:text-white truncate max-w-[120px]">{userCollege || 'Campus'}</span>
+                <span className="text-xs font-bold text-neutral-900 dark:text-white truncate max-w-[120px]">
+                  {currentUserEntry?.college || userCollege || 'GLA University'}
+                </span>
               </div>
             </div>
             <span className="text-neutral-300 dark:text-neutral-700">•</span>
             <div className="flex items-center gap-1.5 text-xs font-mono text-neutral-500 dark:text-neutral-400">
               <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
-              <span>{user?.streakDays ?? (user as any)?.streak_days ?? 0}d</span>
+              <span>{currentUserStreak}d</span>
               <span className="text-neutral-300 dark:text-neutral-700">•</span>
-              <span className="text-neutral-900 dark:text-neutral-200 font-bold">{user?.totalPoints ?? (user as any)?.points ?? 0} XP</span>
+              <span className="text-neutral-900 dark:text-neutral-200 font-bold">{currentUserPoints} XP</span>
             </div>
           </div>
         </div>
@@ -354,12 +403,16 @@ export const HackathonModePage: React.FC = () => {
           </button>
         </div>
 
-        {/* Clean Live Status indicator matching StudentDashboard telemetry */}
+        {/* Clean Live Status indicator matching real database telemetry */}
         <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 text-xs font-mono text-neutral-500 dark:text-neutral-400 mr-1">
           <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-          <span className="text-neutral-800 dark:text-neutral-200 font-bold">428 Active Coders</span>
+          <span className="text-neutral-800 dark:text-neutral-200 font-bold">
+            {cohortAverages?.totalCoders || leaderboardUsers.length || 7} Active Coders
+          </span>
           <span className="text-neutral-300 dark:text-neutral-700">•</span>
-          <span className="text-neutral-700 dark:text-neutral-300 font-semibold">Sprint #18</span>
+          <span className="text-neutral-700 dark:text-neutral-300 font-semibold">
+            {cohortAverages?.averageXP ? `${cohortAverages.averageXP} Avg XP` : 'Sprint #18'}
+          </span>
           <span className="text-neutral-300 dark:text-neutral-700">•</span>
           <span>3h 42m Left</span>
         </div>
@@ -791,136 +844,197 @@ export const HackathonModePage: React.FC = () => {
             </div>
 
             {/* Campus Selector Toggle */}
-            <div className="flex items-center gap-1.5 p-1 rounded-full bg-neutral-100 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-xs font-bold">
-              {userCollege && (
+            <div className="flex items-center gap-1.5 p-1 rounded-full bg-neutral-100 dark:bg-[#1a1a1a] border border-neutral-200/80 dark:border-neutral-800 text-xs font-bold flex-wrap">
+              {availableCampuses.map((c) => (
                 <button
-                  onClick={() => setSelectedCampus(userCollege)}
-                  className={`px-4 py-1.5 rounded-full transition-colors cursor-pointer ${selectedCampus === userCollege
-                    ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-2xs border border-neutral-200/60 dark:border-neutral-700/60'
-                    : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-                    }`}
-                >
-                  🎓 {userCollege}
-                </button>
-              )}
-              <button
-                onClick={() => setSelectedCampus('Global')}
-                className={`px-4 py-1.5 rounded-full transition-colors cursor-pointer ${selectedCampus === 'Global'
-                  ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-2xs border border-neutral-200/60 dark:border-neutral-700/60'
-                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                  key={c}
+                  onClick={() => setSelectedCampus(c)}
+                  className={`px-4 py-1.5 rounded-full transition-colors cursor-pointer ${
+                    selectedCampus === c
+                      ? 'bg-white dark:bg-[#2b2b2b] text-neutral-900 dark:text-white shadow-2xs border border-neutral-200/60 dark:border-neutral-700/60'
+                      : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
                   }`}
-              >
-                🌍 Global
-              </button>
+                >
+                  {c === 'Global' ? '🌍 Global Standings' : `🎓 ${c}`}
+                </button>
+              ))}
             </div>
           </div>
+
+          {/* Database-Calculated Cohort Averages Telemetry */}
+          {cohortAverages && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 text-xs font-mono shadow-2xs">
+              <div className="space-y-0.5">
+                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase tracking-wider block font-sans">
+                  Active Real Coders
+                </span>
+                <span className="text-sm font-bold text-neutral-900 dark:text-white">
+                  {cohortAverages.totalCoders} Students
+                </span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase tracking-wider block font-sans">
+                  Cohort Average Score
+                </span>
+                <span className="text-sm font-bold text-neutral-900 dark:text-white">
+                  {cohortAverages.averageXP} XP
+                </span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase tracking-wider block font-sans">
+                  Average Active Streak
+                </span>
+                <span className="text-sm font-bold text-orange-500">
+                  {cohortAverages.averageStreak} Days 🔥
+                </span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 uppercase tracking-wider block font-sans">
+                  Campus Peak Score
+                </span>
+                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                  {cohortAverages.topScore} XP
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Top 3 Podium Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-            {/* Rank 2 (Silver) */}
-            {topThree[1] && (
-              <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col items-center text-center space-y-3.5 relative">
-                <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-[#2b2b2b] text-neutral-700 dark:text-neutral-300 flex items-center justify-center font-extrabold text-base border border-neutral-200/80 dark:border-neutral-700 font-mono">
-                  #2
+          {loadingLeaderboard && leaderboardUsers.length === 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 animate-pulse space-y-4 shadow-sm"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-neutral-200 dark:bg-neutral-800 mx-auto" />
+                  <div className="w-2/3 h-5 rounded bg-neutral-200 dark:bg-neutral-800 mx-auto" />
+                  <div className="w-1/2 h-4 rounded bg-neutral-100 dark:bg-neutral-800/60 mx-auto" />
+                  <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex justify-around">
+                    <div className="w-16 h-4 rounded bg-neutral-200 dark:bg-neutral-800" />
+                    <div className="w-12 h-4 rounded bg-neutral-200 dark:bg-neutral-800" />
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-                    {topThree[1].name}
-                  </h3>
-                  <span className="text-xs text-neutral-500">{topThree[1].college}</span>
-                  <p className="text-[11px] font-medium text-neutral-400 mt-0.5 font-mono">
-                    {topThree[1].track}
-                  </p>
-                </div>
-                <div className="w-full pt-3.5 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-around text-xs font-mono">
+              ))}
+            </div>
+          ) : leaderboardUsers.length === 0 ? (
+            <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-2">
+              <Award className="w-8 h-8 text-neutral-400 mx-auto" />
+              <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+                No campus records found
+              </h3>
+              <p className="text-xs text-neutral-500 max-w-sm mx-auto">
+                No student profiles registered under this campus yet. Switch to Global to view all engineering students.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              {/* Rank 2 (Silver) */}
+              {topThree[1] && (
+                <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col items-center text-center space-y-3.5 relative">
+                  <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-[#2b2b2b] text-neutral-700 dark:text-neutral-300 flex items-center justify-center font-extrabold text-base border border-neutral-200/80 dark:border-neutral-700 font-mono">
+                    #2
+                  </div>
                   <div>
-                    <span className="text-[10px] text-neutral-400 block font-sans">Score</span>
-                    <span className="font-bold text-neutral-900 dark:text-white">{topThree[1].points} XP</span>
+                    <h3 className="text-base font-bold text-neutral-900 dark:text-white">
+                      {topThree[1].name}
+                    </h3>
+                    <span className="text-xs text-neutral-500">{topThree[1].college}</span>
+                    <p className="text-[11px] font-medium text-neutral-400 mt-0.5 font-mono">
+                      {topThree[1].track}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-1 text-orange-500 font-bold">
-                    <Flame className="w-3.5 h-3.5 fill-current" />
-                    <span>{topThree[1].streakDays}d</span>
+                  <div className="w-full pt-3.5 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-around text-xs font-mono">
+                    <div>
+                      <span className="text-[10px] text-neutral-400 block font-sans">Score</span>
+                      <span className="font-bold text-neutral-900 dark:text-white">{topThree[1].points} XP</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-orange-500 font-bold">
+                      <Flame className="w-3.5 h-3.5 fill-current" />
+                      <span>{topThree[1].streakDays}d</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Rank 1 (Top Leader Spotlight) */}
-            {topThree[0] && (
-              <div className="p-7 sm:p-8 rounded-3xl bg-white dark:bg-[#212121] border-2 border-neutral-900 dark:border-white shadow-md flex flex-col items-center text-center space-y-3.5 relative md:-mt-4">
-                <div className="absolute -top-3.5 px-3.5 py-1 rounded-full bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 font-bold text-[10px] font-mono shadow-sm flex items-center gap-1.5">
-                  <Trophy className="w-3 h-3 text-current" />
-                  <span>CAMPUS LEADER</span>
-                </div>
+              {/* Rank 1 (Top Leader Spotlight) */}
+              {topThree[0] && (
+                <div className="p-7 sm:p-8 rounded-3xl bg-white dark:bg-[#212121] border-2 border-neutral-900 dark:border-white shadow-md flex flex-col items-center text-center space-y-3.5 relative md:-mt-4">
+                  <div className="absolute -top-3.5 px-3.5 py-1 rounded-full bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 font-bold text-[10px] font-mono shadow-sm flex items-center gap-1.5">
+                    <Trophy className="w-3 h-3 text-current" />
+                    <span>CAMPUS LEADER</span>
+                  </div>
 
-                <div className="w-14 h-14 rounded-2xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 flex items-center justify-center font-extrabold text-xl shadow-sm border border-neutral-800 dark:border-neutral-200 font-mono">
-                  #1
-                </div>
+                  <div className="w-14 h-14 rounded-2xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 flex items-center justify-center font-extrabold text-xl shadow-sm border border-neutral-800 dark:border-neutral-200 font-mono">
+                    #1
+                  </div>
 
-                <div>
-                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
-                    {topThree[0].name}
-                  </h3>
-                  <span className="text-xs text-neutral-500">{topThree[0].college}</span>
-                  <p className="text-xs font-bold text-neutral-600 dark:text-neutral-300 mt-0.5 font-mono">
-                    {topThree[0].badge}
-                  </p>
-                </div>
-
-                <div className="w-full pt-3.5 border-t border-neutral-200/80 dark:border-neutral-800 flex items-center justify-around text-xs font-mono">
                   <div>
-                    <span className="text-[10px] text-neutral-400 block font-sans">Total Score</span>
-                    <span className="font-extrabold text-neutral-900 dark:text-white">{topThree[0].points} XP</span>
+                    <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
+                      {topThree[0].name}
+                    </h3>
+                    <span className="text-xs text-neutral-500">{topThree[0].college}</span>
+                    <p className="text-xs font-bold text-neutral-600 dark:text-neutral-300 mt-0.5 font-mono">
+                      {topThree[0].badge}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-1 text-orange-500 font-extrabold">
-                    <Flame className="w-4 h-4 fill-current" />
-                    <span>{topThree[0].streakDays}d Streak</span>
-                  </div>
-                </div>
-              </div>
-            )}
 
-            {/* Rank 3 (Bronze / Runner Up) */}
-            {topThree[2] && (
-              <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col items-center text-center space-y-3.5 relative">
-                <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-[#2b2b2b] text-neutral-700 dark:text-neutral-300 flex items-center justify-center font-extrabold text-base border border-neutral-200/80 dark:border-neutral-700 font-mono">
-                  #3
+                  <div className="w-full pt-3.5 border-t border-neutral-200/80 dark:border-neutral-800 flex items-center justify-around text-xs font-mono">
+                    <div>
+                      <span className="text-[10px] text-neutral-400 block font-sans">Total Score</span>
+                      <span className="font-extrabold text-neutral-900 dark:text-white">{topThree[0].points} XP</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-orange-500 font-extrabold">
+                      <Flame className="w-4 h-4 fill-current" />
+                      <span>{topThree[0].streakDays}d Streak</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-                    {topThree[2].name}
-                  </h3>
-                  <span className="text-xs text-neutral-500">{topThree[2].college}</span>
-                  <p className="text-[11px] font-medium text-neutral-400 mt-0.5 font-mono">
-                    {topThree[2].track}
-                  </p>
-                </div>
-                <div className="w-full pt-3.5 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-around text-xs font-mono">
+              )}
+
+              {/* Rank 3 (Bronze / Runner Up) */}
+              {topThree[2] && (
+                <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col items-center text-center space-y-3.5 relative">
+                  <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-[#2b2b2b] text-neutral-700 dark:text-neutral-300 flex items-center justify-center font-extrabold text-base border border-neutral-200/80 dark:border-neutral-700 font-mono">
+                    #3
+                  </div>
                   <div>
-                    <span className="text-[10px] text-neutral-400 block font-sans">Score</span>
-                    <span className="font-bold text-neutral-900 dark:text-white">{topThree[2].points} XP</span>
+                    <h3 className="text-base font-bold text-neutral-900 dark:text-white">
+                      {topThree[2].name}
+                    </h3>
+                    <span className="text-xs text-neutral-500">{topThree[2].college}</span>
+                    <p className="text-[11px] font-medium text-neutral-400 mt-0.5 font-mono">
+                      {topThree[2].track}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-1 text-orange-500 font-bold">
-                    <Flame className="w-3.5 h-3.5 fill-current" />
-                    <span>{topThree[2].streakDays}d</span>
+                  <div className="w-full pt-3.5 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-around text-xs font-mono">
+                    <div>
+                      <span className="text-[10px] text-neutral-400 block font-sans">Score</span>
+                      <span className="font-bold text-neutral-900 dark:text-white">{topThree[2].points} XP</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-orange-500 font-bold">
+                      <Flame className="w-3.5 h-3.5 fill-current" />
+                      <span>{topThree[2].streakDays}d</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Full Cohort Rankings Table */}
-          <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-2.5 border-b border-neutral-100 dark:border-neutral-800/80">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 font-mono">
-                Rankings 4 – 15
-              </h3>
-              <span className="text-xs font-mono text-neutral-400">
-                {selectedCampus} Standings
-              </span>
-            </div>
+          {remainingRankings.length > 0 && (
+            <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between pb-2.5 border-b border-neutral-100 dark:border-neutral-800/80">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 font-mono">
+                  Rankings 4 – {leaderboardUsers.length}
+                </h3>
+                <span className="text-xs font-mono text-neutral-400">
+                  {selectedCampus} Standings
+                </span>
+              </div>
 
-            <div className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
+              <div className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
               {remainingRankings.map((user) => (
                 <div
                   key={user.id}
@@ -971,6 +1085,7 @@ export const HackathonModePage: React.FC = () => {
               ))}
             </div>
           </div>
+          )}
         </div>
       )}
 
