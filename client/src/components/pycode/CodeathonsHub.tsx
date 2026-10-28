@@ -68,47 +68,49 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
   return (
     <div className="space-y-6">
       {/* Modern Segmented Sub-Tabs */}
-      <div className="inline-flex p-1.5 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1e] border border-neutral-200/80 dark:border-neutral-800 gap-1.5 shadow-2xs">
-        <button
-          onClick={() => setActiveTab('codeathons')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
-            activeTab === 'codeathons'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-          }`}
-        >
-          <Trophy className={`w-4 h-4 ${activeTab === 'codeathons' ? 'text-amber-400 dark:text-amber-600' : 'text-amber-500'}`} />
-          <span>Live & Upcoming Codeathons</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-            activeTab === 'codeathons'
-              ? 'bg-white/20 dark:bg-neutral-900/20'
-              : 'bg-neutral-200/80 dark:bg-neutral-800'
-          }`}>
-            {codeathons.length}
-          </span>
-          {liveCount > 0 && (
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          )}
-        </button>
+      <div className="w-full overflow-x-auto no-scrollbar py-1">
+        <div className="inline-flex items-center p-1.5 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1e] border border-neutral-200/80 dark:border-neutral-800 gap-1.5 min-w-max shadow-2xs">
+          <button
+            onClick={() => setActiveTab('codeathons')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer shrink-0 ${
+              activeTab === 'codeathons'
+                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+            }`}
+          >
+            <Trophy className={`w-4 h-4 ${activeTab === 'codeathons' ? 'text-amber-400 dark:text-amber-600' : 'text-amber-500'}`} />
+            <span>Live & Upcoming Codeathons</span>
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+              activeTab === 'codeathons'
+                ? 'bg-white/20 dark:bg-neutral-900/20'
+                : 'bg-neutral-200/80 dark:bg-neutral-800'
+            }`}>
+              {codeathons.length}
+            </span>
+            {liveCount > 0 && (
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            )}
+          </button>
 
-        <button
-          onClick={() => setActiveTab('results')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
-            activeTab === 'results'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-          }`}
-        >
-          <FileCheck2 className={`w-4 h-4 ${activeTab === 'results' ? 'text-blue-400 dark:text-blue-600' : 'text-blue-500'}`} />
-          <span>My Exam Results</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-            activeTab === 'results'
-              ? 'bg-white/20 dark:bg-neutral-900/20'
-              : 'bg-neutral-200/80 dark:bg-neutral-800'
-          }`}>
-            {pastAttempts.length}
-          </span>
-        </button>
+          <button
+            onClick={() => setActiveTab('results')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer shrink-0 ${
+              activeTab === 'results'
+                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+            }`}
+          >
+            <FileCheck2 className={`w-4 h-4 ${activeTab === 'results' ? 'text-blue-400 dark:text-blue-600' : 'text-blue-500'}`} />
+            <span>My Exam Results</span>
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+              activeTab === 'results'
+                ? 'bg-white/20 dark:bg-neutral-900/20'
+                : 'bg-neutral-200/80 dark:bg-neutral-800'
+            }`}>
+              {pastAttempts.length}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Tab 1: Codeathons Grid */}
