@@ -145,7 +145,7 @@ export const QuestionReviewModal: React.FC<QuestionReviewModalProps> = ({ questi
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
-                  <Code2 className="w-4 h-4 text-[#D4704B]" />
+                  <Code2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span>solution.py (Starter Code Template)</span>
                 </span>
                 <button
@@ -186,7 +186,7 @@ export const QuestionReviewModal: React.FC<QuestionReviewModalProps> = ({ questi
             href={sandboxUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-5 py-2.5 rounded-xl bg-[#D4704B] hover:bg-[#c2613d] active:bg-[#b05332] text-white text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+            className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
           >
             <Play className="w-4 h-4 fill-current" />
             <span>Start Practice in Live Python Sandbox</span>
@@ -359,7 +359,7 @@ export const PracticeQuestionsArena: React.FC = () => {
             placeholder="Search problems by name or concept (e.g., primes, fibonacci, palindrome, dataframe)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-9 py-2.5 rounded-xl text-xs sm:text-[13px] bg-neutral-50 dark:bg-[#222226] border border-neutral-200 dark:border-neutral-700/80 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-[#D4704B]/20 focus:border-[#D4704B] transition-all"
+            className="w-full pl-10 pr-9 py-2.5 rounded-xl text-xs sm:text-[13px] bg-neutral-50 dark:bg-[#222226] border border-neutral-200 dark:border-neutral-700/80 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
           />
           {searchQuery && (
             <button
@@ -384,7 +384,7 @@ export const PracticeQuestionsArena: React.FC = () => {
             <select
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="px-3 py-2 rounded-xl text-xs font-bold bg-neutral-50 dark:bg-[#222226] border border-neutral-200 dark:border-neutral-700/80 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#D4704B]/20 cursor-pointer transition-all"
+              className="px-3 py-2 rounded-xl text-xs font-bold bg-neutral-50 dark:bg-[#222226] border border-neutral-200 dark:border-neutral-700/80 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 cursor-pointer transition-all"
             >
               <option value="all">All Difficulties</option>
               <option value="easy">Easy</option>
@@ -435,7 +435,7 @@ export const PracticeQuestionsArena: React.FC = () => {
             return (
               <div
                 key={question.id}
-                className="group p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xs hover:border-[#D4704B]/50 dark:hover:border-[#D4704B]/40 transition-colors flex flex-col justify-between space-y-4"
+                className="group p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xs hover:border-blue-500/50 dark:hover:border-blue-500/40 transition-colors flex flex-col justify-between space-y-4"
               >
                 <div className="space-y-3">
                   {/* Header: PyCode Logo + Category + Difficulty + Points */}
@@ -482,7 +482,7 @@ export const PracticeQuestionsArena: React.FC = () => {
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-[15px] sm:text-base font-bold text-neutral-900 dark:text-neutral-50 leading-snug tracking-tight group-hover:text-[#D4704B] dark:group-hover:text-[#E28866] transition-colors line-clamp-2">
+                  <h3 className="text-[15px] sm:text-base font-bold text-neutral-900 dark:text-neutral-50 leading-snug tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                     {question.title}
                   </h3>
                 </div>
@@ -501,7 +501,7 @@ export const PracticeQuestionsArena: React.FC = () => {
                     href={sandboxUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-[#D4704B] hover:bg-[#c2613d] active:bg-[#b05332] text-white flex items-center gap-2 shadow-xs transition-colors shrink-0 cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white flex items-center gap-2 shadow-xs transition-colors shrink-0 cursor-pointer"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" />
                     <span>Start in Sandbox</span>

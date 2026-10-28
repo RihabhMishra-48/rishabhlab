@@ -195,7 +195,7 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
             href="https://pycode-student.vercel.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#D4704B] hover:bg-[#C2623F] active:bg-[#B35634] text-white text-xs font-bold shadow-xs transition-colors shrink-0"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold shadow-xs transition-colors shrink-0"
           >
             <span>Open PyCode</span>
             <ExternalLink className="w-3 h-3" />

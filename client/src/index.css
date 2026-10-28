@@ -151,13 +151,13 @@ a:hover,
   color: #d4d4d8 !important;
 }
 
-/* Signature PyCode Terracotta accent */
+/* Primary Blue accent for problem review */
 .pycode-review-content .text-primary {
-  color: #D4704B !important;
+  color: #2563EB !important;
   font-weight: 700 !important;
 }
 .dark .pycode-review-content .text-primary {
-  color: #E28866 !important;
+  color: #60A5FA !important;
 }
 
 /* Upstream border classes */
@@ -178,12 +178,12 @@ a:hover,
   border-color: #27272a !important;
 }
 
-/* Example Blocks - elevated with accent indicator & soft surface */
+/* Example Blocks - elevated with blue indicator & soft surface */
 .pycode-review-content .border-l-2,
 .pycode-review-content [class*="border-primary"] {
   border-left-width: 3.5px !important;
-  border-left-color: #D4704B !important;
-  background-color: rgba(212, 112, 75, 0.05);
+  border-left-color: #2563EB !important;
+  background-color: rgba(37, 99, 235, 0.05);
   border-radius: 0 1rem 1rem 0;
   padding: 0.875rem 1.125rem !important;
   margin-top: 0.625rem !important;
@@ -191,8 +191,8 @@ a:hover,
 }
 .dark .pycode-review-content .border-l-2,
 .dark .pycode-review-content [class*="border-primary"] {
-  background-color: rgba(212, 112, 75, 0.08);
-  border-left-color: #E28866 !important;
+  background-color: rgba(37, 99, 235, 0.08);
+  border-left-color: #60A5FA !important;
 }
 
 /* Inline code tags inside problem descriptions */
