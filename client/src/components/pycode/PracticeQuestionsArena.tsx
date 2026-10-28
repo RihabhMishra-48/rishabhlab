@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { pycodeService } from '../../services/pycodeService';
 import { pycodeCache } from '../../services/pycodeCache';
 import { PracticeQuestion, QuestionCategory } from '../../types/pycode';
+import { PyCodeBrandBadge } from './PyCodeBrandBadge';
 import {
   Search,
   Play,
@@ -10,6 +11,8 @@ import {
   Code2,
   ExternalLink,
   Star,
+  Sparkles,
+  Layers,
 } from 'lucide-react';
 
 interface QuestionReviewModalProps {
@@ -42,7 +45,8 @@ export const QuestionReviewModal: React.FC<QuestionReviewModalProps> = ({ questi
       >
         {/* Modal Top Bar */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-[#202020]">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <PyCodeBrandBadge variant="compact" />
             <span
               className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${question.difficulty === 'easy'
                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
@@ -53,15 +57,12 @@ export const QuestionReviewModal: React.FC<QuestionReviewModalProps> = ({ questi
             >
               {question.difficulty}
             </span>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
               {question.category_name || question.category}
             </span>
             <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
               <Star className="w-3.5 h-3.5 fill-current" />
               {question.points} Pts
-            </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-              PyCode Sandbox
             </span>
           </div>
 
@@ -242,12 +243,16 @@ export const PracticeQuestionsArena: React.FC = () => {
       <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
         <button
           onClick={() => setSelectedCategory('all')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${selectedCategory === 'all'
-            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-            : 'bg-neutral-100 dark:bg-[#1f1f1f] text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+          className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 ${selectedCategory === 'all'
+            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+            : 'bg-neutral-100 hover:bg-neutral-200/70 dark:bg-[#1a1a1a] dark:hover:bg-[#252525] text-neutral-600 dark:text-neutral-400'
             }`}
         >
-          All Arena Problems ({categories.reduce((acc, c) => acc + (c.total_questions || 0), 0) || allPyCodeQuestions.length || 280})
+          <Layers className="w-3.5 h-3.5" />
+          <span>All Problems</span>
+          <span className="px-1.5 py-0.2 rounded-md text-[10px] bg-neutral-200 dark:bg-neutral-800">
+            {categories.reduce((acc, c) => acc + (c.total_questions || 0), 0) || allPyCodeQuestions.length || 280}
+          </span>
         </button>
 
         {/* PyCode Upstream API Categories */}
@@ -256,8 +261,8 @@ export const PracticeQuestionsArena: React.FC = () => {
             key={cat.id}
             onClick={() => setSelectedCategory(cat.id)}
             className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer ${selectedCategory === cat.id
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-              : 'bg-neutral-100 dark:bg-[#1f1f1f] text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+              : 'bg-neutral-100 hover:bg-neutral-200/70 dark:bg-[#1a1a1a] dark:hover:bg-[#252525] text-neutral-600 dark:text-neutral-400'
               }`}
           >
             <span>{cat.name}</span>
@@ -269,30 +274,43 @@ export const PracticeQuestionsArena: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-2xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xs">
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
-            placeholder="Search problems by name or concept (e.g., primes, tensor, lru)..."
+            placeholder="Search problems by name or concept (e.g., primes, loop, matrix)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl text-xs bg-neutral-50 dark:bg-[#242424] border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
+            className="w-full pl-10 pr-8 py-2 rounded-xl text-xs bg-neutral-50 dark:bg-[#222222] border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 p-0.5"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-neutral-500 hidden sm:inline">Difficulty:</span>
-          <select
-            value={selectedDifficulty}
-            onChange={(e) => setSelectedDifficulty(e.target.value)}
-            className="px-3 py-2 rounded-xl text-xs font-semibold bg-neutral-50 dark:bg-[#242424] border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden cursor-pointer"
-          >
-            <option value="all">All Difficulties</option>
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-          </select>
+        <div className="flex items-center justify-between sm:justify-end gap-3">
+          <span className="text-[11px] font-medium text-neutral-500">
+            Showing <span className="font-bold text-neutral-800 dark:text-neutral-200">{filteredQuestions.length}</span> questions
+          </span>
+
+          <div className="flex items-center gap-1.5">
+            <select
+              value={selectedDifficulty}
+              onChange={(e) => setSelectedDifficulty(e.target.value)}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-neutral-50 dark:bg-[#222222] border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden cursor-pointer"
+            >
+              <option value="all">All Difficulties</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -302,7 +320,7 @@ export const PracticeQuestionsArena: React.FC = () => {
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="p-5 rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 animate-pulse space-y-3"
+              className="p-5 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800 animate-pulse space-y-3"
             >
               <div className="w-3/4 h-5 rounded bg-neutral-200 dark:bg-neutral-800" />
               <div className="w-1/2 h-4 rounded bg-neutral-100 dark:bg-neutral-800/60" />
@@ -311,7 +329,7 @@ export const PracticeQuestionsArena: React.FC = () => {
           ))}
         </div>
       ) : filteredQuestions.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800">
+        <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
           <Code2 className="w-10 h-10 text-neutral-400 mx-auto mb-3" />
           <h3 className="text-sm font-bold text-neutral-900 dark:text-white">No questions found</h3>
           <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
@@ -324,15 +342,19 @@ export const PracticeQuestionsArena: React.FC = () => {
             return (
               <div
                 key={question.id}
-                className="p-5 rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-2xs flex flex-col justify-between space-y-4"
+                className="group p-5 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xs hover:border-[#D4704B]/50 dark:hover:border-[#D4704B]/50 transition-colors flex flex-col justify-between space-y-4"
               >
-                <div className="space-y-2">
-                  {/* Header: Category Badge + Source + Difficulty + Points */}
+                <div className="space-y-2.5">
+                  {/* Header: PyCode Logo Badge + Category + Difficulty + Points */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 truncate max-w-[240px]">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                        PyCode Sandbox
+                      <div className="w-4 h-4 rounded-full bg-[#D4704B] flex items-center justify-center text-white font-mono font-bold text-[9px] shrink-0">
+                        &gt;_
+                      </div>
+                      <span className="text-[10px] font-bold text-[#D4704B] uppercase tracking-wider shrink-0">
+                        PyCode
                       </span>
+                      <span className="text-neutral-300 dark:text-neutral-700">·</span>
                       <span className="text-[11px] font-semibold text-neutral-500 truncate">
                         {question.category_name || question.category}
                       </span>
@@ -356,7 +378,7 @@ export const PracticeQuestionsArena: React.FC = () => {
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-sm font-bold text-neutral-900 dark:text-white leading-snug">
+                  <h3 className="text-sm sm:text-base font-bold text-neutral-900 dark:text-white leading-snug group-hover:text-[#D4704B] transition-colors">
                     {question.title}
                   </h3>
                 </div>
@@ -365,7 +387,7 @@ export const PracticeQuestionsArena: React.FC = () => {
                 <div className="flex items-center justify-between gap-2 pt-3 border-t border-neutral-100 dark:border-neutral-800/80">
                   <button
                     onClick={() => setReviewingQuestion(question)}
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5 text-neutral-500" />
                     <span>Review Problem</span>
@@ -375,10 +397,10 @@ export const PracticeQuestionsArena: React.FC = () => {
                     href={question.start_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors shrink-0"
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#D4704B] hover:bg-[#C2623F] text-white flex items-center gap-1.5 shadow-2xs transition-colors shrink-0"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>Start Sandbox</span>
+                    <span>Start in Sandbox</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
