@@ -113,10 +113,20 @@ export const MentorshipPage: React.FC = () => {
       try {
         const data = await api.getMentors();
         if (data && data.length > 0) {
-          const allowedNames = ['harsh', 'rishabh', 'arpit'];
-          let filtered = data.filter((m: any) =>
-            allowedNames.some((name) => m.name?.toLowerCase().includes(name))
-          );
+          let filtered = data
+            .filter((m: any) => {
+              const l = (m.name || '').toLowerCase();
+              if (l.includes('khare')) return false;
+              return l.includes('harsh') || l.includes('rishabh') || l.includes('arpit');
+            })
+            .map((m: any) => {
+              const l = (m.name || '').toLowerCase();
+              let avatar = '/avatars/rishabh.webp';
+              if (l.includes('arpit')) avatar = '/avatars/arpit.webp';
+              else if (l.includes('harsh')) avatar = '/avatars/harsh.webp';
+              else if (l.includes('rishabh')) avatar = '/avatars/rishabh.webp';
+              return { ...m, avatar };
+            });
           if (selectedDomain && selectedDomain !== 'All') {
             const lower = selectedDomain.toLowerCase();
             const domainFiltered = filtered.filter((m: any) => {
@@ -446,11 +456,16 @@ export const MentorshipPage: React.FC = () => {
                   <div className="flex items-start justify-between gap-3">
                     <div className="relative shrink-0">
                       <img
-                        src={mentor.avatar}
+                        src={mentor.avatar || (mentor.name?.toLowerCase().includes('arpit') ? '/avatars/arpit.webp' : mentor.name?.toLowerCase().includes('harsh') ? '/avatars/harsh.webp' : '/avatars/rishabh.webp')}
                         alt={mentor.name}
                         className={`w-20 h-20 sm:w-22 sm:h-22 rounded-2xl object-cover border-2 border-white dark:border-neutral-800 shadow-md ring-2 ${theme.avatarBorder}`}
                         onError={(e: any) => {
-                          e.target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop';
+                          const l = (mentor.name || '').toLowerCase();
+                          e.target.src = l.includes('arpit')
+                            ? '/avatars/arpit.webp'
+                            : l.includes('harsh')
+                            ? '/avatars/harsh.webp'
+                            : '/avatars/rishabh.webp';
                         }}
                       />
                       <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#202020]" />

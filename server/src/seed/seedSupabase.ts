@@ -105,43 +105,46 @@ export async function seedSupabase() {
     }
     console.log(`✅ [Supabase Seed] ${ALL_CODING_PROBLEMS.length} coding problems seeded across all tracks.`);
 
-    // 3. Mentors
+    // 3. Mentors (Strictly authentic RishabhLabs mentors with local avatars)
     const mentors = [
       {
-        name: 'Dr. Arpit Khare',
-        title: 'Staff Software Engineer',
-        company: 'Stripe',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop',
-        topics: ['System Design', 'Hackathon Strategy', 'Full-Stack Architecture'],
-        experience_years: 9,
-        rating: 4.9,
-        bio: 'Staff Engineer at Stripe. Former Smart India Hackathon Winner. Passionate about helping engineering students build robust architectures and high-impact products.',
+        name: 'Rishabh Mishra',
+        title: 'Founder & Full-Stack Lead',
+        company: 'RishabhLabs',
+        domain: 'Full-Stack Development',
+        avatar: '/avatars/rishabh.webp',
+        topics: ['Roadmap', 'Project Review', 'Career Direction', 'Web Development', 'System Design'],
+        experience_years: 6,
+        rating: 5.0,
+        bio: 'Founder of RishabhLabs. Full-Stack Architect specialized in high-performance distributed systems, scalable web applications, and technical placement strategy.',
+        hourly_rate_inr: 0,
+        available_days: ['Monday', 'Wednesday', 'Saturday']
+      },
+      {
+        name: 'Arpit Pandey',
+        title: 'AI & Systems Specialist',
+        company: 'RishabhLabs',
+        domain: 'AI & Machine Learning',
+        avatar: '/avatars/arpit.webp',
+        topics: ['Roadmap', 'Project Review', 'AI / ML Research', 'Deep Learning', 'Internship Prep'],
+        experience_years: 5,
+        rating: 4.98,
+        bio: 'AI & Machine Learning Specialist focusing on Transformer models, LLM agent workflows, PyTorch neural pipelines, and competitive hackathon architecture.',
         hourly_rate_inr: 0,
         available_days: ['Tuesday', 'Thursday', 'Saturday']
       },
       {
-        name: 'Priya Sharma',
-        title: 'Senior Engineering Lead',
-        company: 'Microsoft',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop',
-        topics: ['React & Frontend Architecture', 'Portfolio Review', 'FAANG Placement Prep'],
-        experience_years: 7,
-        rating: 5.0,
-        bio: 'Tech lead at Microsoft Azure Core. Conducted 100+ university campus interviews. Helping developers stand out through verifiable proof of work.',
-        hourly_rate_inr: 0,
-        available_days: ['Monday', 'Wednesday', 'Friday']
-      },
-      {
-        name: 'Vikram Malhotra',
-        title: 'Founding Engineer',
-        company: 'Zomato / Blinkit',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop',
-        topics: ['Distributed Systems', 'Backend Microservices', 'High-Scale NodeJS'],
+        name: 'Harsh Sharma',
+        title: 'Security & Systems Lead',
+        company: 'RishabhLabs',
+        domain: 'Cybersecurity',
+        avatar: '/avatars/harsh.webp',
+        topics: ['Roadmap', 'Cybersecurity', 'Network Protocols', 'Pentesting', 'Hackathon Strategy'],
         experience_years: 6,
-        rating: 4.8,
-        bio: 'Core infrastructure builder handling millions of orders daily. Expert in Redis caching, message queues, and high-performance databases.',
+        rating: 4.97,
+        bio: 'Cybersecurity & Systems Lead. Expert in offensive and defensive security, packet analysis, network protocol security, and Linux kernel hardening.',
         hourly_rate_inr: 0,
-        available_days: ['Saturday', 'Sunday']
+        available_days: ['Monday', 'Wednesday', 'Friday', 'Saturday']
       }
     ];
 

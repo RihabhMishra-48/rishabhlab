@@ -201,8 +201,8 @@ router.get('/', async (req, res) => {
         selectedTrack: 'Smart Education & Developer Productivity',
         teamMembers: [
           { name: 'Rishabh Mishra', role: 'Full-Stack Lead', avatar: '/avatars/rishabh.webp' },
-          { name: 'Ananya Sharma', role: 'AI / Data Engineer', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop' },
-          { name: 'Devendra Verma', role: 'DevOps & Systems', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop' },
+          { name: 'Arpit Pandey', role: 'AI & Systems Specialist', avatar: '/avatars/arpit.webp' },
+          { name: 'Harsh Sharma', role: 'Security & Systems Lead', avatar: '/avatars/harsh.webp' },
         ],
         phases: [
           {

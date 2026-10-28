@@ -76,11 +76,23 @@ router.get('/mentors', async (req, res) => {
         try {
           const { data: sbMentors } = await supabase.from('mentors').select('*');
           if (sbMentors && sbMentors.length > 0) {
-            mentors = sbMentors.map((m: any) => ({
-              _id: m.id,
-              id: m.id,
-              ...m,
-            }));
+            mentors = sbMentors
+              .filter((m: any) => !m.name?.toLowerCase().includes('khare'))
+              .map((m: any) => {
+                const l = (m.name || '').toLowerCase();
+                let avatar = m.avatar;
+                if (!avatar || avatar.startsWith('http')) {
+                  if (l.includes('arpit')) avatar = '/avatars/arpit.webp';
+                  else if (l.includes('harsh')) avatar = '/avatars/harsh.webp';
+                  else if (l.includes('rishabh')) avatar = '/avatars/rishabh.webp';
+                }
+                return {
+                  _id: m.id,
+                  id: m.id,
+                  ...m,
+                  avatar,
+                };
+              });
           }
         } catch (e) {}
       }

@@ -19,30 +19,39 @@ router.get('/', async (req, res) => {
       try {
         const { data: sbMentors } = await supabase.from('mentors').select('*');
         if (sbMentors && sbMentors.length > 0) {
-          // Strictly keep only Harsh, Rishabh, and Arpit
+          // Strictly keep only Rishabh Mishra, Arpit Pandey, and Harsh Sharma
           mentors = sbMentors
             .filter((m: any) => {
               const l = (m.name || '').toLowerCase();
+              if (l.includes('khare')) return false;
               return l.includes('harsh') || l.includes('rishabh') || l.includes('arpit');
             })
-            .map((m: any) => ({
-              _id: m.id,
-              id: m.id,
-              name: m.name,
-              title: m.title || 'Senior Mentor',
-              company: m.company || 'RishabhLabs',
-              domain: m.domain || 'Technology',
-              avatar: m.avatar || '/avatars/rishabh.webp',
-              rating: m.rating || 5.0,
-              reviewsCount: m.reviews_count || (m.experience_years ? m.experience_years * 16 : 85),
-              bio: m.bio || '',
-              hourlyRate: m.hourly_rate_inr ? `₹${m.hourly_rate_inr}` : 'Free for Students',
-              topics: m.topics || ['Roadmap', 'System Design'],
-              availability: m.available_days && m.available_days.length > 0
-                ? m.available_days.map((d: string) => `${d}, 7:00 PM IST`)
-                : ['Today, 7:00 PM IST'],
-              isAvailableToday: true,
-            }));
+            .map((m: any) => {
+              const l = (m.name || '').toLowerCase();
+              let avatar = '/avatars/rishabh.webp';
+              if (l.includes('arpit')) avatar = '/avatars/arpit.webp';
+              else if (l.includes('harsh')) avatar = '/avatars/harsh.webp';
+              else if (l.includes('rishabh')) avatar = '/avatars/rishabh.webp';
+
+              return {
+                _id: m.id,
+                id: m.id,
+                name: m.name,
+                title: m.title || 'Senior Mentor',
+                company: m.company || 'RishabhLabs',
+                domain: m.domain || 'Technology',
+                avatar,
+                rating: m.rating || 5.0,
+                reviewsCount: m.reviews_count || (m.experience_years ? m.experience_years * 16 : 85),
+                bio: m.bio || '',
+                hourlyRate: m.hourly_rate_inr ? `₹${m.hourly_rate_inr}` : 'Free for Students',
+                topics: m.topics || ['Roadmap', 'System Design'],
+                availability: m.available_days && m.available_days.length > 0
+                  ? m.available_days.map((d: string) => `${d}, 7:00 PM IST`)
+                  : ['Today, 7:00 PM IST'],
+                isAvailableToday: true,
+              };
+            });
         }
       } catch (e) {
         console.warn('Supabase mentors fetch warning:', e);
