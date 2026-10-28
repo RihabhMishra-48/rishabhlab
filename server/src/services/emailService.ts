@@ -5,10 +5,10 @@ let transporter: Transporter | null = null;
 function getTransporter(): Transporter | null {
   if (transporter) return transporter;
 
-  const host = process.env.SMTP_HOST;
-  const port = parseInt(process.env.SMTP_PORT || '587', 10);
-  const user = process.env.SMTP_USER || process.env.GMAIL_USER;
-  const pass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;
+  const host = process.env.SMTP_HOST || (process.env.RESEND_API_KEY ? 'smtp.resend.com' : undefined);
+  const port = parseInt(process.env.SMTP_PORT || '465', 10);
+  const user = process.env.SMTP_USER || (process.env.RESEND_API_KEY ? 'resend' : process.env.GMAIL_USER);
+  const pass = process.env.SMTP_PASS || process.env.RESEND_API_KEY || process.env.GMAIL_APP_PASSWORD;
 
   if (host && user && pass) {
     transporter = nodemailer.createTransport({
@@ -28,6 +28,37 @@ function getTransporter(): Transporter | null {
   }
 
   return transporter;
+}
+
+async function sendViaResendHttp(apiKey: string, to: string, subject: string, html: string): Promise<boolean> {
+  try {
+    const from = process.env.SMTP_FROM || process.env.RESEND_FROM || 'Rishabhlabs <rishabhlabs@vrindopnishad.in>';
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey.trim()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject,
+        html,
+      }),
+    });
+
+    if (res.ok) {
+      console.log(`✅ [Email Service] OTP successfully delivered via Resend API to ${to}`);
+      return true;
+    }
+
+    const errBody = await res.json().catch(() => ({}));
+    console.warn(`⚠️ [Email Service] Resend API response error:`, errBody);
+    return false;
+  } catch (err: any) {
+    console.warn(`⚠️ [Email Service] Resend API fetch failed:`, err.message);
+    return false;
+  }
 }
 
 export async function sendOtpEmail(email: string, otp: string, type: 'signup' | 'login' = 'signup'): Promise<boolean> {
@@ -107,10 +138,18 @@ export async function sendOtpEmail(email: string, otp: string, type: 'signup' | 
   console.log(`⏳ Action: ${type}`);
   console.log(`==================================================\n`);
 
+  // 1. Try direct Resend HTTP API first (fastest, most reliable in serverless)
+  const resendApiKey = process.env.RESEND_API_KEY || (process.env.SMTP_PASS?.startsWith('re_') ? process.env.SMTP_PASS : null);
+  if (resendApiKey) {
+    const sent = await sendViaResendHttp(resendApiKey, email, subject, html);
+    if (sent) return true;
+  }
+
+  // 2. Try Nodemailer SMTP
   const activeTransporter = getTransporter();
   if (activeTransporter) {
     try {
-      const from = process.env.SMTP_FROM || `"RishabhLabs Auth" <${process.env.SMTP_USER || process.env.GMAIL_USER || 'auth@rishabhlabs.com'}>`;
+      const from = process.env.SMTP_FROM || process.env.RESEND_FROM || `"Rishabhlabs" <${process.env.SMTP_USER || 'rishabhlabs@vrindopnishad.in'}>`;
       await activeTransporter.sendMail({
         from,
         to: email,
@@ -121,11 +160,10 @@ export async function sendOtpEmail(email: string, otp: string, type: 'signup' | 
       return true;
     } catch (err: any) {
       console.error(`⚠️ [Email Service] SMTP send failed:`, err.message);
-      // Fallback: console OTP was already logged
       return false;
     }
-  } else {
-    console.log(`ℹ️ [Email Service] SMTP credentials not configured in server/.env (SMTP_USER/PASS or GMAIL_USER/PASS). OTP logged above for instant testing.`);
-    return true;
   }
+
+  console.log(`ℹ️ [Email Service] Add RESEND_API_KEY or SMTP credentials in Vercel Environment Variables to deliver real emails to inboxes. OTP logged above for instant testing.`);
+  return true;
 }

@@ -80,9 +80,9 @@ router.post('/send-otp', async (req, res) => {
         college: college ? college.trim() : '',
       });
 
-      // Send email via background / SMTP
-      sendOtpEmail(cleanEmail, otp, 'signup').catch((err) => {
-        console.error('Email send background error:', err.message);
+      // Send email via Resend / SMTP before finishing response
+      await sendOtpEmail(cleanEmail, otp, 'signup').catch((err) => {
+        console.error('Email send error:', err.message);
       });
 
       return res.status(200).json({
@@ -113,8 +113,8 @@ router.post('/send-otp', async (req, res) => {
       const otp = generate8DigitOtp();
       await saveOtp(cleanEmail, otp, 'login');
 
-      sendOtpEmail(cleanEmail, otp, 'login').catch((err) => {
-        console.error('Email send background error:', err.message);
+      await sendOtpEmail(cleanEmail, otp, 'login').catch((err) => {
+        console.error('Email send error:', err.message);
       });
 
       return res.status(200).json({

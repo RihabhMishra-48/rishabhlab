@@ -132,13 +132,17 @@ const PUBLIC_PREFIXES = [
 ];
 
 function isProtectedEndpoint(endpoint: string): boolean {
+  // All authentication routes (login, register, send-otp, verify-otp, confirm-signup) are strictly public
+  if (endpoint.startsWith('/auth/')) {
+    return false;
+  }
+
   // If explicitly matching public prefix without authenticated sub-actions
   const matchesPublic = PUBLIC_PREFIXES.some((prefix) => endpoint.startsWith(prefix));
   const isAction =
     endpoint.includes('/toggle') ||
     endpoint.includes('/submit') ||
     endpoint.includes('/book') ||
-    endpoint.includes('/verify') ||
     endpoint.includes('/task');
 
   return !matchesPublic || isAction;
