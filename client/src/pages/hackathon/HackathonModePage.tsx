@@ -130,14 +130,28 @@ export const HackathonModePage: React.FC = () => {
       .then((res) => {
         if (!isMounted) return;
         if (res && res.leaderboard) {
-          const withCurrentUser = res.leaderboard.map((u: any) => ({
+          // Safeguard: Deduplicate by normalized name on frontend to ensure unique coders
+          const seen = new Set<string>();
+          const dedupedUsers: any[] = [];
+          for (const u of res.leaderboard) {
+            const key = (u.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (key && seen.has(key)) continue;
+            if (key) seen.add(key);
+            dedupedUsers.push({
+              ...u,
+              isCurrentUser: Boolean(
+                (user?.email && u.email?.toLowerCase() === user.email.toLowerCase()) ||
+                (user?.name && u.name?.toLowerCase() === user.name.toLowerCase())
+              ),
+            });
+          }
+
+          const rankedWithIndex = dedupedUsers.map((u, i) => ({
             ...u,
-            isCurrentUser: Boolean(
-              (user?.email && u.email?.toLowerCase() === user.email.toLowerCase()) ||
-              (user?.name && u.name?.toLowerCase() === user.name.toLowerCase())
-            ),
+            rank: i + 1,
           }));
-          setLeaderboardUsers(withCurrentUser);
+
+          setLeaderboardUsers(rankedWithIndex);
           if (res.cohortAverages) setCohortAverages(res.cohortAverages);
           if (res.availableCampuses && res.availableCampuses.length > 0) {
             setAvailableCampuses(res.availableCampuses);

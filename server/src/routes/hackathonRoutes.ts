@@ -109,7 +109,69 @@ router.get('/leaderboard', async (req, res) => {
       }
     }
 
-    const allUsers = Array.from(usersMap.values());
+    // 3. Deduplicate profiles to ensure strictly unique individual coders on the leaderboard
+    const formatDisplayName = (rawName: string): string => {
+      if (!rawName) return 'Student';
+      const trimmed = rawName.trim();
+      if (trimmed === trimmed.toUpperCase() && trimmed.length > 3) {
+        return trimmed
+          .toLowerCase()
+          .split(' ')
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ');
+      }
+      if (trimmed === trimmed.toLowerCase() && trimmed.includes(' ')) {
+        return trimmed
+          .split(' ')
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ');
+      }
+      return trimmed;
+    };
+
+    const formatCollegeName = (col: string): string => {
+      if (!col || !col.trim()) return 'GLA University';
+      const c = col.trim();
+      if (c.toLowerCase().includes('gla')) return 'GLA University';
+      return c;
+    };
+
+    const uniqueUsersMap = new Map<string, any>();
+
+    for (const u of usersMap.values()) {
+      // Normalize name as key to uniquely identify individual coder
+      const normKey = (u.name || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+      const dedupeKey = normKey || (u.email || u.id || '').toLowerCase().trim();
+
+      const formattedName = formatDisplayName(u.name);
+      const formattedCollege = formatCollegeName(u.college);
+
+      if (!uniqueUsersMap.has(dedupeKey)) {
+        uniqueUsersMap.set(dedupeKey, {
+          ...u,
+          name: formattedName,
+          college: formattedCollege,
+        });
+      } else {
+        const existing = uniqueUsersMap.get(dedupeKey);
+        existing.points = Math.max(existing.points, u.points);
+        existing.streakDays = Math.max(existing.streakDays, u.streakDays);
+        existing.problemsSolved = Math.max(existing.problemsSolved, u.problemsSolved);
+        if (!existing.avatar && u.avatar) existing.avatar = u.avatar;
+        if (existing.role !== 'super_admin' && u.role === 'super_admin') existing.role = 'super_admin';
+        if (
+          formattedName.length > existing.name.length ||
+          (existing.name === existing.name.toUpperCase() && formattedName !== formattedName.toUpperCase())
+        ) {
+          existing.name = formattedName;
+        }
+      }
+    }
+
+    const allUsers = Array.from(uniqueUsersMap.values());
 
     // Extract unique campuses present in actual user database
     const campusesSet = new Set<string>();
@@ -175,7 +237,6 @@ router.get('/leaderboard', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
-
 
 // GET /api/hackathon
 router.get('/', async (req, res) => {
