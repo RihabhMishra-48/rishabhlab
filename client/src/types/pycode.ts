@@ -179,4 +179,7 @@ export interface PracticeQuestion {
   practice_url?: string;
   source?: 'pycode' | 'curated';
   slug?: string;
+  is_debugging?: boolean;
+  acceptance_rate?: number;
+  tags?: string[];
 }

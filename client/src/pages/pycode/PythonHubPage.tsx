@@ -12,7 +12,6 @@ import {
   Code2,
   Terminal,
   Trophy,
-  Activity,
   LogIn,
   ExternalLink,
   Sparkles,
@@ -55,34 +54,40 @@ export const PythonHubPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-2xs">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3" />
-              Python Arena
-            </span>
-            <span className="text-xs text-neutral-400">· Live Compiler, Workspaces & Codeathons</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-white flex items-center gap-3">
-            <Code2 className="w-8 h-8 text-emerald-500" />
-            Python Practice & Codeathon Hub
-          </h1>
-          <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mt-1.5 max-w-2xl leading-relaxed">
-            Solve curated algorithmic challenges in real-time, compete in live proctored codeathons, and synchronize your terminal workspace files seamlessly with your mentorship journey.
-          </p>
-        </div>
+      <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Python Live Arena
+              </span>
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
+                · Interactive IDE, Curated Tracks & Proctored Codeathons
+              </span>
+            </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <a
-            href="https://pycode-student.vercel.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-2.5 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 text-xs font-bold flex items-center gap-2 shadow-sm transition-colors"
-          >
-            <span>Open Python Sandbox</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-neutral-50 tracking-tight flex items-center gap-3">
+              <Code2 className="w-8 h-8 text-emerald-500 shrink-0" />
+              <span>Python Practice & Codeathon Hub</span>
+            </h1>
+
+            <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 max-w-2xl leading-relaxed">
+              Solve real-world algorithmic problems, compete in proctored live codeathons, and synchronize your terminal workspace files seamlessly with your mentorship journey.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <a
+              href="https://pycode-student.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4.5 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
+            >
+              <span>Open Python Sandbox</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
         </div>
       </div>
 
@@ -95,41 +100,41 @@ export const PythonHubPage: React.FC = () => {
         />
       )}
 
-      {/* Main Feature Tabs */}
-      <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-2 overflow-x-auto no-scrollbar">
+      {/* Main Feature Segmented Tabs */}
+      <div className="inline-flex p-1.5 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1e] border border-neutral-200/80 dark:border-neutral-800 gap-1.5 w-full sm:w-auto overflow-x-auto no-scrollbar shadow-2xs">
         <button
           onClick={() => setActiveTab('practice')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
             activeTab === 'practice'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'
+              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
           }`}
         >
-          <BookOpen className="w-4 h-4 text-emerald-500" />
+          <BookOpen className={`w-4 h-4 ${activeTab === 'practice' ? 'text-emerald-400 dark:text-emerald-600' : 'text-emerald-500'}`} />
           <span>Practice Arena</span>
         </button>
 
         <button
           onClick={() => setActiveTab('codeathons')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
             activeTab === 'codeathons'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'
+              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
           }`}
         >
-          <Trophy className="w-4 h-4 text-amber-500" />
+          <Trophy className={`w-4 h-4 ${activeTab === 'codeathons' ? 'text-amber-400 dark:text-amber-600' : 'text-amber-500'}`} />
           <span>Codeathons & Exams</span>
         </button>
 
         <button
           onClick={() => setActiveTab('workspace')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
             activeTab === 'workspace'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'
+              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
           }`}
         >
-          <Terminal className="w-4 h-4 text-blue-500" />
+          <Terminal className={`w-4 h-4 ${activeTab === 'workspace' ? 'text-blue-400 dark:text-blue-600' : 'text-blue-500'}`} />
           <span>My Workspace & Heatmap</span>
         </button>
       </div>
@@ -150,20 +155,20 @@ export const PythonHubPage: React.FC = () => {
         <>
           {!user ? (
             /* Logged Out Guest Banner */
-            <div className="p-10 rounded-3xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 text-center space-y-4 shadow-2xs">
+            <div className="p-10 rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 text-center space-y-4 shadow-xs">
               <div className="w-12 h-12 mx-auto rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-500">
                 <LogIn className="w-6 h-6 text-emerald-500" />
               </div>
               <h3 className="text-base font-bold text-neutral-900 dark:text-white">
                 Log in with your student email to view your synced code, heatmap, and exam progress.
               </h3>
-              <p className="text-xs text-neutral-500 max-w-md mx-auto">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-md mx-auto leading-relaxed">
                 Once logged in, your terminal scripts, activity streak, and test scores from PyCode will automatically reflect here.
               </p>
               <div className="pt-2">
                 <Link
                   to="/login"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 text-xs font-bold shadow-sm"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold shadow-xs transition-colors"
                 >
                   <span>Sign In / Log In</span>
                   <ArrowRight className="w-3.5 h-3.5" />

@@ -215,22 +215,22 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
   };
 
   return (
-    <div className="rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-2xs overflow-hidden">
+    <div className="rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-xs overflow-hidden">
       {/* Workspace Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-[#252525]">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-[#202024]">
+        <div className="flex items-center gap-2.5">
           <Code2 className="w-4 h-4 text-emerald-500" />
-          <h3 className="text-xs font-bold text-neutral-900 dark:text-white">
+          <h3 className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white">
             Saved Terminal Workspace ({effectiveWorkspace?.total_files || files.length} Python Scripts)
           </h3>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             Synced
           </span>
         </div>
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleImportStarter}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 text-xs font-bold transition-colors cursor-pointer"
             title="Import or reset 16 starter Python scripts across DSA & Visualisations"
           >
             <Sparkles className="w-3.5 h-3.5" />
@@ -241,7 +241,7 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
             href="https://pycode-student.vercel.app/editor"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold transition-colors shadow-xs"
           >
             <span>Launch PyCode IDE</span>
             <ExternalLink className="w-3 h-3" />
