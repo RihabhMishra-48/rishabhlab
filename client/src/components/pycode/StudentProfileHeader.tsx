@@ -1,6 +1,6 @@
 import React from 'react';
 import { MentorshipSyncPayload } from '../../types/pycode';
-import { Flame, Zap, Award, BookCheck, ExternalLink, UserCheck, AlertCircle } from 'lucide-react';
+import { Flame, Zap, Award, BookCheck, ExternalLink, AlertCircle } from 'lucide-react';
 import { UserAvatar } from '../common/UserAvatar';
 
 interface StudentProfileHeaderProps {
@@ -96,11 +96,9 @@ export const StudentProfileHeader: React.FC<StudentProfileHeaderProps> = ({
               />
             </div>
             <span
-              className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white ring-2 ring-white dark:ring-[#1a1a1e] flex items-center justify-center text-[10px] shadow-xs"
-              title="Synced with PyCode Engine"
-            >
-              <UserCheck className="w-3 h-3" />
-            </span>
+              className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#1a1a1e]"
+              title="Active Account"
+            />
           </div>
 
           <div className="space-y-1.5 min-w-0">
@@ -113,10 +111,6 @@ export const StudentProfileHeader: React.FC<StudentProfileHeaderProps> = ({
                   @{user.username}
                 </span>
               )}
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Python Live Engine
-              </span>
             </div>
 
             {user.bio ? (

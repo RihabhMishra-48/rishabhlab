@@ -57,16 +57,6 @@ export const PythonHubPage: React.FC = () => {
       <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Python Live Arena
-              </span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
-                · Interactive IDE, Curated Tracks & Proctored Codeathons
-              </span>
-            </div>
-
             <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-neutral-50 tracking-tight flex items-center gap-3">
               <Code2 className="w-8 h-8 text-emerald-500 shrink-0" />
               <span>Python Practice & Codeathon Hub</span>

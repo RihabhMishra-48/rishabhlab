@@ -223,9 +223,6 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
           <h3 className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white">
             Saved Terminal Workspace ({effectiveWorkspace?.total_files || files.length} Python Scripts)
           </h3>
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-            Synced
-          </span>
         </div>
         <div className="flex items-center gap-2.5">
           <button
@@ -359,11 +356,10 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
                         <div
                           key={file.name}
                           onClick={() => handleSelectFile(file)}
-                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors cursor-pointer group ${
-                            isSelected
-                              ? 'bg-neutral-200/90 dark:bg-neutral-800 text-neutral-900 dark:text-white font-semibold border border-neutral-300 dark:border-neutral-700'
-                              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/50'
-                          }`}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors cursor-pointer group ${isSelected
+                            ? 'bg-neutral-200/90 dark:bg-neutral-800 text-neutral-900 dark:text-white font-semibold border border-neutral-300 dark:border-neutral-700'
+                            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/50'
+                            }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <FileCode className="w-3.5 h-3.5 shrink-0 text-neutral-400" />
@@ -398,11 +394,10 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
               <div
                 key={file.name}
                 onClick={() => handleSelectFile(file)}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors cursor-pointer group ${
-                  isSelected
-                    ? 'bg-neutral-200/90 dark:bg-neutral-800 text-neutral-900 dark:text-white font-semibold border border-neutral-300 dark:border-neutral-700'
-                    : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/50'
-                }`}
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors cursor-pointer group ${isSelected
+                  ? 'bg-neutral-200/90 dark:bg-neutral-800 text-neutral-900 dark:text-white font-semibold border border-neutral-300 dark:border-neutral-700'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/50'
+                  }`}
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <FileCode className="w-3.5 h-3.5 shrink-0 text-neutral-400" />
@@ -466,7 +461,7 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
 
                 {/* 2. Action Buttons (Top-Right) */}
                 <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                  {/* "Edit in PyCode Editor" Button (Primary) */}
+                  {/* Button (Primary) */}
                   <a
                     href={getFileEditorUrl(selectedFile)}
                     target="_blank"
@@ -475,7 +470,7 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
                     title="Opens PyCode Editor, expands folder and loads this exact file in Monaco ready to run"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Edit in PyCode Editor</span>
+                    <span>Edit</span>
                   </a>
 
                   {/* "Share File" Dropdown Button */}

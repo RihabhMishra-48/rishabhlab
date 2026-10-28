@@ -13,11 +13,9 @@ import {
   Code2,
   ExternalLink,
   Star,
-  CheckCircle2,
   Sparkles,
   Layers,
-  ArrowRight,
-  Bug
+  ArrowRight
 } from 'lucide-react';
 
 interface QuestionReviewModalProps {
@@ -559,27 +557,6 @@ export const PracticeQuestionsArena: React.FC = () => {
                   <h3 className="text-[15px] sm:text-base font-bold text-neutral-900 dark:text-neutral-50 leading-snug tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                     {question.title}
                   </h3>
-
-                  {/* Meta tag chips */}
-                  <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                    {question.is_debugging && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md">
-                        <Bug className="w-3 h-3" />
-                        Interactive Debug Challenge
-                      </span>
-                    )}
-                    {question.acceptance_rate && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800/80 px-2 py-0.5 rounded-md">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                        {question.acceptance_rate}% Acceptance
-                      </span>
-                    )}
-                    {!isCurated && (
-                      <span className="text-[10px] font-mono font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800/60 px-2 py-0.5 rounded-md">
-                        #{question.id}
-                      </span>
-                    )}
-                  </div>
                 </div>
 
                 {/* Action Buttons Row */}
