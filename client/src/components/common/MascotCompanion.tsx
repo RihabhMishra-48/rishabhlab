@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
-import { getCuratedMission } from '../../data/curatedMissions';
+import { getCuratedMission, advanceTrackDay } from '../../data/curatedMissions';
 import { normalizeTrackName } from '../../data/curatedRoadmaps';
 import { api, hasAuthToken } from '../../services/api';
 import { DailyMission } from '../../types';
@@ -207,6 +207,32 @@ export const MascotCompanion: React.FC = () => {
     syncBackend();
   }, [targetTrack, isOpen, user]);
 
+  // Close modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen]);
+
+  // Dismiss small teaser bubble on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (floatingContainerRef.current && !floatingContainerRef.current.contains(e.target as Node)) {
+        setShowSpeechBubble(false);
+      }
+    };
+    if (showSpeechBubble && !isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showSpeechBubble, isOpen]);
+
   // Derived task metrics
   const tasks = mission?.tasks || [];
   const totalTasks = tasks.length;
@@ -310,9 +336,11 @@ export const MascotCompanion: React.FC = () => {
     };
     setMission(updatedMission);
 
-    // Save locally
+    // Save locally per-day
     try {
       const completedIds = updatedTasks.filter((t) => t.isCompleted).map((t) => t.taskId);
+      const dayNum = mission.dayNumber || 1;
+      localStorage.setItem(`rishabhlabs_mission_completed_${targetTrack}_day_${dayNum}`, JSON.stringify(completedIds));
       localStorage.setItem(`rishabhlabs_mission_completed_${targetTrack}`, JSON.stringify(completedIds));
     } catch {
       // Ignore
@@ -421,8 +449,14 @@ export const MascotCompanion: React.FC = () => {
 
       {/* Expanded Dev Guardian Modal */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-neutral-950/75 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
-          <div className="w-full max-w-lg bg-white dark:bg-[#191718] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-5 sm:p-6 relative my-auto space-y-4 max-h-[90vh] overflow-y-auto">
+        <div
+          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-neutral-950/75 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg bg-white dark:bg-[#191718] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-5 sm:p-6 relative my-auto space-y-4 max-h-[90vh] overflow-y-auto cursor-default"
+          >
             
             {/* Top Bar: Day, Track & Close Button */}
             <div className="flex items-center justify-between">
@@ -631,17 +665,34 @@ export const MascotCompanion: React.FC = () => {
                 ))}
               </div>
 
-              {/* Primary Action Button */}
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  navigate('/missions');
-                }}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-bold hover:opacity-90 transition-opacity shadow-xs cursor-pointer shrink-0"
-              >
-                <span>Open Full Mission</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 shrink-0">
+                {isAllDone && (
+                  <button
+                    onClick={() => {
+                      const next = advanceTrackDay(targetTrack);
+                      setMission(getCuratedMission(targetTrack, next));
+                      triggerReaction('sparkle', 1200);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer"
+                    title="Unlock and start next day mission"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Start Day {(mission?.dayNumber || 1) + 1}</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    navigate('/missions');
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-bold hover:opacity-90 transition-opacity shadow-xs cursor-pointer"
+                >
+                  <span>Open Full Mission</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
 
           </div>

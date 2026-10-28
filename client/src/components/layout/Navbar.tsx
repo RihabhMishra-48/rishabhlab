@@ -108,6 +108,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Link to="/features" className={`hover:text-neutral-950 dark:hover:text-white transition-colors ${location.pathname === '/features' ? 'text-neutral-950 dark:text-white font-semibold' : ''}`}>Features</Link>
               <Link to="/pricing" className={`hover:text-neutral-950 dark:hover:text-white transition-colors ${location.pathname === '/pricing' ? 'text-neutral-950 dark:text-white font-semibold' : ''}`}>Pricing</Link>
               <Link to="/about" className={`hover:text-neutral-950 dark:hover:text-white transition-colors ${location.pathname === '/about' ? 'text-neutral-950 dark:text-white font-semibold' : ''}`}>About</Link>
+              <Link to="/mentor/login" className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 transition-colors">Mentor Portal</Link>
+              <Link to="/college/login" className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors">College Portal</Link>
             </nav>
           )}
         </div>
@@ -196,6 +198,39 @@ export const Navbar: React.FC<NavbarProps> = ({
                     Dashboard
                   </Link>
 
+                  {(user.role === 'mentor' || user.role === 'admin' || user.role === 'super_admin') && (
+                    <Link
+                      to="/mentor/sessions"
+                      onClick={() => setRoleDropdownOpen(false)}
+                      className="w-full text-left px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/80 flex items-center gap-2 text-neutral-700 dark:text-neutral-200"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      Mentor Workspace
+                    </Link>
+                  )}
+
+                  {(user.role === 'college_admin' || user.role === 'admin' || user.role === 'super_admin') && (
+                    <Link
+                      to="/college"
+                      onClick={() => setRoleDropdownOpen(false)}
+                      className="w-full text-left px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/80 flex items-center gap-2 text-neutral-700 dark:text-neutral-200"
+                    >
+                      <Building2 className="w-3.5 h-3.5 text-emerald-500" />
+                      College Portal
+                    </Link>
+                  )}
+
+                  {(user.role === 'admin' || user.role === 'super_admin') && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setRoleDropdownOpen(false)}
+                      className="w-full text-left px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/80 flex items-center gap-2 text-neutral-700 dark:text-neutral-200"
+                    >
+                      <ShieldAlert className="w-3.5 h-3.5 text-indigo-500" />
+                      Admin Dashboard
+                    </Link>
+                  )}
+
                   <div className="my-1 border-t border-neutral-100 dark:border-neutral-800"></div>
 
                   <button
@@ -248,6 +283,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           <Link to="/features" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Features</Link>
           <Link to="/pricing" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Pricing</Link>
           <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">About</Link>
+          {!user && (
+            <>
+              <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800"></div>
+              <Link to="/mentor/login" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-amber-600 dark:text-amber-400 font-semibold">Mentor Portal Login</Link>
+              <Link to="/college/login" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-emerald-600 dark:text-emerald-400 font-semibold">College Portal Login</Link>
+            </>
+          )}
           {user && (
             <>
               <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800"></div>

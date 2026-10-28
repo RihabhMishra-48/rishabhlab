@@ -51,12 +51,12 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   const initial = displayName.trim().charAt(0).toUpperCase() || 'U';
   const colorClass = getColorForName(displayName);
 
-  // Filter out unwanted legacy defaults
+  // Filter out broken or invalid image sources
   const isValidSrc =
     effectiveSrc &&
     !imageError &&
-    !effectiveSrc.includes('rishabh.webp') &&
-    !effectiveSrc.includes('unsplash.com');
+    !effectiveSrc.includes('placeholder') &&
+    !effectiveSrc.includes('your-avatar');
 
   const sizeClasses = {
     xs: 'w-6 h-6 text-[10px]',

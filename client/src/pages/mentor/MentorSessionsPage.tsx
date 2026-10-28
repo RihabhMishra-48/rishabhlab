@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import {
-  Users,
   Video,
   Calendar,
   Clock,
@@ -10,18 +9,16 @@ import {
   XCircle,
   Clock3,
   ExternalLink,
-  MessageSquare,
   Sparkles,
   Search,
-  Filter,
   Check,
   Edit3,
-  GraduationCap,
-  Github,
   BookOpen,
-  Send
+  ShieldCheck,
+  History,
+  FileText,
+  UserCheck
 } from 'lucide-react';
-import { UserAvatar } from '../../components/common/UserAvatar';
 
 export const MentorSessionsPage: React.FC = () => {
   const { user } = useAuth();
@@ -51,7 +48,7 @@ export const MentorSessionsPage: React.FC = () => {
       setSessions(Array.isArray(data) ? data : []);
     } catch (err: any) {
       console.error('Failed to load mentor sessions:', err);
-      showNotification('Failed to load student sessions.');
+      showNotification('Failed to load consultation inquiries.');
     } finally {
       setLoading(false);
     }
@@ -66,7 +63,7 @@ export const MentorSessionsPage: React.FC = () => {
       setSavingId(id);
       await api.mentorUpdateSession(id, { status: newStatus });
       setSessions((prev) =>
-        prev.map((s) => (s._id === id ? { ...s, status: newStatus } : s))
+        prev.map((s) => (s._id === id || s.id === id ? { ...s, status: newStatus } : s))
       );
       showNotification(`Session marked as ${newStatus}!`);
     } catch (err: any) {
@@ -79,15 +76,19 @@ export const MentorSessionsPage: React.FC = () => {
   const handleSaveDetails = async (id: string) => {
     try {
       setSavingId(id);
-      const updated = await api.mentorUpdateSession(id, {
+      await api.mentorUpdateSession(id, {
         meetingLink: meetingLinkInput,
         notesFromMentor: notesInput,
       });
       setSessions((prev) =>
-        prev.map((s) => (s._id === id ? { ...s, meetingLink: meetingLinkInput, notesFromMentor: notesInput } : s))
+        prev.map((s) =>
+          s._id === id || s.id === id
+            ? { ...s, meetingLink: meetingLinkInput, notesFromMentor: notesInput }
+            : s
+        )
       );
       setEditingSessionId(null);
-      showNotification('Meeting link & mentor notes saved successfully!');
+      showNotification('Meeting URL & mentor notes updated!');
     } catch (err: any) {
       showNotification(err.message || 'Failed to save meeting details.');
     } finally {
@@ -96,29 +97,37 @@ export const MentorSessionsPage: React.FC = () => {
   };
 
   const startEditing = (session: any) => {
-    setEditingSessionId(session._id);
-    setMeetingLinkInput(session.meetingLink || 'https://meet.google.com/new');
+    setEditingSessionId(session._id || session.id);
+    setMeetingLinkInput(session.meetingLink || 'https://meet.google.com/rsh-mentor-call');
     setNotesInput(session.notesFromMentor || '');
   };
 
   const filteredSessions = sessions.filter((s) => {
-    if (statusFilter !== 'all' && s.status !== statusFilter) return false;
+    const isUpcoming = s.status === 'confirmed' || s.status === 'accepted';
+    if (statusFilter === 'confirmed' && !isUpcoming) return false;
+    if (statusFilter === 'pending' && s.status !== 'pending') return false;
+    if (statusFilter === 'completed' && s.status !== 'completed') return false;
+    if (statusFilter === 'cancelled' && s.status !== 'cancelled') return false;
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const studentName = s.studentId?.name?.toLowerCase() || '';
-      const studentEmail = s.studentId?.email?.toLowerCase() || '';
-      const topic = s.topic?.toLowerCase() || '';
-      return studentName.includes(q) || studentEmail.includes(q) || topic.includes(q);
+      const code = (s.bookingCode || s._id || s.id || '').toLowerCase();
+      const topic = (s.topic || '').toLowerCase();
+      const msg = (s.message || '').toLowerCase();
+      const slot = (s.preferredSlot || '').toLowerCase();
+      return code.includes(q) || topic.includes(q) || msg.includes(q) || slot.includes(q);
     }
     return true;
   });
 
   const stats = {
     total: sessions.length,
-    upcoming: sessions.filter((s) => s.status === 'accepted').length,
+    upcoming: sessions.filter((s) => s.status === 'confirmed' || s.status === 'accepted').length,
     pending: sessions.filter((s) => s.status === 'pending').length,
     completed: sessions.filter((s) => s.status === 'completed').length,
   };
+
+  const isSuperAdmin = user?.role === 'super_admin' || user?.role === 'admin';
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
@@ -126,32 +135,62 @@ export const MentorSessionsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-2xs">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3" />
               Verified Mentor Workspace
             </span>
-            <span className="text-xs text-neutral-400">· 1:1 Student Meetings</span>
+            <span className="text-xs text-neutral-400">· 1:1 Inquiries & Bookings</span>
           </div>
           <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-            <Users className="w-6 h-6 text-emerald-500" />
-            Mentor Office Hours & Student Bookings
+            <Video className="w-6 h-6 text-emerald-500" />
+            Mentor Consultations & Session History
           </h1>
           <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-            Review student session requests, schedule Google Meet / Zoom calls, and guide learners through roadmap bottlenecks.
+            {isSuperAdmin
+              ? 'Administrator View: Full authority to modify and manage sessions across all 3 mentors (Harsh, Rishabh, Arpit).'
+              : `Logged in as ${user?.name || 'Mentor'}. Review technical questions, set meeting links, and track consultation history.`}
           </p>
         </div>
 
         {notification && (
-          <div className="px-4 py-2 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 text-xs font-semibold shadow-lg animate-fade-in flex items-center gap-2">
+          <div className="px-4 py-2 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 text-xs font-semibold shadow-lg flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600" />
             {notification}
           </div>
         )}
       </div>
 
+      {/* Mentor Profile Overview Card */}
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-transparent border border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center font-bold text-base shadow-xs">
+            {user?.name ? user.name.substring(0, 2).toUpperCase() : 'ML'}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="font-bold text-sm text-neutral-900 dark:text-white">
+                {user?.name || 'Lead Mentor'}
+              </h2>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+                Core Mentor Network
+              </span>
+            </div>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+              Available for Architecture Guidance, Code Reviews & Placement Prep
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <span className="px-3 py-1 rounded-xl text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            Accepting Inquiries
+          </span>
+        </div>
+      </div>
+
       {/* Metrics Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
-          <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Total Bookings</p>
+          <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Total Inquiries</p>
           <p className="text-2xl font-bold text-neutral-900 dark:text-white mt-1">{stats.total}</p>
         </div>
         <div className="p-4 rounded-xl bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
@@ -162,13 +201,13 @@ export const MentorSessionsPage: React.FC = () => {
         </div>
         <div className="p-4 rounded-xl bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
           <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-            <CheckCircle className="w-3.5 h-3.5" /> Confirmed / Active
+            <CheckCircle className="w-3.5 h-3.5" /> Confirmed / Upcoming
           </p>
           <p className="text-2xl font-bold text-neutral-900 dark:text-white mt-1">{stats.upcoming}</p>
         </div>
         <div className="p-4 rounded-xl bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
           <p className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-            <GraduationCap className="w-3.5 h-3.5" /> Completed Sessions
+            <History className="w-3.5 h-3.5" /> Completed Archive
           </p>
           <p className="text-2xl font-bold text-neutral-900 dark:text-white mt-1">{stats.completed}</p>
         </div>
@@ -180,7 +219,7 @@ export const MentorSessionsPage: React.FC = () => {
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
-            placeholder="Search student, email, or topic..."
+            placeholder="Search bookings by code, topic, or query..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-1.5 rounded-lg text-xs bg-white dark:bg-[#262626] border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
@@ -189,10 +228,10 @@ export const MentorSessionsPage: React.FC = () => {
 
         <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
           {[
-            { id: 'all', label: 'All Sessions' },
-            { id: 'pending', label: 'Pending' },
-            { id: 'accepted', label: 'Confirmed' },
-            { id: 'completed', label: 'Completed' },
+            { id: 'all', label: 'All Inquiries' },
+            { id: 'pending', label: 'Pending Queries' },
+            { id: 'confirmed', label: 'Confirmed Calls' },
+            { id: 'completed', label: 'Completed History' },
             { id: 'cancelled', label: 'Cancelled' },
           ].map((tab) => (
             <button
@@ -210,72 +249,67 @@ export const MentorSessionsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Sessions List */}
+      {/* Sessions / Inquiries List */}
       {loading ? (
         <div className="p-12 text-center text-sm text-neutral-500">
           <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          Loading your student sessions...
+          Loading your consultation inquiries...
         </div>
       ) : filteredSessions.length === 0 ? (
         <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#1c1c1c] border border-neutral-200 dark:border-neutral-800">
           <Calendar className="w-10 h-10 text-neutral-400 mx-auto mb-3" />
-          <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">No sessions found</h3>
+          <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">No inquiries found</h3>
           <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
             {statusFilter !== 'all'
-              ? `No sessions with status "${statusFilter}". Try switching filters.`
-              : 'Students who book mentorship with you will appear here with their project inquiries.'}
+              ? `No consultation records matching "${statusFilter}". Try selecting another tab.`
+              : 'Learner inquiries and scheduled 1:1 sessions will appear here.'}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {filteredSessions.map((session) => {
-            const student = session.studentId;
-            const isEditing = editingSessionId === session._id;
-            const isSaving = savingId === session._id;
+            const sid = session._id || session.id;
+            const isEditing = editingSessionId === sid;
+            const isSaving = savingId === sid;
+            const isConfirmed = session.status === 'confirmed' || session.status === 'accepted';
 
             return (
               <div
-                key={session._id}
+                key={sid}
                 className="p-5 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800 shadow-2xs space-y-4"
               >
-                {/* Header: Student Profile + Status Badge */}
+                {/* Header: Ticket Reference Code + Status */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <UserAvatar
-                      src={student?.avatar}
-                      name={student?.name}
-                      email={student?.email}
-                      size={44}
-                      roundedClassName="rounded-xl"
-                    />
+                    <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-neutral-300 font-mono text-xs font-bold shrink-0">
+                      <FileText className="w-5 h-5 text-emerald-500" />
+                    </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
-                          {student?.name || 'Anonymous Student'}
-                        </h3>
-                        {student?.college && (
-                          <span className="text-[11px] px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
-                            {student.college}
+                        <span className="font-mono text-xs font-bold text-neutral-900 dark:text-white">
+                          {session.bookingCode || `BK-${String(sid).slice(-6).toUpperCase()}`}
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">
+                          1:1 Consultation Ticket
+                        </span>
+                        {session.mentorName && isSuperAdmin && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
+                            Assigned: {session.mentorName}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-neutral-500 mt-0.5">
-                        <span>{student?.email || 'No email provided'}</span>
-                        {student?.degree && <span>· {student.degree}</span>}
-                        {student?.targetGoal && (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                            · Goal: {student.targetGoal}
-                          </span>
-                        )}
+                        <Clock className="w-3.5 h-3.5 text-neutral-400" />
+                        <span>Slot: <strong className="text-neutral-800 dark:text-neutral-200 font-medium">{session.preferredSlot}</strong></span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Status Badge & Quick Actions */}
+                  {/* Status Badge & Actions */}
                   <div className="flex items-center gap-2 self-start sm:self-auto">
                     <span
                       className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize flex items-center gap-1.5 ${
-                        session.status === 'accepted'
+                        isConfirmed
                           ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                           : session.status === 'pending'
                           ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
@@ -284,55 +318,56 @@ export const MentorSessionsPage: React.FC = () => {
                           : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                       }`}
                     >
-                      {session.status === 'accepted' && <CheckCircle className="w-3.5 h-3.5" />}
+                      {isConfirmed && <CheckCircle className="w-3.5 h-3.5" />}
                       {session.status === 'pending' && <Clock3 className="w-3.5 h-3.5" />}
                       {session.status === 'completed' && <Check className="w-3.5 h-3.5" />}
                       {session.status === 'cancelled' && <XCircle className="w-3.5 h-3.5" />}
-                      {session.status}
+                      {isConfirmed ? 'Confirmed' : session.status}
                     </span>
 
                     {session.status === 'pending' && (
                       <button
-                        onClick={() => handleUpdateStatus(session._id, 'accepted')}
+                        onClick={() => handleUpdateStatus(sid, 'confirmed')}
                         disabled={isSaving}
                         className="px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
                       >
-                        Accept Call
+                        Confirm Booking
                       </button>
                     )}
 
-                    {session.status === 'accepted' && (
+                    {isConfirmed && (
                       <button
-                        onClick={() => handleUpdateStatus(session._id, 'completed')}
+                        onClick={() => handleUpdateStatus(sid, 'completed')}
                         disabled={isSaving}
                         className="px-3 py-1 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors"
                       >
-                        Mark Done
+                        Mark Completed
                       </button>
                     )}
                   </div>
                 </div>
 
-                {/* Session Inquiries & Message */}
-                <div className="p-3.5 rounded-xl bg-neutral-50 dark:bg-[#222222] border border-neutral-200/70 dark:border-neutral-800 text-xs space-y-2">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
-                      <BookOpen className="w-3.5 h-3.5 text-neutral-500" />
+                {/* Technical Topic & Student Query Message */}
+                <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#222222] border border-neutral-200/70 dark:border-neutral-800 text-xs space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200/50 dark:border-neutral-700/50 pb-2">
+                    <span className="font-bold text-neutral-900 dark:text-white flex items-center gap-1.5 text-xs">
+                      <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
                       Topic: {session.topic}
                     </span>
-                    <span className="text-neutral-500 flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5" />
-                      Slot: <span className="font-medium text-neutral-800 dark:text-neutral-200">{session.preferredSlot}</span>
+                    <span className="text-[11px] text-neutral-400">
+                      Technical Inquiry
                     </span>
                   </div>
-                  {session.message && (
-                    <p className="text-neutral-600 dark:text-neutral-300 italic">
+                  {session.message ? (
+                    <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed pt-1">
                       "{session.message}"
                     </p>
+                  ) : (
+                    <p className="text-neutral-400 italic">No additional query message supplied.</p>
                   )}
                 </div>
 
-                {/* Meeting Link & Mentor Notes Section */}
+                {/* Meeting Link & Mentor Prep Notes Section */}
                 {isEditing ? (
                   <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#222222] border border-emerald-500/30 space-y-3">
                     <div>
@@ -349,23 +384,23 @@ export const MentorSessionsPage: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                        Notes & Preparation for Student:
+                        Mentor Preparation & Outcome Notes:
                       </label>
                       <textarea
                         rows={2}
                         value={notesInput}
                         onChange={(e) => setNotesInput(e.target.value)}
-                        placeholder="Please have your GitHub repo open, terminal ready with project running..."
+                        placeholder="Add preparation notes or post-session recommendations..."
                         className="w-full px-3 py-1.5 rounded-lg text-xs bg-white dark:bg-[#1a1a1a] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
                       />
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleSaveDetails(session._id)}
+                        onClick={() => handleSaveDetails(sid)}
                         disabled={isSaving}
                         className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
                       >
-                        {isSaving ? 'Saving...' : 'Save Details'}
+                        {isSaving ? 'Saving...' : 'Save Meeting Details'}
                       </button>
                       <button
                         onClick={() => setEditingSessionId(null)}
@@ -379,24 +414,24 @@ export const MentorSessionsPage: React.FC = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800/80">
                     <div className="flex-1 min-w-0">
                       {session.meetingLink ? (
-                        <div className="flex items-center gap-2">
-                          <Video className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-neutral-400 font-medium">Meeting URL:</span>
                           <a
                             href={session.meetingLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 truncate"
+                            className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline truncate max-w-xs flex items-center gap-1"
                           >
-                            {session.meetingLink}
+                            <span>{session.meetingLink}</span>
                             <ExternalLink className="w-3 h-3 shrink-0" />
                           </a>
                         </div>
                       ) : (
-                        <p className="text-xs text-neutral-400 italic">No meeting link set yet.</p>
+                        <span className="text-xs text-neutral-400 italic">No meeting link set yet.</span>
                       )}
                       {session.notesFromMentor && (
-                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
-                          Note: {session.notesFromMentor}
+                        <p className="text-[11px] text-neutral-500 mt-0.5 truncate">
+                          <span className="font-medium text-neutral-600 dark:text-neutral-400">Notes:</span> {session.notesFromMentor}
                         </p>
                       )}
                     </div>
@@ -404,21 +439,20 @@ export const MentorSessionsPage: React.FC = () => {
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => startEditing(session)}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors"
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex items-center gap-1"
                       >
-                        <Edit3 className="w-3 h-3" />
-                        Edit Link / Notes
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Update Link / Notes</span>
                       </button>
-
-                      {session.meetingLink && (
+                      {session.meetingLink && isConfirmed && (
                         <a
                           href={session.meetingLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 transition-colors"
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors flex items-center gap-1"
                         >
-                          <Video className="w-3 h-3" />
-                          Join Meeting
+                          <Video className="w-3.5 h-3.5" />
+                          <span>Join Video Call</span>
                         </a>
                       )}
                     </div>
@@ -432,5 +466,3 @@ export const MentorSessionsPage: React.FC = () => {
     </div>
   );
 };
-
-export default MentorSessionsPage;

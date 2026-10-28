@@ -10,55 +10,57 @@ import {
   Sparkles,
   Clock,
   Target,
-  GraduationCap,
-  Briefcase,
   Shield,
   Code,
   Cpu,
   Smartphone,
   Cloud,
   BarChart3,
-  Building2,
-  Linkedin,
-  FileCheck,
   Check,
-  CheckCheck
+  Building2,
+  Award
 } from 'lucide-react';
 
 export const OnboardingPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
   const navigate = useNavigate();
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, loading } = useAuth();
 
-  // If user is already onboarded, send them straight to dashboard
+  // If unauthenticated, redirect to login
   useEffect(() => {
-    if (user && user.isOnboarded) {
-      navigate('/dashboard', { replace: true });
+    if (!loading && !user) {
+      navigate('/login', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
-  // Initial role is always student (Admin can promote to mentor manually)
+  // Account role is default student for all learners
   const role = 'student';
 
   // Step 1: Field of Interest (The Primary Anchor)
   const [fieldOfInterest, setFieldOfInterest] = useState('Cybersecurity');
 
-  // Step 2: Identity & Background
+  // Step 2: Identity & Academic Background
   const [fullName, setFullName] = useState(user?.name || '');
   const [college, setCollege] = useState(user?.college || '');
   const [degree, setDegree] = useState(user?.degree || '');
-  const [yearOfStudy, setYearOfStudy] = useState(user?.year || '');
+  const [yearOfStudy, setYearOfStudy] = useState(user?.year || '2nd Year (Sophomore)');
+  const [campusPassCode, setCampusPassCode] = useState('');
+  const [verifiedCollege, setVerifiedCollege] = useState<string | null>(
+    localStorage.getItem('rishabhlabs_college_verified') || null
+  );
 
-  // Step 3: Level & Target
-  const [currentLevel, setCurrentLevel] = useState('Beginner');
+  // Step 3: Experience Level & Learning Goals
+  const [currentLevel, setCurrentLevel] = useState('Complete Beginner');
   const [availableTime, setAvailableTime] = useState('2 hours/day');
   const [desiredOutcome, setDesiredOutcome] = useState('Build projects');
 
-  // Assessment Modal
+  // Assessment Diagnostic Modal
   const [showNotSureAssessment, setShowNotSureAssessment] = useState(false);
-  const [assessmentInterests, setAssessmentInterests] = useState<string[]>(['Security & Network Hardening']);
-  const [assessmentComfort, setAssessmentComfort] = useState('Moderate');
+  const [assessmentInterests, setAssessmentInterests] = useState<string[]>([
+    'Security & Threat Defense (Ethical Hacking, Network Hardening)',
+  ]);
+  const [assessmentComfort, setAssessmentComfort] = useState('Beginner');
   const [assessmentResult, setAssessmentResult] = useState<any>(null);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,6 +68,15 @@ export const OnboardingPage: React.FC = () => {
   useEffect(() => {
     if (user?.name && !fullName) {
       setFullName(user.name);
+    }
+    if (user?.college && !college) {
+      setCollege(user.college);
+    }
+    if (user?.degree && !degree) {
+      setDegree(user.degree);
+    }
+    if (user?.fieldOfInterest) {
+      setFieldOfInterest(user.fieldOfInterest);
     }
   }, [user]);
 
@@ -151,6 +162,12 @@ export const OnboardingPage: React.FC = () => {
     { id: 'Advanced', label: 'Advanced', desc: 'Comfortable with full engineering stacks, targeting placements & hackathons' },
   ];
 
+  const timeOptions = [
+    { id: '1 hour/day', label: '1 hour / day', desc: 'Consistent foundation & theory pace' },
+    { id: '2 hours/day', label: '2 hours / day', desc: 'Recommended sprint velocity (Optimal)' },
+    { id: '4+ hours/day', label: '4+ hours / day', desc: 'Intensive immersion & bootcamp focus' },
+  ];
+
   const outcomeOptions = [
     { id: 'Build projects', label: 'Build Production Projects', desc: 'Ship real, verifiable full-stack applications with proof of work' },
     { id: 'Placement preparation', label: 'Placement & Job Preparation', desc: 'Technical campus placements, LeetCode patterns & mock interviews' },
@@ -169,6 +186,18 @@ export const OnboardingPage: React.FC = () => {
   const handlePrev = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleVerifyCampusPass = () => {
+    const cleanCode = campusPassCode.trim();
+    if (cleanCode === '123456') {
+      const university = 'GLA University';
+      setVerifiedCollege(university);
+      setCollege(university);
+      localStorage.setItem('rishabhlabs_college_verified', university);
+    } else if (cleanCode) {
+      alert('Invalid campus code. For testing, use demo code: 123456');
     }
   };
 
@@ -201,10 +230,11 @@ export const OnboardingPage: React.FC = () => {
       const userKey = user?.id || 'active';
       localStorage.setItem(`rishabhlabs_onboarded_${userKey}`, 'true');
       localStorage.setItem(`rishabhlabs_goal_${userKey}`, fieldOfInterest);
-      localStorage.setItem(`rishabhlabs_role_${userKey}`, role);
+      localStorage.setItem(`rishabhlabs_role_${userKey}`, 'student');
       localStorage.setItem('rishabhlabs_onboarded', 'true');
       localStorage.setItem('rishabhlabs_goal', fieldOfInterest);
-      localStorage.setItem('rishabhlabs_role', role);
+      localStorage.setItem('rishabhlabs_role', 'student');
+      localStorage.setItem('rishabhlabs_onboarding_date', new Date().toISOString());
 
       // 1. Sync to Supabase directly if configured
       try {
@@ -214,6 +244,7 @@ export const OnboardingPage: React.FC = () => {
             full_name: fullName.trim() || user?.name || 'Engineer',
             role: 'student',
             target_goal: fieldOfInterest,
+            field_of_interest: fieldOfInterest,
             college_name: college.trim() ? college.trim() : null,
             degree: degree.trim() ? degree.trim() : null,
             year_of_study: yearOfStudy.trim() ? yearOfStudy.trim() : null,
@@ -229,7 +260,6 @@ export const OnboardingPage: React.FC = () => {
             .update(profilePayload)
             .eq('id', user.id);
 
-          // Fallback if extended migration columns are not yet cached
           if (updateErr) {
             await supabase
               .from('profiles')
@@ -243,6 +273,7 @@ export const OnboardingPage: React.FC = () => {
                 current_level: currentLevel,
                 available_time: availableTime,
                 desired_outcome: desiredOutcome,
+                is_onboarded: true,
               })
               .eq('id', user.id);
           }
@@ -298,7 +329,7 @@ export const OnboardingPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Multi-Step Platform Progress Line (Dual-Segment Pill Standard) */}
+        {/* Multi-Step Platform Progress Line */}
         <div className="flex items-center gap-3">
           <span className="text-xs font-semibold text-neutral-500">
             Step {currentStep} of {totalSteps}
@@ -441,7 +472,7 @@ export const OnboardingPage: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="space-y-1">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-[11px] font-semibold text-neutral-600 dark:text-neutral-300">
-                      Step 1 of 4 · Primary Focus
+                      Step 1 of 4 · Primary Track
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
                       Select your primary field of interest
@@ -489,12 +520,28 @@ export const OnboardingPage: React.FC = () => {
                           </div>
 
                           <div>
-                            <h4 className="text-xs font-bold text-neutral-900 dark:text-white">
-                              {opt.label}
-                            </h4>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-xs font-bold text-neutral-900 dark:text-white">
+                                {opt.label}
+                              </h4>
+                              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md bg-neutral-200/60 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                                {opt.badge}
+                              </span>
+                            </div>
                             <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1 leading-snug">
                               {opt.desc}
                             </p>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1 pt-1">
+                            {opt.skills.map((skill) => (
+                              <span
+                                key={skill}
+                                className="text-[9px] px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800/80 text-neutral-600 dark:text-neutral-400 font-medium"
+                              >
+                                {skill}
+                              </span>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -541,11 +588,11 @@ export const OnboardingPage: React.FC = () => {
                       type="text"
                       value={college}
                       onChange={(e) => setCollege(e.target.value)}
-                      placeholder="e.g. Indian Institute of Technology / BITS / SRM"
+                      placeholder="e.g. Indian Institute of Technology / GLA / BITS / SRM"
                       className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none"
                     />
                     <div className="flex flex-wrap gap-1.5 mt-2">
-                      {['IIT / NIT', 'State Technical University', 'Autonomous Institute', 'Deemed University'].map((c) => (
+                      {['GLA University', 'IIT / NIT', 'State Technical University', 'Autonomous Institute'].map((c) => (
                         <button
                           key={c}
                           type="button"
@@ -612,29 +659,75 @@ export const OnboardingPage: React.FC = () => {
                       ))}
                     </div>
                   </div>
+
+                  {/* College / Campus Pass Verification Card */}
+                  <div className="mt-4 p-4 rounded-2xl bg-neutral-50 dark:bg-[#1a1a1c] border border-neutral-200 dark:border-neutral-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-emerald-500" />
+                        <div>
+                          <p className="text-xs font-bold text-neutral-900 dark:text-white">College / Campus Pass</p>
+                          <p className="text-[11px] text-neutral-500">Have a partner campus code? (Demo code: 123456)</p>
+                        </div>
+                      </div>
+
+                      {verifiedCollege && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
+                          <Check className="w-3 h-3" />
+                          Verified
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={campusPassCode}
+                        onChange={(e) => setCampusPassCode(e.target.value)}
+                        placeholder="Enter 6-digit code"
+                        maxLength={6}
+                        className="w-36 px-3 py-2 rounded-xl text-xs bg-white dark:bg-[#262626] border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white font-mono text-center outline-none focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyCampusPass}
+                        className="px-4 py-2 rounded-xl text-xs font-semibold bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:opacity-90 transition-opacity"
+                      >
+                        Verify Pass
+                      </button>
+                    </div>
+
+                    {verifiedCollege && (
+                      <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                        <Award className="w-3.5 h-3.5" />
+                        Campus pass unlocked: {verifiedCollege} partner curriculum & lab benefits applied.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* STEP 3: EXPERIENCE LEVEL & PRIMARY TARGET */}
+            {/* STEP 3: EXPERIENCE LEVEL, DAILY VELOCITY & PRIMARY TARGET */}
             {currentStep === 3 && (
               <div className="space-y-6">
                 <div className="space-y-1">
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-[11px] font-semibold text-neutral-600 dark:text-neutral-300">
-                    Step 3 of 4 · Level & Objectives
+                    Step 3 of 4 · Level & Velocity
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
-                    What is your starting level and target?
+                    What is your starting level and daily commitment?
                   </h1>
                   <p className="text-xs sm:text-sm text-neutral-500">
                     This calibrates your daily roadmap tasks, coding challenges, and weekly milestone velocity.
                   </p>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-5">
+                  {/* Experience Level */}
                   <div>
                     <label className="text-xs font-bold text-neutral-900 dark:text-white mb-2 block">
-                      Current Experience in {fieldOfInterest}
+                      1. Current Experience in {fieldOfInterest}
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {levelOptions.map((opt) => {
@@ -660,9 +753,42 @@ export const OnboardingPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pt-2">
+                  {/* Daily Commitment */}
+                  <div>
                     <label className="text-xs font-bold text-neutral-900 dark:text-white mb-2 block">
-                      Primary Target Goal
+                      2. Daily Time Commitment
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {timeOptions.map((opt) => {
+                        const isSelected = availableTime === opt.id;
+                        return (
+                          <div
+                            key={opt.id}
+                            onClick={() => setAvailableTime(opt.id)}
+                            className={`cursor-pointer p-3.5 rounded-xl border transition-colors flex items-center justify-between ${
+                              isSelected
+                                ? 'bg-neutral-100 dark:bg-white/[0.12] border-neutral-300 dark:border-white/20 shadow-xs text-neutral-900 dark:text-white font-semibold'
+                                : 'bg-white/60 dark:bg-[#1a1a1c]/60 border-neutral-200/70 dark:border-neutral-800/70 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-[#242427]'
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-neutral-500" />
+                                <p className="text-xs font-bold text-neutral-900 dark:text-white">{opt.label}</p>
+                              </div>
+                              <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">{opt.desc}</p>
+                            </div>
+                            {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Target Goal */}
+                  <div>
+                    <label className="text-xs font-bold text-neutral-900 dark:text-white mb-2 block">
+                      3. Primary Target Goal
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {outcomeOptions.map((opt) => {
@@ -727,12 +853,17 @@ export const OnboardingPage: React.FC = () => {
                       <span className="text-xs font-mono font-medium text-neutral-500 dark:text-neutral-400 capitalize">
                         Student Account
                       </span>
+                      {verifiedCollege && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
+                          {verifiedCollege} Pass
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                     <div className="p-3 rounded-xl bg-white dark:bg-[#252525] border border-neutral-200/80 dark:border-neutral-800">
-                      <span className="text-neutral-400 text-[10px] uppercase font-bold block">Primary Domain</span>
+                      <span className="text-neutral-400 text-[10px] uppercase font-bold block">Primary Track</span>
                       <span className="font-bold text-neutral-900 dark:text-white mt-0.5 block truncate">{fieldOfInterest}</span>
                     </div>
 
@@ -785,24 +916,24 @@ export const OnboardingPage: React.FC = () => {
                   type="button"
                   disabled={isSubmitting}
                   onClick={handleNext}
-                className="px-6 py-3 rounded-full bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 text-xs font-semibold transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-3.5 h-3.5 border-2 border-white/30 dark:border-neutral-900/30 border-t-white dark:border-t-neutral-900 rounded-full animate-spin"></span>
-                    Generating Track...
-                  </span>
-                ) : currentStep === totalSteps ? (
-                  <>
-                    <span>Enter {fieldOfInterest} Track</span>
-                    <Sparkles className="w-4 h-4" />
-                  </>
-                ) : (
-                  <>
-                    <span>Continue to Step {currentStep + 1}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
+                  className="px-6 py-3 rounded-full bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 text-xs font-semibold transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 border-2 border-white/30 dark:border-neutral-900/30 border-t-white dark:border-t-neutral-900 rounded-full animate-spin"></span>
+                      Generating Track...
+                    </span>
+                  ) : currentStep === totalSteps ? (
+                    <>
+                      <span>Enter {fieldOfInterest} Track</span>
+                      <Sparkles className="w-4 h-4" />
+                    </>
+                  ) : (
+                    <>
+                      <span>Continue to Step {currentStep + 1}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -819,3 +950,5 @@ export const OnboardingPage: React.FC = () => {
     </div>
   );
 };
+
+export default OnboardingPage;

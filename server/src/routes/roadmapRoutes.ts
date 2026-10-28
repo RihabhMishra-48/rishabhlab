@@ -6,11 +6,23 @@ import { aiService } from '../services/aiService';
 
 const router = Router();
 
+import mongoose from 'mongoose';
+
 // GET /api/roadmap
 router.get('/', requireAuth, async (req: AuthRequest, res) => {
   try {
     const user = req.user!;
-    const profile = await StudentProfile.findOne({ userId: user._id });
+    const isMongoReady = mongoose.connection.readyState === 1;
+
+    let profile: any = null;
+    if (isMongoReady) {
+      try {
+        profile = await StudentProfile.findOne({ userId: user._id });
+      } catch (e) {
+        console.warn('Mongo find profile error:', e);
+      }
+    }
+
     const userGoal = (req.query.track as string) || profile?.targetGoal || (user as any).targetGoal || 'Web Development';
     const isExplicitRegenerate = req.query.regenerate === 'true';
 
@@ -21,14 +33,20 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
     else if (trackLower.includes('cyber') || trackLower.includes('security')) catFilter = 'Cybersecurity';
     else if (trackLower.includes('app') || trackLower.includes('mobile')) catFilter = 'Mobile App Development';
 
-    // Find existing roadmap for this user matching category
-    let roadmap = await Roadmap.findOne({
-      userId: user._id,
-      $or: [
-        { category: { $regex: new RegExp(catFilter.slice(0, 4), 'i') } },
-        { title: { $regex: new RegExp(catFilter.slice(0, 4), 'i') } },
-      ],
-    });
+    let roadmap: any = null;
+    if (isMongoReady) {
+      try {
+        roadmap = await Roadmap.findOne({
+          userId: user._id,
+          $or: [
+            { category: { $regex: new RegExp(catFilter.slice(0, 4), 'i') } },
+            { title: { $regex: new RegExp(catFilter.slice(0, 4), 'i') } },
+          ],
+        });
+      } catch (e) {
+        console.warn('Mongo find roadmap error:', e);
+      }
+    }
 
     if (!roadmap || isExplicitRegenerate) {
       const generated = await aiService.generateRoadmap(
@@ -42,23 +60,31 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
         isExplicitRegenerate
       );
 
-      if (roadmap && isExplicitRegenerate) {
-        roadmap.title = generated.title;
-        roadmap.slug = generated.slug;
-        roadmap.category = generated.category;
-        roadmap.nodes = generated.nodes as any;
-        roadmap.totalNodes = generated.totalNodes;
-        roadmap.completedNodes = 0;
-        await roadmap.save();
-      } else if (!roadmap) {
-        roadmap = await Roadmap.create({
-          ...generated,
-          userId: user._id,
-        });
+      if (isMongoReady) {
+        try {
+          if (roadmap && isExplicitRegenerate) {
+            roadmap.title = generated.title;
+            roadmap.slug = generated.slug;
+            roadmap.category = generated.category;
+            roadmap.nodes = generated.nodes as any;
+            roadmap.totalNodes = generated.totalNodes;
+            roadmap.completedNodes = 0;
+            await roadmap.save();
+          } else if (!roadmap) {
+            roadmap = await Roadmap.create({
+              ...generated,
+              userId: user._id,
+            });
+          }
+        } catch (e) {
+          roadmap = { ...generated, userId: user._id, _id: 'roadmap-' + Date.now() };
+        }
+      } else {
+        roadmap = { ...generated, userId: user._id, _id: 'roadmap-' + Date.now() };
       }
     }
 
-    const currentActiveNode = roadmap.nodes.find((n) => n.status === 'in_progress') || roadmap.nodes[0];
+    const currentActiveNode = roadmap?.nodes?.find((n: any) => n.status === 'in_progress') || roadmap?.nodes?.[0] || null;
 
     res.json({
       roadmap,
@@ -66,8 +92,8 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
       summary: {
         title: roadmap.title,
         trackInfo: `${roadmap.category} • ${roadmap.targetLevel} • ${roadmap.estimatedDailyTime} • ${roadmap.totalDurationDays} days`,
-        completedCount: roadmap.nodes.filter((n) => n.status === 'completed').length,
-        totalCount: roadmap.nodes.length,
+        completedCount: roadmap?.nodes?.filter((n: any) => n.status === 'completed')?.length || 0,
+        totalCount: roadmap?.nodes?.length || 0,
       },
     });
   } catch (err: any) {

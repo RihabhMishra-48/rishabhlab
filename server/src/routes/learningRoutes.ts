@@ -1,7 +1,9 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { Lesson } from '../models/Lesson';
 import { StudentProfile } from '../models/StudentProfile';
+import { getCleanLessons } from '../seed/seedData';
 
 const router = Router();
 
@@ -9,15 +11,29 @@ const router = Router();
 router.get('/', async (req, res) => {
   try {
     const { track } = req.query;
-    const filter = track ? { track } : {};
-    const lessons = await Lesson.find(filter).sort({ order: 1 });
+    const isMongoReady = mongoose.connection.readyState === 1;
+
+    let lessons: any[] = [];
+    if (isMongoReady) {
+      try {
+        const filter = track ? { track } : {};
+        lessons = await Lesson.find(filter).sort({ order: 1 });
+      } catch (e) {
+        console.warn('Mongo find error in lessons:', e);
+      }
+    }
+
+    if (!lessons || lessons.length === 0) {
+      lessons = getCleanLessons();
+      if (track) lessons = lessons.filter((l: any) => l.track === track);
+    }
 
     // Group by module
-    const grouped = lessons.reduce((acc: any, l) => {
-      const key = l.moduleTitle;
+    const grouped = lessons.reduce((acc: any, l: any) => {
+      const key = l.moduleTitle || 'Core Concepts';
       if (!acc[key]) acc[key] = [];
       acc[key].push({
-        id: l._id,
+        id: l._id || l.slug,
         title: l.title,
         slug: l.slug,
         readTime: l.readTime,
@@ -38,29 +54,52 @@ router.get('/', async (req, res) => {
 router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
-    const lesson = await Lesson.findOne({ slug });
+    const isMongoReady = mongoose.connection.readyState === 1;
+
+    let lesson: any = null;
+    let nextLesson: any = null;
+    let prevLesson: any = null;
+    let moduleLessons: any[] = [];
+
+    if (isMongoReady) {
+      try {
+        lesson = await Lesson.findOne({ slug });
+        if (lesson) {
+          nextLesson = await Lesson.findOne({
+            track: lesson.track,
+            order: { $gt: lesson.order },
+          }).sort({ order: 1 });
+
+          prevLesson = await Lesson.findOne({
+            track: lesson.track,
+            order: { $lt: lesson.order },
+          }).sort({ order: -1 });
+
+          moduleLessons = await Lesson.find({
+            track: lesson.track,
+          })
+            .select('title slug order readTime track moduleTitle')
+            .sort({ order: 1 });
+        }
+      } catch (e) {
+        console.warn('Mongo find error in lesson by slug:', e);
+      }
+    }
+
+    if (!lesson) {
+      const allClean = getCleanLessons();
+      const idx = allClean.findIndex((l: any) => l.slug === slug);
+      if (idx !== -1) {
+        lesson = allClean[idx];
+        nextLesson = idx < allClean.length - 1 ? allClean[idx + 1] : null;
+        prevLesson = idx > 0 ? allClean[idx - 1] : null;
+        moduleLessons = allClean.filter((l: any) => l.track === lesson.track);
+      }
+    }
 
     if (!lesson) {
       return res.status(404).json({ message: 'Lesson not found' });
     }
-
-    // Find next and previous lesson
-    const nextLesson = await Lesson.findOne({
-      track: lesson.track,
-      order: { $gt: lesson.order },
-    }).sort({ order: 1 });
-
-    const prevLesson = await Lesson.findOne({
-      track: lesson.track,
-      order: { $lt: lesson.order },
-    }).sort({ order: -1 });
-
-    // Find all lessons in this track/module for dynamic module navigation
-    const moduleLessons = await Lesson.find({
-      track: lesson.track,
-    })
-      .select('title slug order readTime track moduleTitle')
-      .sort({ order: 1 });
 
     res.json({
       lesson,

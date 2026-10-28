@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Editor from '@monaco-editor/react';
 import { WorkspaceFile, FileTreeNode } from '../../types/pycode';
+import { STARTER_PYTHON_WORKSPACE } from '../../data/starterPythonWorkspace';
 import { useAuth } from '../../context/AuthContext';
 import {
   Folder,
@@ -17,7 +18,9 @@ import {
   Share2,
   Link as LinkIcon,
   MessageCircle,
-  MoreVertical
+  MoreVertical,
+  Sparkles,
+  Search
 } from 'lucide-react';
 
 interface StudentWorkspaceViewerProps {
@@ -52,9 +55,20 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
   loading = false,
 }) => {
   const { isDarkMode } = useAuth();
-  const files = workspace?.files || [];
+  const [localWorkspace, setLocalWorkspace] = useState<any>(null);
+  const [importNotice, setImportNotice] = useState(false);
+  const [fileSearch, setFileSearch] = useState('');
+
+  // Use local override, or props workspace if non-empty, or fallback to STARTER_PYTHON_WORKSPACE
+  const effectiveWorkspace = useMemo(() => {
+    if (localWorkspace) return localWorkspace;
+    if (workspace && workspace.files && workspace.files.length > 0) return workspace;
+    return STARTER_PYTHON_WORKSPACE;
+  }, [localWorkspace, workspace]);
+
+  const files = effectiveWorkspace?.files || [];
   const [selectedFile, setSelectedFile] = useState<WorkspaceFile | null>(null);
-  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({ DSA: true, visualisations: false, algorithms: false });
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedFileLink, setCopiedFileLink] = useState(false);
   const [copiedFolderLink, setCopiedFolderLink] = useState(false);
@@ -80,18 +94,26 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Initialize selected file and expand ONLY that file's folder
+  // Initialize selected file and expand that file's folder
   useEffect(() => {
     if (files.length > 0 && !selectedFile) {
       const first = files[0];
       setSelectedFile(first);
       if (first.folder && first.folder !== 'root') {
-        setExpandedFolders({ [first.folder]: true });
-      } else {
-        setExpandedFolders({});
+        setExpandedFolders((prev) => ({ ...prev, [first.folder as string]: true }));
       }
     }
   }, [files, selectedFile]);
+
+  const handleImportStarter = () => {
+    setLocalWorkspace(STARTER_PYTHON_WORKSPACE);
+    if (STARTER_PYTHON_WORKSPACE.files.length > 0) {
+      setSelectedFile(STARTER_PYTHON_WORKSPACE.files[0]);
+      setExpandedFolders({ DSA: true, visualisations: false, algorithms: false });
+    }
+    setImportNotice(true);
+    setTimeout(() => setImportNotice(false), 2500);
+  };
 
   const handleSelectFile = (file: WorkspaceFile) => {
     setSelectedFile(file);
@@ -136,7 +158,7 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
     }, 1800);
   };
 
-  if (loading && (!workspace || files.length === 0)) {
+  if (loading && (!effectiveWorkspace || files.length === 0)) {
     return (
       <div className="p-6 rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 animate-pulse space-y-4">
         <div className="w-56 h-5 rounded-md bg-neutral-200 dark:bg-neutral-800" />
@@ -145,38 +167,21 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
     );
   }
 
-  // Empty state
-  if (!workspace || workspace.total_files === 0 || files.length === 0) {
+  // Filter files based on search
+  const displayedFiles = (files as WorkspaceFile[]).filter((f: WorkspaceFile) => {
+    if (!fileSearch.trim()) return true;
+    const query = fileSearch.toLowerCase();
     return (
-      <div className="p-10 rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-2xs text-center space-y-3">
-        <div className="w-12 h-12 mx-auto rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center">
-          <Terminal className="w-6 h-6" />
-        </div>
-        <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
-          No Python scripts saved in your workspace yet
-        </h3>
-        <p className="text-xs text-neutral-500 max-w-md mx-auto">
-          Start writing and saving algorithms, loops, and scripts on PyCode! They will automatically synchronize to your mentorship workspace here.
-        </p>
-        <div className="pt-2">
-          <a
-            href="https://pycode-student.vercel.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 text-xs font-bold shadow-sm"
-          >
-            <span>Open Python Sandbox</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        </div>
-      </div>
+      f.name.toLowerCase().includes(query) ||
+      (f.folder && f.folder.toLowerCase().includes(query)) ||
+      (f.code && f.code.toLowerCase().includes(query))
     );
-  }
+  });
 
   // Group files by folder
-  const rootFiles = files.filter((f) => !f.folder || f.folder === 'root');
+  const rootFiles = displayedFiles.filter((f: WorkspaceFile) => !f.folder || f.folder === 'root');
   const folderGroups: Record<string, WorkspaceFile[]> = {};
-  files.forEach((f) => {
+  displayedFiles.forEach((f: WorkspaceFile) => {
     if (f.folder && f.folder !== 'root') {
       if (!folderGroups[f.folder]) folderGroups[f.folder] = [];
       folderGroups[f.folder].push(f);
@@ -184,7 +189,8 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
   });
 
   // Folder details lookup map
-  const folderDetailsMap = (workspace.folder_details || []).reduce<Record<string, any>>((acc, f) => {
+  const folderDetailsList: any[] = effectiveWorkspace?.folder_details || [];
+  const folderDetailsMap = folderDetailsList.reduce((acc: Record<string, any>, f: any) => {
     acc[f.name] = f;
     return acc;
   }, {});
@@ -215,10 +221,22 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
         <div className="flex items-center gap-2">
           <Code2 className="w-4 h-4 text-emerald-500" />
           <h3 className="text-xs font-bold text-neutral-900 dark:text-white">
-            Saved Terminal Workspace ({workspace.total_files} Python Scripts)
+            Saved Terminal Workspace ({effectiveWorkspace?.total_files || files.length} Python Scripts)
           </h3>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            Synced
+          </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleImportStarter}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold transition-colors cursor-pointer"
+            title="Import or reset 16 starter Python scripts across DSA & Visualisations"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{importNotice ? '16 Scripts Imported! ✓' : 'Import Starter Workspace'}</span>
+          </button>
+
           <a
             href="https://pycode-student.vercel.app/editor"
             target="_blank"
@@ -234,10 +252,22 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
       {/* 2-Column VS Code-Style Layout with Theme Gray Backgrounds */}
       <div className="grid grid-cols-1 md:grid-cols-12 min-h-[460px]">
         {/* Left Column: File Explorer (md:col-span-4) */}
-        <div className="md:col-span-4 border-r border-neutral-200 dark:border-neutral-800 p-3 bg-neutral-50/70 dark:bg-[#1a1a1a] space-y-1 overflow-y-auto max-h-[560px]">
-          <div className="px-2 py-1 text-[10px] uppercase font-bold tracking-wider text-neutral-400 flex items-center justify-between">
+        <div className="md:col-span-4 border-r border-neutral-200 dark:border-neutral-800 p-3 bg-neutral-50/70 dark:bg-[#1a1a1a] space-y-2 overflow-y-auto max-h-[560px]">
+          <div className="px-1 flex items-center justify-between text-[10px] uppercase font-bold tracking-wider text-neutral-400">
             <span>EXPLORER / WORKSPACE</span>
-            <span>{workspace.total_files} files</span>
+            <span>{displayedFiles.length} files</span>
+          </div>
+
+          {/* Quick File Search Filter */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+            <input
+              type="text"
+              placeholder="Search scripts..."
+              value={fileSearch}
+              onChange={(e) => setFileSearch(e.target.value)}
+              className="w-full pl-8 pr-2.5 py-1.5 text-xs rounded-xl bg-neutral-200/50 dark:bg-neutral-800/80 border border-transparent focus:border-neutral-300 dark:focus:border-neutral-700 text-neutral-900 dark:text-white outline-hidden"
+            />
           </div>
 
           {/* Folders — Start Collapsed, Only Selected Folder Opens */}
@@ -360,7 +390,7 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
           })}
 
           {/* Root Files */}
-          {rootFiles.map((file) => {
+          {rootFiles.map((file: WorkspaceFile) => {
             const isSelected = selectedFile?.name === file.name;
             const fileEditorUrl = getFileEditorUrl(file);
 

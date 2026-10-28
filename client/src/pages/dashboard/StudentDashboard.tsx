@@ -76,6 +76,8 @@ export const StudentDashboard: React.FC = () => {
 
     try {
       const completedIds = updatedTasks.filter((t: any) => t.isCompleted).map((t: any) => t.taskId);
+      const dayNum = mission.dayNumber || 1;
+      localStorage.setItem(`rishabhlabs_mission_completed_${targetTrack}_day_${dayNum}`, JSON.stringify(completedIds));
       localStorage.setItem(`rishabhlabs_mission_completed_${targetTrack}`, JSON.stringify(completedIds));
     } catch (e) {
       // Ignore

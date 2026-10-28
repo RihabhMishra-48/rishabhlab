@@ -7,47 +7,58 @@ import { Roadmap } from '../models/Roadmap';
 
 const router = Router();
 
+import mongoose from 'mongoose';
+
 // GET /api/profile - current authenticated user profile
 router.get('/', requireAuth, async (req: AuthRequest, res) => {
   try {
     const user = req.user!;
-    let profile = await StudentProfile.findOne({ userId: user._id });
-    if (!profile) {
-      profile = await StudentProfile.create({
-        userId: user._id,
-        currentTrack: (user as any).targetGoal || 'Personalized Path',
-        level: 'Beginner',
-        progressPercent: 0,
-        streakDays: user.streakDays || 0,
-        totalPoints: user.totalPoints || 0,
-        skillsCompleted: 0,
-        projectsCompleted: 0,
-        totalProjects: 0,
-        nextMilestone: 'Complete Day 1 Mission',
-      });
+    const isMongoReady = mongoose.connection.readyState === 1;
+
+    let profile: any = null;
+    let actualProjectsCount = 0;
+    let completedProjectsCount = 0;
+    let progressPct = 0;
+
+    if (isMongoReady) {
+      try {
+        profile = await StudentProfile.findOne({ userId: user._id });
+        if (!profile) {
+          profile = await StudentProfile.create({
+            userId: user._id,
+            currentTrack: (user as any).targetGoal || 'Personalized Path',
+            level: 'Beginner',
+            progressPercent: 0,
+            streakDays: user.streakDays || 0,
+            totalPoints: user.totalPoints || 0,
+            skillsCompleted: 0,
+            projectsCompleted: 0,
+            totalProjects: 0,
+            nextMilestone: 'Complete Day 1 Mission',
+          });
+        }
+
+        const roadmap = await Roadmap.findOne({ userId: user._id });
+        const completedNodes = roadmap ? (roadmap.completedNodes || 0) : 0;
+        const totalNodes = roadmap?.nodes?.length || 0;
+        progressPct = totalNodes > 0 ? Math.round((completedNodes / totalNodes) * 100) : 0;
+
+        actualProjectsCount = await Project.countDocuments({ userId: user._id });
+        completedProjectsCount = await Project.countDocuments({ userId: user._id, status: 'Completed' });
+
+        if (profile.progressPercent !== progressPct || profile.totalProjects !== actualProjectsCount || profile.projectsCompleted !== completedProjectsCount) {
+          profile.progressPercent = progressPct;
+          profile.totalProjects = actualProjectsCount;
+          profile.projectsCompleted = completedProjectsCount;
+          await profile.save();
+        }
+      } catch (e) {
+        console.warn('Mongo error in profile:', e);
+      }
     }
 
-    // Query actual roadmap for this user
-    const roadmap = await Roadmap.findOne({ userId: user._id });
-    const completedNodes = roadmap ? (roadmap.completedNodes || 0) : 0;
-    const totalNodes = roadmap?.nodes?.length || 0;
-    const progressPct = totalNodes > 0 ? Math.round((completedNodes / totalNodes) * 100) : 0;
-
-    // Real projects calculation
-    const actualProjectsCount = await Project.countDocuments({ userId: user._id });
-    const completedProjectsCount = await Project.countDocuments({ userId: user._id, status: 'Completed' });
-
-    // Heal profile progressPercent and projects with actual verified numbers
-    if (profile.progressPercent !== progressPct || profile.totalProjects !== actualProjectsCount || profile.projectsCompleted !== completedProjectsCount) {
-      profile.progressPercent = progressPct;
-      profile.totalProjects = actualProjectsCount;
-      profile.projectsCompleted = completedProjectsCount;
-      await profile.save();
-    }
-
-    const streakCount = user.streakDays ?? profile.streakDays ?? 0;
-
-    const userSkills = (profile.verifiedSkills || []).map((s: string) => ({
+    const streakCount = user.streakDays ?? profile?.streakDays ?? 0;
+    const userSkills = (profile?.verifiedSkills || []).map((s: string) => ({
       name: s,
       category: 'Core',
       level: 'Verified',
@@ -71,7 +82,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
         projectsCount: actualProjectsCount > 0 ? `${completedProjectsCount} / ${actualProjectsCount}` : '0',
         streakDays: `${streakCount} days`,
         status: streakCount > 0 ? 'Active' : 'Getting Started',
-        totalPoints: user.totalPoints ?? profile.totalPoints ?? 0,
+        totalPoints: user.totalPoints ?? profile?.totalPoints ?? 0,
       },
       skills: userSkills,
       projects: [],

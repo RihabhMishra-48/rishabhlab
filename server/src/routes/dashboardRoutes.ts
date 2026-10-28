@@ -1,10 +1,12 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { DailyMission } from '../models/DailyMission';
 import { StudentProfile } from '../models/StudentProfile';
 import { Roadmap } from '../models/Roadmap';
 import { Project } from '../models/Project';
 import { aiService } from '../services/aiService';
+import { supabase, isSupabaseConfigured } from '../config/supabase';
 
 const router = Router();
 
@@ -12,46 +14,61 @@ const router = Router();
 router.get('/', requireAuth, async (req: AuthRequest, res) => {
   try {
     const user = req.user!;
+    let profile: any = null;
+    let roadmap: any = null;
+    let mission: any = null;
+    let inProgressProjects: any[] = [];
 
-    // Fetch user profile stats
-    let profile = await StudentProfile.findOne({ userId: user._id });
-    const userGoal = profile?.targetGoal || (user as any).targetGoal || 'AI / ML';
+    const isMongoConnected = mongoose.connection.readyState === 1;
 
-    // Fetch active roadmap for this specific user
-    let roadmap = await Roadmap.findOne({ userId: user._id });
-    if (!roadmap) {
-      // Generate customized roadmap for the user's exact chosen goal
-      const generated = await aiService.generateRoadmap({
-        goal: userGoal,
-        currentLevel: 'Beginner',
-        availableTime: '2 hours/day',
-        desiredOutcome: 'Build projects',
-        targetDate: '90 days',
-      });
-      roadmap = await Roadmap.create({
-        ...generated,
-        userId: user._id,
-      });
+    if (isMongoConnected) {
+      profile = await StudentProfile.findOne({ userId: user._id });
+    } else if (isSupabaseConfigured() && supabase) {
+      const { data: sbProf } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id || user._id)
+        .maybeSingle();
+
+      if (sbProf) {
+        profile = {
+          targetGoal: sbProf.target_goal || sbProf.field_of_interest || 'Web Development',
+          progressPercent: Math.round(((sbProf.skills_completed || 0) / 12) * 100),
+          skillsCompleted: sbProf.skills_completed || 0,
+          totalSkills: 12,
+          projectsCompleted: 0,
+          totalProjects: 3,
+          streakDays: sbProf.streak_days || 0,
+          totalPoints: sbProf.total_points || 0,
+        };
+      }
     }
 
-    // Fetch active daily mission for this specific user
-    let mission = await DailyMission.findOne({ userId: user._id }).sort({ dayNumber: -1 });
-    if (!mission || mission.trackTitle !== userGoal) {
-      const generatedMission = await aiService.generateDailyMission(1, userGoal);
-      mission = await DailyMission.create({
-        userId: user._id,
-        dayNumber: 1,
-        trackTitle: userGoal,
-        dateString: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
-        quote: generatedMission.quote,
-        tasks: generatedMission.tasks,
-        completedTasksCount: 0,
-        isAllCompleted: false,
-      });
-    }
+    const userGoal = profile?.targetGoal || (user as any).targetGoal || 'Web Development';
 
-    // Fetch active projects
-    const inProgressProjects = await Project.find({ status: 'In Progress' }).limit(3);
+    if (isMongoConnected) {
+      roadmap = await Roadmap.findOne({ userId: user._id });
+      if (!roadmap) {
+        try {
+          const generated = await aiService.generateRoadmap({
+            goal: userGoal,
+            currentLevel: 'Beginner',
+            availableTime: '2 hours/day',
+            desiredOutcome: 'Build projects',
+            targetDate: '90 days',
+          });
+          roadmap = await Roadmap.create({
+            ...generated,
+            userId: user._id,
+          });
+        } catch {
+          // Fall back gracefully
+        }
+      }
+
+      mission = await DailyMission.findOne({ userId: user._id }).sort({ dayNumber: -1 });
+      inProgressProjects = await Project.find({ status: 'In Progress' }).limit(3);
+    }
 
     const defaultDay1Mission = {
       dayNumber: 1,
@@ -112,9 +129,9 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
       roadmapSummary: {
         id: roadmap?._id,
         title: roadmap?.title || `${userGoal} Track`,
-        currentStep: roadmap?.nodes.find((n) => n.status === 'in_progress')?.title || 'Foundations',
+        currentStep: roadmap?.nodes.find((n: any) => n.status === 'in_progress')?.title || 'Foundations',
         totalNodes: roadmap?.nodes.length || 6,
-        completedNodes: roadmap?.nodes.filter((n) => n.status === 'completed').length || 0,
+        completedNodes: roadmap?.nodes.filter((n: any) => n.status === 'completed').length || 0,
       },
       nextRecommendedAction: {
         title: 'Start Day 1 Foundations Mission',

@@ -47,8 +47,11 @@ export const App: React.FC = () => {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/about" element={<AboutPage />} />
 
-          {/* Auth Flow */}
+          {/* Auth Flow & Dedicated Portals */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/mentor/login" element={<LoginPage defaultPortal="mentor" />} />
+          <Route path="/college/login" element={<LoginPage defaultPortal="college" />} />
+          <Route path="/admin/login" element={<LoginPage defaultPortal="admin" />} />
           <Route path="/register" element={<RegisterPage />} />
 
           {/* Onboarding (requires authenticated user, but not yet onboarded) */}
@@ -90,6 +93,7 @@ export const App: React.FC = () => {
               <Route path="/profile" element={<ProfilePage />} />
 
               {/* Role-Specific Workspaces */}
+              <Route path="/mentor" element={<Navigate to="/mentor/sessions" replace />} />
               <Route
                 path="/mentor/sessions"
                 element={

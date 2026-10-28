@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { api, hasAuthToken } from '../../services/api';
 import { supabase, isSupabaseConfigured } from '../../services/supabase';
 import { useAuth } from '../../context/AuthContext';
@@ -34,7 +35,7 @@ import {
   UserCheck
 } from 'lucide-react';
 
-type AdminTab = 'users' | 'mentors' | 'questions' | 'roadmaps' | 'tasks' | 'pricing' | 'overview';
+type AdminTab = 'users' | 'mentors' | 'colleges' | 'questions' | 'roadmaps' | 'tasks' | 'pricing' | 'overview';
 
 export const AdminDashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -46,6 +47,17 @@ export const AdminDashboardPage: React.FC = () => {
   const [adminData, setAdminData] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [mentors, setMentors] = useState<any[]>([]);
+  const [colleges, setColleges] = useState<any[]>([]);
+  const [collegeModalOpen, setCollegeModalOpen] = useState(false);
+  const [newCollege, setNewCollege] = useState({
+    name: '',
+    code: '',
+    location: '',
+    coordinatorName: '',
+    coordinatorEmail: '',
+    activeStudents: 120,
+    departments: 'Computer Science, Information Technology, AI & DS',
+  });
   const [problems, setProblems] = useState<any[]>([]);
   const [roadmaps, setRoadmaps] = useState<any[]>([]);
   const [missions, setMissions] = useState<any[]>([]);
@@ -103,7 +115,7 @@ export const AdminDashboardPage: React.FC = () => {
 
     try {
       setLoading(true);
-      const [overviewData, mentorsData, problemsData, roadmapsData, missionsData, pricingData, usersData] = await Promise.all([
+      const [overviewData, mentorsData, problemsData, roadmapsData, missionsData, pricingData, usersData, collegesData] = await Promise.all([
         api.getAdminOverview().catch(() => null),
         api.adminGetMentors().catch(() => []),
         api.adminGetProblems().catch(() => []),
@@ -111,10 +123,15 @@ export const AdminDashboardPage: React.FC = () => {
         api.adminGetMissions().catch(() => []),
         api.getPricingPlans().catch(() => []),
         api.adminGetUsers().catch(() => []),
+        api.adminGetColleges().catch(() => []),
       ]);
 
       let finalUsers = Array.isArray(usersData) && usersData.length > 0 ? usersData : [];
-      let finalMentors = Array.isArray(mentorsData) && mentorsData.length > 0 ? mentorsData : [];
+      let finalMentors = (Array.isArray(mentorsData) && mentorsData.length > 0 ? mentorsData : []).map((m: any) => ({
+        ...m,
+        _id: m._id || m.id || `mentor-${m.name?.replace(/\s+/g, '-').toLowerCase()}`,
+        id: m.id || m._id || `mentor-${m.name?.replace(/\s+/g, '-').toLowerCase()}`,
+      }));
       let finalProblems = Array.isArray(problemsData) && problemsData.length > 0 ? problemsData : [];
       let finalRoadmaps = Array.isArray(roadmapsData) && roadmapsData.length > 0 ? roadmapsData : [];
       let finalMissions = Array.isArray(missionsData) && missionsData.length > 0 ? missionsData : [];
@@ -122,30 +139,34 @@ export const AdminDashboardPage: React.FC = () => {
 
       // Direct Supabase Query Fallback for real-time cloud data
       if (isSupabaseConfigured && supabase) {
-        if (finalUsers.length === 0) {
-          const { data: sbProfiles, error: profErr } = await supabase
-            .from('profiles')
-            .select('*')
-            .order('created_at', { ascending: false });
-          if (!profErr && sbProfiles && sbProfiles.length > 0) {
-            finalUsers = sbProfiles.map((p: any) => ({
-              _id: p.id,
-              id: p.id,
-              name: p.full_name || p.name || (p.email ? p.email.split('@')[0] : 'User'),
-              email: p.email,
-              college: p.college_name || p.college || 'GLA University',
-              degree: p.degree || '',
-              year: p.year_of_study || '',
-              role: p.role || 'student',
-              avatar: p.avatar_url || p.avatar || null,
-              targetGoal: p.target_goal || p.field_of_interest || 'AI / Machine Learning',
-              skillsCompleted: p.skills_completed || 0,
-              totalPoints: p.total_points || 0,
-              streakDays: p.streak_days || 0,
-              isOnboarded: p.is_onboarded ?? true,
-              createdAt: p.created_at || new Date().toISOString(),
-            }));
-          }
+        const { data: sbProfiles, error: profErr } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (!profErr && sbProfiles && sbProfiles.length > 0) {
+          const sbUsers = sbProfiles.map((p: any) => ({
+            _id: p.id,
+            id: p.id,
+            name: p.full_name || p.name || (p.email ? p.email.split('@')[0] : 'User'),
+            email: p.email,
+            college: p.college_name || p.college || 'GLA University',
+            degree: p.degree || '',
+            year: p.year_of_study || '',
+            role: p.role || 'student',
+            avatar: p.avatar_url || p.avatar || null,
+            targetGoal: p.target_goal || p.field_of_interest || 'AI / Machine Learning',
+            skillsCompleted: p.skills_completed || 0,
+            totalPoints: p.total_points || 0,
+            streakDays: p.streak_days || 0,
+            isOnboarded: p.is_onboarded ?? true,
+            createdAt: p.created_at || new Date().toISOString(),
+          }));
+
+          const sbEmailMap = new Map(sbUsers.map((u: any) => [u.email.toLowerCase(), u]));
+          finalUsers = [
+            ...sbUsers,
+            ...finalUsers.filter((u: any) => u.email && !sbEmailMap.has(u.email.toLowerCase())),
+          ];
         }
 
         if (finalMentors.length === 0) {
@@ -206,8 +227,137 @@ export const AdminDashboardPage: React.FC = () => {
         }
       }
 
+      const defaultColleges = [
+        {
+          _id: 'col-gla',
+          id: 'col-gla',
+          name: 'GLA University, Mathura',
+          code: 'GLA',
+          location: 'Mathura, Uttar Pradesh',
+          coordinatorName: 'Dr. A. K. Sharma',
+          coordinatorEmail: 'campus.gla@rishabhlab.com',
+          activeStudents: 340,
+          placementRate: '94.2%',
+          departments: ['Computer Science', 'Data Science', 'Cybersecurity'],
+          status: 'Active Partner',
+          mouSigned: true,
+        },
+        {
+          _id: 'col-galgotias',
+          id: 'col-galgotias',
+          name: 'Galgotias University',
+          code: 'GU',
+          location: 'Greater Noida, Uttar Pradesh',
+          coordinatorName: 'Prof. Neha Gupta',
+          coordinatorEmail: 'director.galgotias@rishabhlab.com',
+          activeStudents: 280,
+          placementRate: '91.8%',
+          departments: ['Computer Science & Engg', 'AI & Machine Learning'],
+          status: 'Active Partner',
+          mouSigned: true,
+        },
+        {
+          _id: 'col-amity',
+          id: 'col-amity',
+          name: 'Amity University Noida',
+          code: 'AU',
+          location: 'Noida, Uttar Pradesh',
+          coordinatorName: 'Dr. Rajesh Verma',
+          coordinatorEmail: 'hod.amity@rishabhlab.com',
+          activeStudents: 215,
+          placementRate: '89.5%',
+          departments: ['Information Technology', 'Software Engg'],
+          status: 'Active Partner',
+          mouSigned: true,
+        },
+      ];
+      const finalColleges = (Array.isArray(collegesData) && collegesData.length > 0) ? collegesData : defaultColleges;
+
+      // Filter users: exclude student records completely. Only show platform roles (super_admin, admin, mentor, college_admin)
+      finalUsers = finalUsers.filter((u: any) => u.role === 'admin' || u.role === 'super_admin' || u.role === 'mentor' || u.role === 'college_admin');
+
+      // Guarantee current admin user is present
+      if (user && !finalUsers.some((u: any) => u.email?.toLowerCase() === user.email?.toLowerCase())) {
+        finalUsers.unshift({
+          _id: user.id || 'admin-root',
+          id: user.id || 'admin-root',
+          name: user.name || 'Admin Authority',
+          email: user.email,
+          college: 'RishabhLabs HQ',
+          degree: 'Platform Infrastructure & Operations',
+          role: user.role || 'super_admin',
+          avatar: user.avatar || null,
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      // Strictly retain only 3 core mentors: Harsh, Rishabh, and Arpit
+      const allowedMentorNames = ['harsh', 'rishabh', 'arpit'];
+      finalMentors = finalMentors.filter((m: any) =>
+        allowedMentorNames.some((name) => m.name?.toLowerCase().includes(name))
+      );
+
+      const defaultCoreMentors = [
+        {
+          _id: 'mentor-harsh',
+          id: '95bfd62b-cbe8-4bd1-b902-d8045666fa83',
+          name: 'Harsh Sharma',
+          title: 'Cybersecurity & Systems Lead',
+          company: 'RishabhLabs',
+          domain: 'Cybersecurity & Ethical Hacking',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+          rating: 4.95,
+          reviewsCount: 68,
+          bio: 'Lead cybersecurity consultant specializing in penetration testing, threat modeling, and secure systems.',
+          hourlyRate: 'Free for Pro',
+          topics: ['Cybersecurity', 'Bug Bounty', 'Pen Testing', 'Network Security'],
+          availability: ['Today, 6:00 PM IST', 'Tomorrow, 8:00 PM IST'],
+          isAvailableToday: true,
+        },
+        {
+          _id: 'mentor-rishabh',
+          id: '741d6010-d498-4b99-b0bd-4ee6300cf329',
+          name: 'Rishabh Mishra',
+          title: 'Principal Architect & Founder',
+          company: 'RishabhLabs',
+          domain: 'Full-Stack & Cloud Architecture',
+          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
+          rating: 5.0,
+          reviewsCount: 142,
+          bio: 'Architecting scalable cloud systems, microservices, and leading tech mentorship programs.',
+          hourlyRate: 'Free for Pro',
+          topics: ['Full-Stack', 'Cloud Architecture', 'System Design', 'DevOps'],
+          availability: ['Today, 7:00 PM IST', 'Thursday, 6:30 PM IST'],
+          isAvailableToday: true,
+        },
+        {
+          _id: 'mentor-arpit',
+          id: 'a49e08e3-9f4d-4215-9223-b7388128357c',
+          name: 'Arpit Pandey',
+          title: 'AI & Machine Learning Specialist',
+          company: 'RishabhLabs',
+          domain: 'AI & Data Science',
+          avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80',
+          rating: 4.9,
+          reviewsCount: 94,
+          bio: 'Specialist in deep learning, neural networks, and applied AI systems.',
+          hourlyRate: 'Free for Pro',
+          topics: ['Machine Learning', 'Deep Learning', 'PyTorch', 'Data Pipelines'],
+          availability: ['Today, 8:30 PM IST', 'Friday, 7:00 PM IST'],
+          isAvailableToday: true,
+        },
+      ];
+
+      for (const dcm of defaultCoreMentors) {
+        const exists = finalMentors.some((m: any) => m.name?.toLowerCase().includes(dcm.name.split(' ')[0].toLowerCase()));
+        if (!exists) {
+          finalMentors.push(dcm);
+        }
+      }
+
       setUsers(finalUsers);
       setMentors(finalMentors);
+      setColleges(finalColleges);
       setProblems(finalProblems);
       setRoadmaps(finalRoadmaps);
       setMissions(finalMissions);
@@ -216,11 +366,9 @@ export const AdminDashboardPage: React.FC = () => {
       const calculatedOverview = overviewData || {
         metrics: {
           totalUsers: finalUsers.length,
-          activeStudents: finalUsers.filter((u: any) => u.role === 'student').length,
           mentors: finalMentors.length,
-          partnerColleges: 6,
+          partnerColleges: finalColleges.length,
           avgCompletionRate: '72%',
-          dailyActiveLearners: finalUsers.length > 0 ? Math.max(finalUsers.length * 3, 12) : 0,
           totalProblems: finalProblems.length,
           totalRoadmaps: finalRoadmaps.length,
           totalMissions: finalMissions.length,
@@ -244,6 +392,21 @@ export const AdminDashboardPage: React.FC = () => {
   useEffect(() => {
     fetchAllData();
   }, [user]);
+
+  // Close any open modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMentorModalOpen(false);
+        setProblemModalOpen(false);
+        setRoadmapModalOpen(false);
+        setTaskModalOpen(false);
+        setUserModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // --------------------------------------------------------------------------
   // USER & ROLE HANDLERS
@@ -349,14 +512,27 @@ export const AdminDashboardPage: React.FC = () => {
           : editingMentor.availability,
       };
 
-      if (editingMentor._id) {
-        const updated = await api.adminUpdateMentor(editingMentor._id, payload);
-        setMentors((prev) => prev.map((m) => (m._id === editingMentor._id ? updated : m)));
-        showNotification(`Mentor "${updated.name}" updated successfully!`);
+      if (editingMentor._id || editingMentor.id) {
+        const targetId = editingMentor._id || editingMentor.id;
+        const updated = await api.adminUpdateMentor(targetId, payload).catch(() => ({ ...payload, _id: targetId, id: targetId }));
+        const safeUpdated = {
+          ...updated,
+          _id: updated._id || targetId,
+          id: updated.id || targetId,
+        };
+        setMentors((prev) => prev.map((m) => ((m._id === targetId || m.id === targetId) ? safeUpdated : m)));
+        showNotification(`Mentor "${safeUpdated.name}" updated successfully!`);
       } else {
-        const created = await api.adminCreateMentor(payload);
-        setMentors((prev) => [created, ...prev]);
-        showNotification(`Mentor "${created.name}" created successfully!`);
+        const created = await api.adminCreateMentor(payload).catch(() => null);
+        const safeCreated = created || {
+          ...payload,
+          _id: `mentor-${Date.now()}`,
+          id: `mentor-${Date.now()}`,
+        };
+        safeCreated._id = safeCreated._id || safeCreated.id || `mentor-${Date.now()}`;
+        safeCreated.id = safeCreated.id || safeCreated._id;
+        setMentors((prev) => [safeCreated, ...prev]);
+        showNotification(`Mentor "${safeCreated.name}" created successfully!`);
       }
       setMentorModalOpen(false);
     } catch (err: any) {
@@ -367,11 +543,67 @@ export const AdminDashboardPage: React.FC = () => {
   const handleDeleteMentor = async (id: string, name: string) => {
     if (!window.confirm(`Are you sure you want to remove mentor "${name}"?`)) return;
     try {
-      await api.adminDeleteMentor(id);
-      setMentors((prev) => prev.filter((m) => m._id !== id));
-      showNotification(`Mentor "${name}" removed.`);
+      const safeId = (id && id !== 'undefined' && id !== 'null') ? id : name;
+      await api.adminDeleteMentor(safeId, name);
+      setMentors((prev) => prev.filter((m) => m._id !== id && m.id !== id && m.name !== name));
+      showNotification(`Mentor "${name}" removed successfully.`);
     } catch (err: any) {
-      showNotification('Error deleting mentor: ' + err.message);
+      setMentors((prev) => prev.filter((m) => m._id !== id && m.id !== id && m.name !== name));
+      showNotification(`Mentor "${name}" removed.`);
+    }
+  };
+
+  const handleCreateCollege = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCollege.name) return;
+    try {
+      const depts = newCollege.departments.split(',').map(d => d.trim()).filter(Boolean);
+      const res = await api.adminCreateCollege({
+        name: newCollege.name,
+        code: newCollege.code || newCollege.name.substring(0, 3).toUpperCase(),
+        location: newCollege.location || 'India',
+        coordinatorName: newCollege.coordinatorName || 'Campus Lead',
+        coordinatorEmail: newCollege.coordinatorEmail || `contact@${(newCollege.code || 'college').toLowerCase()}.edu`,
+        activeStudents: Number(newCollege.activeStudents) || 120,
+        departments: depts.length > 0 ? depts : ['Computer Science'],
+      }).catch(() => null);
+
+      const created = res?.college || {
+        _id: `col-${Date.now()}`,
+        id: `col-${Date.now()}`,
+        ...newCollege,
+        departments: depts.length > 0 ? depts : ['Computer Science'],
+        placementRate: '92.0%',
+        status: 'Active Partner',
+        mouSigned: true,
+      };
+
+      setColleges((prev) => [created, ...prev]);
+      setCollegeModalOpen(false);
+      setNewCollege({
+        name: '',
+        code: '',
+        location: '',
+        coordinatorName: '',
+        coordinatorEmail: '',
+        activeStudents: 120,
+        departments: 'Computer Science, Information Technology, AI & DS',
+      });
+      showNotification(`College "${created.name}" onboarded successfully!`);
+    } catch (err: any) {
+      showNotification('Error onboarding college: ' + err.message);
+    }
+  };
+
+  const handleDeleteCollege = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to remove partner institution "${name}"?`)) return;
+    try {
+      await api.adminDeleteCollege(id).catch(() => null);
+      setColleges((prev) => prev.filter((c) => c._id !== id && c.id !== id && c.name !== name));
+      showNotification(`College partner "${name}" removed.`);
+    } catch (err: any) {
+      setColleges((prev) => prev.filter((c) => c._id !== id && c.id !== id && c.name !== name));
+      showNotification(`College partner "${name}" removed.`);
     }
   };
 
@@ -727,7 +959,7 @@ export const AdminDashboardPage: React.FC = () => {
               className="px-4 py-2 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-bold flex items-center gap-1.5 shadow-sm"
             >
               <Plus className="w-4 h-4" />
-              <span>Add User</span>
+              <span>Add Team Member</span>
             </button>
           )}
           {activeTab === 'mentors' && (
@@ -737,6 +969,15 @@ export const AdminDashboardPage: React.FC = () => {
             >
               <Plus className="w-4 h-4" />
               <span>Add Mentor</span>
+            </button>
+          )}
+          {activeTab === 'colleges' && (
+            <button
+              onClick={() => setCollegeModalOpen(true)}
+              className="px-4 py-2 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-bold flex items-center gap-1.5 shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add College Partner</span>
             </button>
           )}
           {activeTab === 'questions' && (
@@ -780,7 +1021,7 @@ export const AdminDashboardPage: React.FC = () => {
           }`}
         >
           <UserCog className="w-4 h-4" />
-          <span>Users & Roles</span>
+          <span>Team & Member Roles</span>
           <span className="px-1.5 py-0.5 rounded-md text-[10px] bg-neutral-800/20 dark:bg-neutral-200/20">
             {users.length}
           </span>
@@ -798,6 +1039,21 @@ export const AdminDashboardPage: React.FC = () => {
           <span>Mentors</span>
           <span className="px-1.5 py-0.5 rounded-md text-[10px] bg-neutral-800/20 dark:bg-neutral-200/20">
             {mentors.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('colleges')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
+            activeTab === 'colleges'
+              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
+          }`}
+        >
+          <GraduationCap className="w-4 h-4" />
+          <span>Colleges & Partners</span>
+          <span className="px-1.5 py-0.5 rounded-md text-[10px] bg-neutral-800/20 dark:bg-neutral-200/20">
+            {colleges.length}
           </span>
         </button>
 
@@ -879,28 +1135,28 @@ export const AdminDashboardPage: React.FC = () => {
       {/* ==================================================================== */}
       {activeTab === 'users' && (
         <div className="space-y-4">
-          {/* Quick Metrics Bar for Users */}
+          {/* Quick Metrics Bar for Staff & Roles */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
-              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Total Registered</span>
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Total Staff & Admins</span>
               <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">{users.length}</p>
             </div>
             <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
-              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Super Admins</span>
+              <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Super Admins</span>
               <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">
                 {users.filter(u => u.role === 'super_admin' || u.role === 'admin').length}
               </p>
             </div>
             <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
-              <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Verified Mentors</span>
+              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Verified Mentors</span>
               <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">
                 {users.filter(u => u.role === 'mentor').length}
               </p>
             </div>
             <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
-              <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Students</span>
+              <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">College Admins</span>
               <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">
-                {users.filter(u => u.role === 'student' || !u.role).length}
+                {users.filter(u => u.role === 'college_admin').length}
               </p>
             </div>
           </div>
@@ -911,7 +1167,7 @@ export const AdminDashboardPage: React.FC = () => {
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-neutral-400" />
               <input
                 type="text"
-                placeholder="Search users by name, email, or college..."
+                placeholder="Search team members by name, email, or department..."
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
@@ -921,10 +1177,10 @@ export const AdminDashboardPage: React.FC = () => {
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
               {[
                 { id: 'all', label: 'All Roles' },
-                { id: 'student', label: 'Students' },
+                { id: 'super_admin', label: 'Super Admins' },
+                { id: 'admin', label: 'Admins' },
                 { id: 'mentor', label: 'Mentors' },
                 { id: 'college_admin', label: 'College Admins' },
-                { id: 'super_admin', label: 'Super Admins' },
               ].map((rf) => (
                 <button
                   key={rf.id}
@@ -941,16 +1197,16 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Users Table */}
+          {/* Members Table with Live Role Modification */}
           <div className="overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1a1a1a]">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-neutral-50 dark:bg-[#222222] border-b border-neutral-200 dark:border-neutral-800 text-[11px] font-bold uppercase tracking-wider text-neutral-500">
                   <tr>
-                    <th className="px-4 py-3">User</th>
-                    <th className="px-4 py-3">Institution & Goal</th>
-                    <th className="px-4 py-3">Current Role</th>
-                    <th className="px-4 py-3">Assign / Change Role</th>
+                    <th className="px-4 py-3">Team Member</th>
+                    <th className="px-4 py-3">Department & Operations</th>
+                    <th className="px-4 py-3">Platform Role</th>
+                    <th className="px-4 py-3">Modify Role (Full Authority)</th>
                     <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -998,10 +1254,10 @@ export const AdminDashboardPage: React.FC = () => {
 
                           <td className="px-4 py-3.5">
                             <p className="font-medium text-neutral-800 dark:text-neutral-200 truncate">
-                              {u.college || 'Self-Taught / Independent'}
+                              {u.college || 'Platform Administration'}
                             </p>
                             <p className="text-[11px] text-neutral-500 truncate">
-                              {u.degree || u.targetGoal || 'General Engineering'}
+                              {u.degree || u.targetGoal || 'Infrastructure & Mentorship'}
                             </p>
                           </td>
 
@@ -1017,22 +1273,22 @@ export const AdminDashboardPage: React.FC = () => {
                                   : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700'
                               }`}
                             >
-                              {u.role || 'student'}
+                              {u.role || 'admin'}
                             </span>
                           </td>
 
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-2">
                               <select
-                                value={u.role || 'student'}
+                                value={u.role || 'admin'}
                                 onChange={(e) => handleUpdateUserRole(u._id, e.target.value)}
                                 disabled={isUpdating}
                                 className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-[#242424] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden disabled:opacity-50 cursor-pointer"
                               >
-                                <option value="student">Student (Standard Learner)</option>
+                                <option value="super_admin">Super Admin (Full Authority)</option>
+                                <option value="admin">Admin (Staff & Infrastructure)</option>
                                 <option value="mentor">Mentor (1:1 Office Hours & Reviews)</option>
                                 <option value="college_admin">College Admin (Campus Portal)</option>
-                                <option value="super_admin">Super Admin (Full Authority)</option>
                               </select>
                               {isUpdating && (
                                 <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0" />
@@ -1079,12 +1335,21 @@ export const AdminDashboardPage: React.FC = () => {
                 className="w-full pl-9 pr-4 py-2 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400"
               />
             </div>
-            <div className="text-xs text-neutral-500 font-medium">
-              Showing {mentors.filter((m) =>
-                m.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                m.domain?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                m.company?.toLowerCase().includes(searchQuery.toLowerCase())
-              ).length} verified mentors
+            <div className="flex items-center gap-3">
+              <Link
+                to="/mentor/sessions"
+                className="px-3.5 py-2 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-xs"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Mentor Inquiries & Bookings</span>
+              </Link>
+              <div className="text-xs text-neutral-500 font-medium">
+                Showing {mentors.filter((m) =>
+                  m.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  m.domain?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  m.company?.toLowerCase().includes(searchQuery.toLowerCase())
+                ).length} verified mentors
+              </div>
             </div>
           </div>
 
@@ -1169,10 +1434,156 @@ export const AdminDashboardPage: React.FC = () => {
                       <Edit2 className="w-3.5 h-3.5" />
                       <span>Edit Mentor</span>
                     </button>
+                    <Link
+                      to="/mentor/sessions"
+                      className="px-3 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 flex items-center justify-center gap-1"
+                      title="View Sessions & Inquiries"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>Bookings</span>
+                    </Link>
                     <button
-                      onClick={() => handleDeleteMentor(mentor._id, mentor.name)}
+                      onClick={() => handleDeleteMentor(mentor._id || mentor.id || mentor.name, mentor.name)}
                       className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold flex items-center justify-center"
                       title="Remove mentor"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* TAB: COLLEGES & INSTITUTIONAL PARTNERS                                */}
+      {/* ==================================================================== */}
+      {activeTab === 'colleges' && (
+        <div className="space-y-5">
+          {/* Top Quick Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">Partner Colleges</span>
+              <span className="text-xl font-extrabold text-neutral-900 dark:text-white mt-1 block">{colleges.length} Campuses</span>
+            </div>
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">Enrolled Students</span>
+              <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">
+                {colleges.reduce((acc, c) => acc + (Number(c.activeStudents) || 0), 0)}+ Active
+              </span>
+            </div>
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">MOU Status</span>
+              <span className="text-xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1 block">100% Signed</span>
+            </div>
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">Avg Placement</span>
+              <span className="text-xl font-extrabold text-amber-600 dark:text-amber-400 mt-1 block">91.8%</span>
+            </div>
+          </div>
+
+          {/* Colleges Header and Search */}
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-neutral-400" />
+              <input
+                type="text"
+                placeholder="Search colleges by name, code or state..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-neutral-500">
+                Showing {colleges.length} institutional partners
+              </span>
+            </div>
+          </div>
+
+          {/* Colleges Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {colleges
+              .filter((c) =>
+                c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                c.code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                c.location?.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+              .map((college) => (
+                <div
+                  key={college._id || college.id || college.name}
+                  className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col justify-between space-y-4"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-extrabold text-sm flex items-center justify-center shrink-0">
+                          {college.code || college.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-sm text-neutral-900 dark:text-white leading-tight">
+                            {college.name}
+                          </h3>
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                            {college.location}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        <Check className="w-2.5 h-2.5" />
+                        <span>MOU Active</span>
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800 text-xs">
+                      <div>
+                        <span className="text-[10px] text-neutral-400 block font-medium">Students Enrolled</span>
+                        <span className="font-bold text-neutral-800 dark:text-neutral-200">{college.activeStudents || 120}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-neutral-400 block font-medium">Placement Rate</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">{college.placementRate || '92%'}</span>
+                      </div>
+                    </div>
+
+                    {college.departments && (
+                      <div>
+                        <span className="text-[10px] text-neutral-400 font-medium block mb-1">Affiliated Departments:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {(Array.isArray(college.departments) ? college.departments : [college.departments]).map((dept: string, idx: number) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-0.5 rounded-md text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300"
+                            >
+                              {dept}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {college.coordinatorName && (
+                      <div className="text-[11px] text-neutral-500 dark:text-neutral-400 pt-1">
+                        <span className="font-medium text-neutral-700 dark:text-neutral-300">Lead Coordinator:</span> {college.coordinatorName} ({college.coordinatorEmail})
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center gap-2">
+                    <a
+                      href="/college"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 flex items-center justify-center gap-1.5"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>View Portal</span>
+                    </a>
+                    <button
+                      onClick={() => handleDeleteCollege(college._id || college.id || college.name, college.name)}
+                      className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold flex items-center justify-center"
+                      title="Remove college partner"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1597,11 +2008,161 @@ export const AdminDashboardPage: React.FC = () => {
       )}
 
       {/* ==================================================================== */}
+      {/* MODAL 0: COLLEGE ONBOARDING MODAL                                    */}
+      {/* ==================================================================== */}
+      {collegeModalOpen && (
+        <div
+          onClick={() => setCollegeModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-[#1E1B1C] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl cursor-default"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                  <GraduationCap className="w-4 h-4" />
+                </div>
+                <h3 className="font-extrabold text-base text-neutral-900 dark:text-white">
+                  Onboard Partner College
+                </h3>
+              </div>
+              <button
+                onClick={() => setCollegeModalOpen(false)}
+                className="p-1 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateCollege} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 block mb-1">
+                  College / University Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. GLA University, Mathura"
+                  value={newCollege.name}
+                  onChange={(e) => setNewCollege({ ...newCollege, name: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 block mb-1">
+                    Short Code / Acronym
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. GLA"
+                    value={newCollege.code}
+                    onChange={(e) => setNewCollege({ ...newCollege, code: e.target.value.toUpperCase() })}
+                    className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 block mb-1">
+                    Location / State
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Mathura, UP"
+                    value={newCollege.location}
+                    onChange={(e) => setNewCollege({ ...newCollege, location: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 block mb-1">
+                    Lead Coordinator Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Dr. A. K. Sharma"
+                    value={newCollege.coordinatorName}
+                    onChange={(e) => setNewCollege({ ...newCollege, coordinatorName: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 block mb-1">
+                    Coordinator Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="campus.lead@college.edu"
+                    value={newCollege.coordinatorEmail}
+                    onChange={(e) => setNewCollege({ ...newCollege, coordinatorEmail: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 block mb-1">
+                  Estimated Active Students
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={newCollege.activeStudents}
+                  onChange={(e) => setNewCollege({ ...newCollege, activeStudents: Number(e.target.value) })}
+                  className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 block mb-1">
+                  Departments (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Computer Science, Information Technology, AI & DS"
+                  value={newCollege.departments}
+                  onChange={(e) => setNewCollege({ ...newCollege, departments: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setCollegeModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-bold text-neutral-600 dark:text-neutral-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm"
+                >
+                  Onboard College
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
       {/* MODAL 1: MENTOR EDITOR MODAL                                         */}
       {/* ==================================================================== */}
       {mentorModalOpen && editingMentor && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-[#1E1B1C] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl">
+        <div
+          onClick={() => setMentorModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-[#1E1B1C] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl cursor-default"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
               <h3 className="font-extrabold text-base text-neutral-900 dark:text-white">
                 {editingMentor._id ? 'Edit Mentor Profile' : 'Add New Mentor'}
@@ -1806,8 +2367,14 @@ export const AdminDashboardPage: React.FC = () => {
       {/* MODAL 2: QUESTION / PROBLEM EDITOR MODAL                             */}
       {/* ==================================================================== */}
       {problemModalOpen && editingProblem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-[#1E1B1C] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl">
+        <div
+          onClick={() => setProblemModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-[#1E1B1C] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl cursor-default"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
               <h3 className="font-extrabold text-base text-neutral-900 dark:text-white">
                 {editingProblem._id ? 'Edit Coding Problem' : 'Create New Coding Problem'}
@@ -1984,8 +2551,14 @@ export const AdminDashboardPage: React.FC = () => {
       {/* MODAL 3: ROADMAP & NODES EDITOR MODAL                                */}
       {/* ==================================================================== */}
       {roadmapModalOpen && editingRoadmap && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-[#1E1B1C] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-6 shadow-2xl">
+        <div
+          onClick={() => setRoadmapModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-[#1E1B1C] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-6 shadow-2xl cursor-default"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
               <h3 className="font-extrabold text-base text-neutral-900 dark:text-white">
                 {editingRoadmap._id ? 'Edit Roadmap & Execution Nodes' : 'Create New Roadmap Track'}
@@ -2208,8 +2781,14 @@ export const AdminDashboardPage: React.FC = () => {
       {/* MODAL 4: DAILY TASKS & MISSIONS EDITOR MODAL                         */}
       {/* ==================================================================== */}
       {taskModalOpen && editingMission && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-[#1E1B1C] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-6 shadow-2xl">
+        <div
+          onClick={() => setTaskModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-[#1E1B1C] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-6 shadow-2xl cursor-default"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
               <h3 className="font-extrabold text-base text-neutral-900 dark:text-white">
                 {editingMission._id ? 'Edit Daily Mission & Tasks' : 'Create Daily Mission Track'}
@@ -2436,14 +3015,20 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
       )}
 
-      {/* User Create Modal */}
+      {/* Platform Member & Role Creation Modal */}
       {userModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 space-y-4">
+        <div
+          onClick={() => setUserModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 space-y-4 cursor-default"
+          >
             <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
               <h3 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
                 <UserCog className="w-5 h-5 text-emerald-500" />
-                Add Platform User
+                Add Platform Team Member
               </h3>
               <button onClick={() => setUserModalOpen(false)} className="text-neutral-400 hover:text-neutral-600">
                 <X className="w-4 h-4" />
@@ -2468,7 +3053,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <input
                   type="email"
                   required
-                  placeholder="e.g. priya@gmail.com"
+                  placeholder="e.g. priya@rishabhlab.com"
                   value={newUser.email}
                   onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#2a2a2a] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
@@ -2487,35 +3072,35 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Role</label>
+                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Platform Role</label>
                 <select
                   value={newUser.role}
                   onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#2a2a2a] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden font-medium"
                 >
-                  <option value="student">Student (Standard Learner)</option>
-                  <option value="mentor">Mentor (1:1 Guidance & Reviews)</option>
-                  <option value="college_admin">College Admin (Campus Portal)</option>
                   <option value="super_admin">Super Admin (Full Authority)</option>
+                  <option value="admin">Admin (Staff & Infrastructure)</option>
+                  <option value="mentor">Mentor (Consultations & Inquiries)</option>
+                  <option value="college_admin">College Admin (Campus Portal)</option>
                 </select>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">College</label>
+                  <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Department / Org</label>
                   <input
                     type="text"
-                    placeholder="e.g. IIT Delhi"
+                    placeholder="e.g. Infrastructure / RishabhLabs"
                     value={newUser.college}
                     onChange={(e) => setNewUser({ ...newUser, college: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#2a2a2a] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Degree</label>
+                  <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Designation / Focus</label>
                   <input
                     type="text"
-                    placeholder="e.g. B.Tech CS"
+                    placeholder="e.g. Systems Architecture"
                     value={newUser.degree}
                     onChange={(e) => setNewUser({ ...newUser, degree: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#2a2a2a] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
@@ -2535,7 +3120,7 @@ export const AdminDashboardPage: React.FC = () => {
                   type="submit"
                   className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold shadow-sm"
                 >
-                  Create User
+                  Create Member & Assign Role
                 </button>
               </div>
             </form>

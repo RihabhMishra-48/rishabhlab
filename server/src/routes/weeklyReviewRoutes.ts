@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { WeeklyReview } from '../models/CollegeAndReview';
 import { DailyMission } from '../models/DailyMission';
@@ -12,6 +13,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
     const userGoal = (user as any).targetGoal || 'Cybersecurity';
     const isCyber = userGoal.toLowerCase().includes('cyber') || userGoal.toLowerCase().includes('sec');
     const isAI = userGoal.toLowerCase().includes('ai') || userGoal.toLowerCase().includes('ml');
+    const isMongoReady = mongoose.connection.readyState === 1;
 
     // Calculate current calendar week date range
     const now = new Date();
@@ -26,19 +28,24 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
     const dateRange = `${fmt(monday)} – ${fmt(sunday)}`;
     const weekLabel = 'Week 1';
 
-    // Compute live completed hours and items from user's actual daily mission tasks
-    const missions = await DailyMission.find({ userId: user._id });
     let completedMinutes = 0;
     const completedItems: string[] = [];
 
-    missions.forEach((m) => {
-      m.tasks.forEach((t) => {
-        if (t.isCompleted) {
-          completedMinutes += t.durationMinutes || 25;
-          completedItems.push(t.title);
-        }
-      });
-    });
+    if (isMongoReady) {
+      try {
+        const missions = await DailyMission.find({ userId: user._id });
+        missions.forEach((m) => {
+          m.tasks.forEach((t) => {
+            if (t.isCompleted) {
+              completedMinutes += t.durationMinutes || 25;
+              completedItems.push(t.title);
+            }
+          });
+        });
+      } catch (e) {
+        console.warn('Mongo find error in weeklyReview:', e);
+      }
+    }
 
     const plannedHours = 10;
     const completedHours = Math.floor(completedMinutes / 60);
@@ -67,10 +74,42 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
       ];
     }
 
-    let review = await WeeklyReview.findOne({ userId: user._id }).sort({ createdAt: -1 });
+    let review: any = null;
+    if (isMongoReady) {
+      try {
+        review = await WeeklyReview.findOne({ userId: user._id }).sort({ createdAt: -1 });
+        if (!review) {
+          review = await WeeklyReview.create({
+            userId: user._id,
+            weekLabel,
+            dateRange,
+            plannedHours,
+            completedHours,
+            completedMinutes: remainingMinutes,
+            completionPercentage,
+            completedItems,
+            nextWeekItems,
+            reflectionText: '',
+          });
+        } else {
+          review.weekLabel = weekLabel;
+          review.dateRange = dateRange;
+          review.plannedHours = plannedHours;
+          review.completedHours = completedHours;
+          review.completedMinutes = remainingMinutes;
+          review.completionPercentage = completionPercentage;
+          review.completedItems = completedItems;
+          review.nextWeekItems = nextWeekItems;
+          await review.save();
+        }
+      } catch (e) {
+        console.warn('Mongo error saving weekly review:', e);
+      }
+    }
 
     if (!review) {
-      review = await WeeklyReview.create({
+      review = {
+        _id: 'review-' + Date.now(),
         userId: user._id,
         weekLabel,
         dateRange,
@@ -81,17 +120,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
         completedItems,
         nextWeekItems,
         reflectionText: '',
-      });
-    } else {
-      review.weekLabel = weekLabel;
-      review.dateRange = dateRange;
-      review.plannedHours = plannedHours;
-      review.completedHours = completedHours;
-      review.completedMinutes = remainingMinutes;
-      review.completionPercentage = completionPercentage;
-      review.completedItems = completedItems;
-      review.nextWeekItems = nextWeekItems;
-      await review.save();
+      };
     }
 
     res.json(review);
@@ -104,18 +133,33 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
 router.post('/submit', requireAuth, async (req: AuthRequest, res) => {
   try {
     const { reflectionText } = req.body;
-    let review = await WeeklyReview.findOne({ userId: req.user?._id }).sort({ createdAt: -1 });
+    const isMongoReady = mongoose.connection.readyState === 1;
+    let review: any = null;
 
-    if (!review) {
-      review = await WeeklyReview.findOne({});
+    if (isMongoReady) {
+      try {
+        review = await WeeklyReview.findOne({ userId: req.user?._id }).sort({ createdAt: -1 });
+        if (!review) review = await WeeklyReview.findOne({});
+        if (review) {
+          review.reflectionText = reflectionText || 'College semester exams had more lab viva hours this Thursday.';
+          review.submittedAt = new Date();
+          review.aiAdaptiveAdjustment =
+            'Adaptive Recommendation: We have adjusted your upcoming Week 4 daily mission durations from 90 min down to 45 min focused sessions to protect your momentum during college test weeks.';
+          await review.save();
+        }
+      } catch (e) {
+        console.warn('Mongo submit reflection error:', e);
+      }
     }
 
-    if (review) {
-      review.reflectionText = reflectionText || 'College semester exams had more lab viva hours this Thursday.';
-      review.submittedAt = new Date();
-      review.aiAdaptiveAdjustment =
-        'Adaptive Recommendation: We have adjusted your upcoming Week 4 daily mission durations from 90 min down to 45 min focused sessions to protect your momentum during college test weeks.';
-      await review.save();
+    if (!review) {
+      review = {
+        _id: 'review-offline',
+        reflectionText: reflectionText || '',
+        submittedAt: new Date(),
+        aiAdaptiveAdjustment:
+          'Adaptive Recommendation: Adjusting roadmap intensity according to your weekly pace.',
+      };
     }
 
     res.json({

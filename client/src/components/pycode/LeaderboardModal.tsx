@@ -43,6 +43,17 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
     }
   }, [codeathonId]);
 
+  useEffect(() => {
+    if (!codeathonId) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [codeathonId, onClose]);
+
   const loadLeaderboard = async (id: string, isRefresh = false) => {
     try {
       if (isRefresh) setRefreshing(true);
@@ -80,8 +91,14 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
   const totalQuestions = data?.codeathon?.total_questions ?? 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-xs animate-in fade-in duration-150 cursor-pointer"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-[#1f1f1f] border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-[#202020]">
           <div className="flex items-center gap-3">

@@ -166,7 +166,7 @@ export interface QuestionCategory {
 }
 
 export interface PracticeQuestion {
-  id: number;
+  id: number | string;
   title: string;
   difficulty: 'easy' | 'medium' | 'hard';
   points: number;
@@ -177,4 +177,6 @@ export interface PracticeQuestion {
   starter_code: string;
   start_url: string;
   practice_url?: string;
+  source?: 'pycode' | 'curated';
+  slug?: string;
 }

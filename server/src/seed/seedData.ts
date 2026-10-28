@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 import { User } from '../models/User';
 import { StudentProfile, Onboarding } from '../models/StudentProfile';
 import { Roadmap } from '../models/Roadmap';
@@ -1088,6 +1089,10 @@ export const getCleanMentors = () => [
 ];
 
 export const seedDatabase = async () => {
+  if (mongoose.connection.readyState !== 1) {
+    console.log('ℹ️ [Seed] MongoDB not connected; skipping Mongo seeding. Operating with Supabase.');
+    return;
+  }
   try {
     // Non-destructive seeding for educational content: only insert if collections are currently empty
     const projectCount = await Project.countDocuments();

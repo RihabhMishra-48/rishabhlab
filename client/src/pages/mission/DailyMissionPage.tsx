@@ -87,6 +87,8 @@ export const DailyMissionPage: React.FC = () => {
 
     try {
       const completedIds = updatedTasks.filter((t) => t.isCompleted).map((t) => t.taskId);
+      const dayNum = mission.dayNumber || 1;
+      localStorage.setItem(`rishabhlabs_mission_completed_${track}_day_${dayNum}`, JSON.stringify(completedIds));
       localStorage.setItem(`rishabhlabs_mission_completed_${track}`, JSON.stringify(completedIds));
     } catch (e) {
       // Ignore

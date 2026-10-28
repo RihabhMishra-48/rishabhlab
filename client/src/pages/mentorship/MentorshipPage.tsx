@@ -113,9 +113,26 @@ export const MentorshipPage: React.FC = () => {
       try {
         const data = await api.getMentors();
         if (data && data.length > 0) {
-          setMentors(data);
-          setSelectedMentor(data[0]);
-          return;
+          const allowedNames = ['harsh', 'rishabh', 'arpit'];
+          let filtered = data.filter((m: any) =>
+            allowedNames.some((name) => m.name?.toLowerCase().includes(name))
+          );
+          if (selectedDomain && selectedDomain !== 'All') {
+            const lower = selectedDomain.toLowerCase();
+            const domainFiltered = filtered.filter((m: any) => {
+              const d = (m.domain || '').toLowerCase();
+              if (lower.includes('ai') || lower.includes('ml')) return d.includes('ai') || d.includes('machine');
+              if (lower.includes('web') || lower.includes('full') || lower.includes('stack')) return d.includes('web') || d.includes('full-stack');
+              if (lower.includes('cyber') || lower.includes('sec')) return d.includes('cyber') || d.includes('sec');
+              return d.includes(lower);
+            });
+            if (domainFiltered.length > 0) filtered = domainFiltered;
+          }
+          if (filtered.length > 0) {
+            setMentors(filtered);
+            setSelectedMentor(filtered[0]);
+            return;
+          }
         }
       } catch (err) {
         console.warn('API getMentors fallback to curated mentor list:', err);

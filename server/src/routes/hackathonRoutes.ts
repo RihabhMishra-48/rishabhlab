@@ -5,13 +5,23 @@ import { aiService } from '../services/aiService';
 
 const router = Router();
 
+import mongoose from 'mongoose';
+
 // GET /api/hackathon
 router.get('/', async (req, res) => {
   try {
-    let hackathon = await Hackathon.findOne({});
+    const isMongoReady = mongoose.connection.readyState === 1;
+    let hackathon: any = null;
+    if (isMongoReady) {
+      try {
+        hackathon = await Hackathon.findOne({});
+      } catch (e) {
+        console.warn('Mongo findOne error in hackathon:', e);
+      }
+    }
+
     if (!hackathon) {
-      // Seed default hackathon instance
-      hackathon = await Hackathon.create({
+      const defaultData = {
         hackathonName: 'Smart India Hackathon & InnovateX',
         targetEventDate: new Date(Date.now() + 12 * 24 * 3600 * 1000 + 4 * 3600 * 1000 + 32 * 60 * 1000),
         daysRemaining: 12,
@@ -74,7 +84,17 @@ router.get('/', async (req, res) => {
             deliverables: ['Live domain URL', 'GitHub repo link', 'Judge evaluation form'],
           },
         ],
-      });
+      };
+
+      if (isMongoReady) {
+        try {
+          hackathon = await Hackathon.create(defaultData);
+        } catch (e) {
+          hackathon = { _id: 'default-hackathon', ...defaultData };
+        }
+      } else {
+        hackathon = { _id: 'default-hackathon', ...defaultData };
+      }
     }
 
     res.json(hackathon);

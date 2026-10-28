@@ -30,14 +30,27 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string; email?: string };
       let user = null;
-      if (decoded.id && mongoose.Types.ObjectId.isValid(decoded.id)) {
-        user = await User.findById(decoded.id);
-      }
-      if (!user && decoded.email) {
-        user = await User.findOne({ email: decoded.email.toLowerCase() });
+      if (mongoose.connection.readyState === 1) {
+        if (decoded.id && mongoose.Types.ObjectId.isValid(decoded.id)) {
+          user = await User.findById(decoded.id);
+        }
+        if (!user && decoded.email) {
+          user = await User.findOne({ email: decoded.email.toLowerCase() });
+        }
       }
       if (user) {
         req.user = user;
+        return next();
+      }
+      if (decoded.id || decoded.email) {
+        req.user = {
+          _id: decoded.id as any,
+          id: decoded.id,
+          name: decoded.email ? decoded.email.split('@')[0] : 'User',
+          email: decoded.email || '',
+          role: decoded.role || 'student',
+          isOnboarded: true,
+        } as any;
         return next();
       }
     } catch (jwtErr) {

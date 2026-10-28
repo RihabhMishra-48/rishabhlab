@@ -4,8 +4,11 @@ import ws from 'ws';
 
 dotenv.config();
 
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.SUPABASE_URL || 'https://qfknwmygntetelrwkrfy.supabase.co';
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFma253bXlnbnRldGVscndrcmZ5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5Mjg1MjY2OCwiZXhwIjoyMTA4NDI4NjY4fQ.0RAej44bjLan9n_pipuqt3_GO2whLQWV44MKJjH7cak';
 
 export let supabase: SupabaseClient | null = null;
 

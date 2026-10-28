@@ -11,15 +11,23 @@ const router = Router();
 
 // Helper to resolve problem across Supabase and MongoDB
 async function resolveProblem(idOrSlug: string): Promise<any | null> {
-  // 1. Try Mongo if valid ObjectId
-  if (mongoose.Types.ObjectId.isValid(idOrSlug)) {
-    const mongoProb = await CodingProblem.findById(idOrSlug);
-    if (mongoProb) return mongoProb;
-  }
+  const isMongoReady = mongoose.connection.readyState === 1;
 
-  // 2. Try Mongo by slug
-  const mongoProbBySlug = await CodingProblem.findOne({ slug: idOrSlug });
-  if (mongoProbBySlug) return mongoProbBySlug;
+  if (isMongoReady) {
+    try {
+      // 1. Try Mongo if valid ObjectId
+      if (mongoose.Types.ObjectId.isValid(idOrSlug)) {
+        const mongoProb = await CodingProblem.findById(idOrSlug);
+        if (mongoProb) return mongoProb;
+      }
+
+      // 2. Try Mongo by slug
+      const mongoProbBySlug = await CodingProblem.findOne({ slug: idOrSlug });
+      if (mongoProbBySlug) return mongoProbBySlug;
+    } catch (e) {
+      console.warn('Mongo find problem error:', e);
+    }
+  }
 
   // 3. Try Supabase
   if (isSupabaseConfigured() && supabase) {
@@ -103,13 +111,21 @@ router.get('/', async (req, res) => {
     }
 
     // 2. Fallback to MongoDB
-    const filter: any = {};
-    if (category) filter.category = category;
-    if (difficulty) filter.difficulty = difficulty;
-    if (type === 'debugging') filter.isDebuggingChallenge = true;
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const filter: any = {};
+        if (category) filter.category = category;
+        if (difficulty) filter.difficulty = difficulty;
+        if (type === 'debugging') filter.isDebuggingChallenge = true;
 
-    const problems = await CodingProblem.find(filter).select('-testCases.expectedOutput');
-    res.json(problems);
+        const problems = await CodingProblem.find(filter).select('-testCases.expectedOutput');
+        return res.json(problems);
+      } catch (e) {
+        console.warn('Mongo find problems error:', e);
+      }
+    }
+
+    res.json([]);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }

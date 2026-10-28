@@ -394,9 +394,24 @@ export const api = {
     invalidateCache(/mentor/);
     return res;
   },
-  adminDeleteMentor: async (id: string) => {
-    const res = await request<any>(`/admin/mentors/${id}`, { method: 'DELETE' });
+  adminDeleteMentor: async (id: string, name?: string) => {
+    const qs = name ? `?name=${encodeURIComponent(name)}` : '';
+    const safeId = id && id !== 'undefined' ? encodeURIComponent(id) : 'by-name';
+    const res = await request<any>(`/admin/mentors/${safeId}${qs}`, { method: 'DELETE' });
     invalidateCache(/mentor/);
+    return res;
+  },
+
+  // Admin Colleges CRUD
+  adminGetColleges: () => request<any[]>('/admin/colleges'),
+  adminCreateCollege: async (data: any) => {
+    const res = await request<any>('/admin/colleges', { method: 'POST', body: JSON.stringify(data) });
+    invalidateCache(/college/);
+    return res;
+  },
+  adminDeleteCollege: async (id: string) => {
+    const res = await request<any>(`/admin/colleges/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    invalidateCache(/college/);
     return res;
   },
 

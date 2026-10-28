@@ -82,22 +82,26 @@ const startServer = async () => {
     await connectDB();
     await seedDatabase();
 
-    // Listen immediately so Vite client proxy (/api/auth/me) connects without ECONNREFUSED
-    app.listen(PORT, () => {
-      console.log(`🚀 [Rishabh Labs Backend] Server running on http://localhost:${PORT}`);
-      console.log(`📡 [Rishabh Labs Backend] Core API mounted at http://localhost:${PORT}/api`);
+    // In local development or container mode, start listening
+    if (!process.env.VERCEL) {
+      app.listen(PORT, () => {
+        console.log(`🚀 [Rishabh Labs Backend] Server running on http://localhost:${PORT}`);
+        console.log(`📡 [Rishabh Labs Backend] Core API mounted at http://localhost:${PORT}/api`);
 
-      // Sync Supabase non-blockingly in the background
-      if (isSupabaseConfigured()) {
-        console.log('⚡ [Supabase] Syncing initial schema & curriculum data with live Supabase in background...');
-        seedSupabase().catch((err: any) => {
-          console.error('❌ [Supabase Seed Error]:', err?.message || err);
-        });
-      }
-    });
+        // Sync Supabase non-blockingly in the background
+        if (isSupabaseConfigured()) {
+          console.log('⚡ [Supabase] Syncing initial schema & curriculum data with live Supabase in background...');
+          seedSupabase().catch((err: any) => {
+            console.error('❌ [Supabase Seed Error]:', err?.message || err);
+          });
+        }
+      });
+    }
   } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+    console.error('Database connection notice:', error);
+    if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
   }
 };
 

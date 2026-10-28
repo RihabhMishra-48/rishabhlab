@@ -73,11 +73,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           if (profile) {
             const goal = profile.field_of_interest || profile.target_goal || localGoal;
-            const hasChosenGoal = Boolean(
-              (goal && goal.trim() !== '' && goal !== 'Not Set') ||
-              localOnboarded ||
-              profile.is_onboarded
-            );
+            // Only genuinely onboarded if profile.is_onboarded is true OR localOnboarded is true
+            const isUserOnboarded = Boolean(profile.is_onboarded || localOnboarded);
             const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture;
             const isStockAvatar = profile.avatar_url && (profile.avatar_url.includes('unsplash.com') || profile.avatar_url.includes('rishabh.webp'));
             const userAvatar = (profile.avatar_url && !isStockAvatar) ? profile.avatar_url : (metaAvatar || '');
@@ -100,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               mentorExperienceYears: profile.mentor_experience_years,
               mentorLinkedin: profile.mentor_linkedin,
               mentorExpertise: profile.mentor_expertise,
-              isOnboarded: hasChosenGoal,
+              isOnboarded: isUserOnboarded,
             });
           } else {
             const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '';
@@ -130,10 +127,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (window.location.hash) {
               window.history.replaceState(null, '', window.location.pathname);
             }
-            const hasChosenGoal = profile
-              ? Boolean((profile.target_goal && profile.target_goal.trim() !== '' && profile.target_goal !== 'Not Set') || localOnboarded)
+            const isUserOnboarded = profile
+              ? Boolean(profile.is_onboarded || localOnboarded)
               : localOnboarded;
-            const targetPath = hasChosenGoal ? '/dashboard' : '/onboarding';
+            const targetPath = isUserOnboarded ? '/dashboard' : '/onboarding';
             if (window.location.pathname !== targetPath) {
               window.location.href = targetPath;
             }
@@ -228,11 +225,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (profile) {
               const goal = profile.field_of_interest || profile.target_goal || localGoal;
-              const hasChosenGoal = Boolean(
-                (goal && goal.trim() !== '' && goal !== 'Not Set') ||
-                localOnboarded ||
-                profile.is_onboarded
-              );
+              const isUserOnboarded = Boolean(profile.is_onboarded || localOnboarded);
               const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture;
               const isStockAvatar = profile.avatar_url && (profile.avatar_url.includes('unsplash.com') || profile.avatar_url.includes('rishabh.webp'));
               const userAvatar = (profile.avatar_url && !isStockAvatar) ? profile.avatar_url : (metaAvatar || '');
@@ -255,7 +248,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 mentorExperienceYears: profile.mentor_experience_years,
                 mentorLinkedin: profile.mentor_linkedin,
                 mentorExpertise: profile.mentor_expertise,
-                isOnboarded: hasChosenGoal,
+                isOnboarded: isUserOnboarded,
               });
               setLoading(false);
               return;
