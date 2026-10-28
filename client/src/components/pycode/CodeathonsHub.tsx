@@ -69,16 +69,16 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
     <div className="space-y-6">
       {/* Modern Segmented Sub-Tabs */}
       <div className="w-full overflow-x-auto no-scrollbar py-1">
-        <div className="inline-flex items-center p-1.5 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1e] border border-neutral-200/80 dark:border-neutral-800 gap-1.5 min-w-max shadow-2xs">
+        <div className="inline-flex items-center p-1 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800 gap-1 min-w-max shadow-2xs">
           <button
             onClick={() => setActiveTab('codeathons')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer shrink-0 ${
+            className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
               activeTab === 'codeathons'
                 ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50'
             }`}
           >
-            <Trophy className={`w-4 h-4 ${activeTab === 'codeathons' ? 'text-amber-400 dark:text-amber-600' : 'text-amber-500'}`} />
+            <Trophy className={`w-4 h-4 shrink-0 ${activeTab === 'codeathons' ? 'text-amber-400 dark:text-amber-600' : 'text-amber-500'}`} />
             <span>Live & Upcoming Codeathons</span>
             <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
               activeTab === 'codeathons'
@@ -94,13 +94,13 @@ export const CodeathonsHub: React.FC<CodeathonsHubProps> = ({
 
           <button
             onClick={() => setActiveTab('results')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer shrink-0 ${
+            className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
               activeTab === 'results'
                 ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50'
             }`}
           >
-            <FileCheck2 className={`w-4 h-4 ${activeTab === 'results' ? 'text-blue-400 dark:text-blue-600' : 'text-blue-500'}`} />
+            <FileCheck2 className={`w-4 h-4 shrink-0 ${activeTab === 'results' ? 'text-blue-400 dark:text-blue-600' : 'text-blue-500'}`} />
             <span>My Exam Results</span>
             <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
               activeTab === 'results'

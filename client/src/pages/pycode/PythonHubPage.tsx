@@ -72,7 +72,7 @@ export const PythonHubPage: React.FC = () => {
               href="https://pycode-student.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4.5 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
+              className="px-5 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
             >
               <span>Open Python Sandbox</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -92,40 +92,40 @@ export const PythonHubPage: React.FC = () => {
 
       {/* Main Feature Segmented Tabs */}
       <div className="w-full overflow-x-auto no-scrollbar py-1">
-        <div className="inline-flex items-center p-1.5 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1e] border border-neutral-200/80 dark:border-neutral-800 gap-1.5 min-w-max shadow-2xs">
+        <div className="inline-flex items-center p-1 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800 gap-1 min-w-max shadow-2xs">
           <button
             onClick={() => setActiveTab('practice')}
-            className={`flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl text-xs sm:text-[13px] font-bold transition-colors whitespace-nowrap cursor-pointer shrink-0 ${
+            className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
               activeTab === 'practice'
                 ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50'
             }`}
           >
-            <BookOpen className={`w-4 h-4 ${activeTab === 'practice' ? 'text-emerald-400 dark:text-emerald-600' : 'text-emerald-500'}`} />
+            <BookOpen className={`w-4 h-4 shrink-0 ${activeTab === 'practice' ? 'text-emerald-400 dark:text-emerald-600' : 'text-emerald-500'}`} />
             <span>Practice Arena</span>
           </button>
 
           <button
             onClick={() => setActiveTab('codeathons')}
-            className={`flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl text-xs sm:text-[13px] font-bold transition-colors whitespace-nowrap cursor-pointer shrink-0 ${
+            className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
               activeTab === 'codeathons'
                 ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50'
             }`}
           >
-            <Trophy className={`w-4 h-4 ${activeTab === 'codeathons' ? 'text-amber-400 dark:text-amber-600' : 'text-amber-500'}`} />
+            <Trophy className={`w-4 h-4 shrink-0 ${activeTab === 'codeathons' ? 'text-amber-400 dark:text-amber-600' : 'text-amber-500'}`} />
             <span>Codeathons & Exams</span>
           </button>
 
           <button
             onClick={() => setActiveTab('workspace')}
-            className={`flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl text-xs sm:text-[13px] font-bold transition-colors whitespace-nowrap cursor-pointer shrink-0 ${
+            className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
               activeTab === 'workspace'
                 ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50'
             }`}
           >
-            <Terminal className={`w-4 h-4 ${activeTab === 'workspace' ? 'text-blue-400 dark:text-blue-600' : 'text-blue-500'}`} />
+            <Terminal className={`w-4 h-4 shrink-0 ${activeTab === 'workspace' ? 'text-blue-400 dark:text-blue-600' : 'text-blue-500'}`} />
             <span>My Workspace & Heatmap</span>
           </button>
         </div>
