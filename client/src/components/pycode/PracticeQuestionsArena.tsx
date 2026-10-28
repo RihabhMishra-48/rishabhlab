@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { pycodeService } from '../../services/pycodeService';
 import { pycodeCache } from '../../services/pycodeCache';
 import { PracticeQuestion, QuestionCategory } from '../../types/pycode';
-import { CURATED_PROBLEMS } from '../../data/curatedProblems';
 import {
   Search,
   Filter,
@@ -12,10 +10,9 @@ import {
   X,
   Code2,
   ExternalLink,
-  Star,
-  Sparkles,
   Layers,
-  ArrowRight
+  Copy,
+  Check,
 } from 'lucide-react';
 
 interface QuestionReviewModalProps {
@@ -23,7 +20,17 @@ interface QuestionReviewModalProps {
   onClose: () => void;
 }
 
+const cleanPyCodeHtml = (html: string): string => {
+  if (!html) return '';
+  return html
+    // Escape isolated comparison markers that might trip up HTML parsers
+    .replace(/<(\d+)/g, '&lt;$1')
+    .trim();
+};
+
 export const QuestionReviewModal: React.FC<QuestionReviewModalProps> = ({ question, onClose }) => {
+  const [copiedCode, setCopiedCode] = useState(false);
+
   useEffect(() => {
     if (!question) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -37,20 +44,46 @@ export const QuestionReviewModal: React.FC<QuestionReviewModalProps> = ({ questi
 
   if (!question) return null;
 
-  const isCurated = question.source === 'curated';
+  const handleCopyStarter = () => {
+    if (!question.starter_code) return;
+    navigator.clipboard.writeText(question.starter_code);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  const sandboxUrl =
+    question.start_url ||
+    question.practice_url ||
+    `https://pycode-student.vercel.app/practice/${question.id}`;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150 cursor-pointer"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-xs animate-in fade-in duration-150 cursor-pointer"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-3xl max-h-[90vh] flex flex-col rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden cursor-default"
+        className="w-full max-w-3xl max-h-[90vh] flex flex-col rounded-3xl bg-white dark:bg-[#18181b] border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden cursor-default"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Top Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-[#202024]">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        {/* Modal Top Header Bar */}
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/90 dark:bg-[#1f1f23]">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+            {/* PyCode Brand Badge */}
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#D4704B]/10 text-[#D4704B] border border-[#D4704B]/20">
+              <div className="w-3.5 h-3.5 rounded-full bg-[#D4704B] flex items-center justify-center text-white font-mono font-bold text-[7px] shrink-0">
+                &gt;_
+              </div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider">
+                PYCODE
+              </span>
+            </div>
+
+            {/* Category */}
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-neutral-200/80 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+              {question.category_name || question.category}
+            </span>
+
+            {/* Difficulty Pill */}
             <span
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
                 question.difficulty === 'easy'
@@ -71,96 +104,94 @@ export const QuestionReviewModal: React.FC<QuestionReviewModalProps> = ({ questi
               />
               {question.difficulty}
             </span>
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
-              {question.category_name || question.category}
-            </span>
-            <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 fill-current" />
+
+            {/* Points */}
+            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800/80 text-neutral-800 dark:text-neutral-200 border border-neutral-200/60 dark:border-neutral-700/60">
               {question.points} Pts
             </span>
-            {isCurated ? (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                RishabhLabs Lab
-              </span>
-            ) : (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                PyCode Sandbox
-              </span>
-            )}
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-white hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors"
+            className="p-1.5 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-white hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            title="Close (Esc)"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Modal Body: Problem Statement & Rendered HTML */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          <div>
-            <h2 className="text-xl font-extrabold text-neutral-900 dark:text-white">
+        {/* Modal Scrollable Body */}
+        <div className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-6">
+          {/* Title & Metadata */}
+          <div className="space-y-1">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-neutral-900 dark:text-white tracking-tight leading-snug">
               {question.title}
             </h2>
-            <p className="text-xs text-neutral-500 mt-1">
-              {isCurated ? 'RishabhLabs Engineering Challenge' : 'PyCode Python Sandbox Problem'} #{question.id}
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
+              PyCode Python Sandbox Problem #{question.id}
             </p>
           </div>
 
-          {/* Formatted HTML Description */}
-          <div className="p-5 rounded-2xl bg-neutral-50 dark:bg-[#222226] border border-neutral-200/80 dark:border-neutral-800/80 text-xs sm:text-[13px] text-neutral-800 dark:text-neutral-200 leading-relaxed space-y-3 prose dark:prose-invert max-w-none">
+          {/* Formatted Problem Statement Content */}
+          <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#1f1f23] border border-neutral-200/90 dark:border-neutral-800 shadow-2xs">
             <div
-              className="pycode-description whitespace-pre-wrap font-sans"
-              dangerouslySetInnerHTML={{ __html: question.description }}
+              className="pycode-review-content"
+              dangerouslySetInnerHTML={{ __html: cleanPyCodeHtml(question.description) }}
             />
           </div>
 
-          {/* Starter Code Preview */}
+          {/* Starter Code Section (if available) */}
           {question.starter_code && (
-            <div className="space-y-2">
-              <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
-                <Code2 className="w-4 h-4 text-emerald-500" />
-                Starter Template Preview
-              </span>
-              <div className="p-4 rounded-2xl bg-[#111113] text-emerald-400 font-mono text-xs overflow-x-auto border border-neutral-800">
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                  <Code2 className="w-4 h-4 text-[#D4704B]" />
+                  <span>solution.py (Starter Code Template)</span>
+                </span>
+                <button
+                  onClick={handleCopyStarter}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-neutral-100 hover:bg-neutral-200/80 dark:bg-neutral-800 dark:hover:bg-neutral-700/80 text-neutral-700 dark:text-neutral-300 transition-colors cursor-pointer"
+                >
+                  {copiedCode ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-neutral-400" />
+                      <span>Copy Code</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#0f0f11] dark:bg-[#0c0c0e] text-emerald-400 dark:text-emerald-300 font-mono text-xs overflow-x-auto border border-neutral-800 shadow-inner select-all leading-relaxed">
                 <pre><code>{question.starter_code}</code></pre>
               </div>
             </div>
           )}
         </div>
 
-        {/* Modal Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-[#202024]">
+        {/* Modal Bottom Action Footer */}
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-t border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/90 dark:bg-[#1f1f23]">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="px-4 py-2.5 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
           >
             Close
           </button>
 
-          {isCurated && question.slug ? (
-            <Link
-              to={`/practice/problem/${question.slug}`}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
-            >
-              <Play className="w-4 h-4 fill-current" />
-              <span>Open in Full IDE Workspace</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          ) : (
-            <a
-              href={question.start_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
-            >
-              <Play className="w-4 h-4 fill-current" />
-              <span>Start Practice in Live Python Sandbox</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          )}
+          <a
+            href={sandboxUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-5 py-2.5 rounded-xl bg-[#D4704B] hover:bg-[#c2613d] active:bg-[#b05332] text-white text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+          >
+            <Play className="w-4 h-4 fill-current" />
+            <span>Start Practice in Live Python Sandbox</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
         </div>
       </div>
     </div>
@@ -175,7 +206,6 @@ const DEFAULT_CATEGORIES: QuestionCategory[] = [
   { id: 'python-lists-arrays', name: '5. Lists & Array Algorithms', description: 'List comprehensions, rotation, chunking, binary search, sorting, two-pointer techniques', total_questions: 40 },
   { id: 'python-dicts', name: '6. Dictionaries & Sets', description: 'Frequency count, hash maps, key-value lookup operations', total_questions: 8 },
   { id: 'python-oop', name: '7. OOP, Lambdas & Exceptions', description: 'Classes, encapsulation, inheritance, property decorators, dunders, custom errors', total_questions: 14 },
-  { id: 'python-basics', name: '3. Pattern Printing & Basics', description: 'Fundamental algorithm logic and triangular patterns', total_questions: 1 },
   { id: 'numpy', name: '8. NumPy Scientific Computing', description: 'N-dimensional arrays, mathematical vectorization, matrix transformations', total_questions: 2 },
   { id: 'pandas', name: '9. Pandas Data Science & Analysis', description: 'DataFrames, null handling, indexing, group-by, merging, filtering datasets', total_questions: 120 },
   { id: 'matplotlib-seaborn', name: '10. Matplotlib & Seaborn Visuals', description: 'Bar plots, line charts, scatter plots, canvas styling, and distributions', total_questions: 6 }
@@ -206,38 +236,7 @@ export const PracticeQuestionsArena: React.FC = () => {
   // Review Modal state
   const [reviewingQuestion, setReviewingQuestion] = useState<PracticeQuestion | null>(null);
 
-  // 1. Transform RishabhLabs 53 Curated Problems into PracticeQuestion format
-  const curatedQuestions: PracticeQuestion[] = useMemo(() => {
-    return CURATED_PROBLEMS.map((p) => {
-      const diffLower = (p.difficulty?.toLowerCase() || 'medium') as 'easy' | 'medium' | 'hard';
-      const pts = diffLower === 'easy' ? 20 : diffLower === 'medium' ? 40 : 80;
-      const catSlug = p.category ? p.category.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'general';
-
-      return {
-        id: p.id,
-        title: p.title,
-        difficulty: diffLower,
-        points: pts,
-        category: catSlug,
-        category_name: p.category,
-        category_description: `RishabhLabs Engineering Challenge · ${p.category}`,
-        description: `${p.descriptionMarkdown}${
-          p.constraints?.length
-            ? `\n\n**Constraints:**\n${p.constraints.map((c) => `- ${c}`).join('\n')}`
-            : ''
-        }`,
-        starter_code: p.starterCode?.python || p.starterCode?.javascript || '',
-        start_url: `/practice/problem/${p.slug}`,
-        source: 'curated',
-        slug: p.slug,
-        is_debugging: p.isDebuggingChallenge,
-        acceptance_rate: p.acceptanceRate,
-        tags: p.tags,
-      };
-    });
-  }, []);
-
-  // 2. Fetch PyCode Questions from API / Cache on mount and background revalidate
+  // Fetch PyCode Questions from API / Cache on mount and background revalidate
   useEffect(() => {
     let isMounted = true;
     const loadQuestions = async () => {
@@ -264,39 +263,24 @@ export const PracticeQuestionsArena: React.FC = () => {
     };
   }, []);
 
-  // 3. Combine both collections based on selected category & difficulty
-  const combinedQuestions = useMemo(() => {
-    let pool: PracticeQuestion[] = [];
+  // Filter questions based on selected category, difficulty & live search
+  const filteredQuestions = useMemo(() => {
+    let pool: PracticeQuestion[] = allPyCodeQuestions;
 
-    if (selectedCategory === 'all') {
-      // Include both PyCode questions and Curated questions
-      pool = [...curatedQuestions, ...allPyCodeQuestions];
-    } else if (selectedCategory === 'curated') {
-      pool = curatedQuestions;
-    } else if (
-      [
-        'web-development',
-        'ai-machine-learning',
-        'mobile-app-development',
-        'cybersecurity',
-        'data-analytics',
-      ].includes(selectedCategory)
-    ) {
-      pool = curatedQuestions.filter((q) => q.category === selectedCategory);
-    } else {
-      // PyCode category selected
-      const matching = allPyCodeQuestions.filter((q) => {
+    // Apply category filter
+    if (selectedCategory !== 'all') {
+      const catLower = selectedCategory.toLowerCase();
+      pool = pool.filter((q) => {
         if (!q.category) return false;
+        const qCat = q.category.toLowerCase();
         return (
           q.category === selectedCategory ||
-          q.category.toLowerCase() === selectedCategory.toLowerCase() ||
-          (selectedCategory === 'numpy' && q.category.includes('numpy')) ||
-          (selectedCategory === 'pandas' && q.category.includes('pandas')) ||
-          (selectedCategory.includes('matplotlib') &&
-            (q.category.includes('matplotlib') || q.category.includes('seaborn')))
+          qCat === catLower ||
+          (catLower === 'numpy' && qCat.includes('numpy')) ||
+          (catLower === 'pandas' && qCat.includes('pandas')) ||
+          (catLower.includes('matplotlib') && (qCat.includes('matplotlib') || qCat.includes('seaborn')))
         );
       });
-      pool = matching.length > 0 ? matching : allPyCodeQuestions;
     }
 
     // Apply difficulty filter
@@ -316,9 +300,9 @@ export const PracticeQuestionsArena: React.FC = () => {
     }
 
     return pool;
-  }, [curatedQuestions, allPyCodeQuestions, selectedCategory, selectedDifficulty, searchQuery]);
+  }, [allPyCodeQuestions, selectedCategory, selectedDifficulty, searchQuery]);
 
-  const totalProblemCount = curatedQuestions.length + (categories.reduce((acc, c) => acc + (c.total_questions || 0), 0) || allPyCodeQuestions.length || 280);
+  const totalProblemCount = categories.reduce((acc, c) => acc + (c.total_questions || 0), 0) || allPyCodeQuestions.length || 280;
 
   return (
     <div className="space-y-6">
@@ -326,7 +310,7 @@ export const PracticeQuestionsArena: React.FC = () => {
       <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
         <button
           onClick={() => setSelectedCategory('all')}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-2 ${
+          className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-2 shrink-0 ${
             selectedCategory === 'all'
               ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
               : 'bg-neutral-100 hover:bg-neutral-200/80 dark:bg-[#1a1a1e] dark:hover:bg-[#25252a] text-neutral-700 dark:text-neutral-300'
@@ -343,66 +327,12 @@ export const PracticeQuestionsArena: React.FC = () => {
           </span>
         </button>
 
-        {/* Curated Track Badges */}
-        <button
-          onClick={() => setSelectedCategory('curated')}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-2 cursor-pointer ${
-            selectedCategory === 'curated'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : 'bg-blue-500/10 text-blue-700 dark:text-blue-300 hover:bg-blue-500/20 border border-blue-500/20'
-          }`}
-        >
-          <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-          <span>RishabhLabs Engineering</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-            selectedCategory === 'curated' ? 'bg-white/20' : 'bg-blue-500/20'
-          }`}>
-            {curatedQuestions.length}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setSelectedCategory('web-development')}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-2 cursor-pointer ${
-            selectedCategory === 'web-development'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-              : 'bg-neutral-100 hover:bg-neutral-200/80 dark:bg-[#1a1a1e] dark:hover:bg-[#25252a] text-neutral-700 dark:text-neutral-300'
-          }`}
-        >
-          <span>Web & React</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-            selectedCategory === 'web-development'
-              ? 'bg-white/20 dark:bg-neutral-900/20'
-              : 'bg-neutral-200/80 dark:bg-neutral-800'
-          }`}>
-            {curatedQuestions.filter((q) => q.category === 'web-development').length}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setSelectedCategory('ai-machine-learning')}
-          className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-2 cursor-pointer ${
-            selectedCategory === 'ai-machine-learning'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-              : 'bg-neutral-100 hover:bg-neutral-200/80 dark:bg-[#1a1a1e] dark:hover:bg-[#25252a] text-neutral-700 dark:text-neutral-300'
-          }`}
-        >
-          <span>AI & ML</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-            selectedCategory === 'ai-machine-learning'
-              ? 'bg-white/20 dark:bg-neutral-900/20'
-              : 'bg-neutral-200/80 dark:bg-neutral-800'
-          }`}>
-            {curatedQuestions.filter((q) => q.category === 'ai-machine-learning').length}
-          </span>
-        </button>
-
-        {/* PyCode Upstream Categories */}
+        {/* PyCode Upstream Python Categories */}
         {categories.map((cat) => (
           <button
             key={cat.id}
             onClick={() => setSelectedCategory(cat.id)}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-2 cursor-pointer ${
+            className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-2 cursor-pointer shrink-0 ${
               selectedCategory === cat.id
                 ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
                 : 'bg-neutral-100 hover:bg-neutral-200/80 dark:bg-[#1a1a1e] dark:hover:bg-[#25252a] text-neutral-700 dark:text-neutral-300'
@@ -426,10 +356,10 @@ export const PracticeQuestionsArena: React.FC = () => {
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
-            placeholder="Search problems by name or concept (e.g., debounce, primes, tensor, lru)..."
+            placeholder="Search problems by name or concept (e.g., primes, fibonacci, palindrome, dataframe)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-9 py-2.5 rounded-xl text-xs sm:text-[13px] bg-neutral-50 dark:bg-[#222226] border border-neutral-200 dark:border-neutral-700/80 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            className="w-full pl-10 pr-9 py-2.5 rounded-xl text-xs sm:text-[13px] bg-neutral-50 dark:bg-[#222226] border border-neutral-200 dark:border-neutral-700/80 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-[#D4704B]/20 focus:border-[#D4704B] transition-all"
           />
           {searchQuery && (
             <button
@@ -443,7 +373,7 @@ export const PracticeQuestionsArena: React.FC = () => {
 
         <div className="flex items-center justify-between sm:justify-end gap-3">
           <div className="text-xs text-neutral-500 dark:text-neutral-400 font-medium hidden md:inline">
-            Showing <span className="font-bold font-mono text-neutral-900 dark:text-neutral-200">{combinedQuestions.length}</span> problems
+            Showing <span className="font-bold font-mono text-neutral-900 dark:text-neutral-200">{filteredQuestions.length}</span> problems
           </div>
 
           <div className="flex items-center gap-2">
@@ -454,7 +384,7 @@ export const PracticeQuestionsArena: React.FC = () => {
             <select
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="px-3 py-2 rounded-xl text-xs font-bold bg-neutral-50 dark:bg-[#222226] border border-neutral-200 dark:border-neutral-700/80 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 cursor-pointer transition-all"
+              className="px-3 py-2 rounded-xl text-xs font-bold bg-neutral-50 dark:bg-[#222226] border border-neutral-200 dark:border-neutral-700/80 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#D4704B]/20 cursor-pointer transition-all"
             >
               <option value="all">All Difficulties</option>
               <option value="easy">Easy</option>
@@ -466,7 +396,7 @@ export const PracticeQuestionsArena: React.FC = () => {
       </div>
 
       {/* Questions Grid */}
-      {loading ? (
+      {loading && filteredQuestions.length === 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4.5">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
@@ -486,7 +416,7 @@ export const PracticeQuestionsArena: React.FC = () => {
             </div>
           ))}
         </div>
-      ) : combinedQuestions.length === 0 ? (
+      ) : filteredQuestions.length === 0 ? (
         <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-xs">
           <Code2 className="w-10 h-10 text-neutral-400 mx-auto mb-3" />
           <h3 className="text-sm font-bold text-neutral-900 dark:text-white">No questions found</h3>
@@ -496,30 +426,29 @@ export const PracticeQuestionsArena: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4.5">
-          {combinedQuestions.map((question) => {
-            const isCurated = question.source === 'curated';
+          {filteredQuestions.map((question) => {
+            const sandboxUrl =
+              question.start_url ||
+              question.practice_url ||
+              `https://pycode-student.vercel.app/practice/${question.id}`;
 
             return (
               <div
                 key={question.id}
-                className="group p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xs hover:border-blue-500/50 dark:hover:border-blue-500/40 transition-colors flex flex-col justify-between space-y-4"
+                className="group p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xs hover:border-[#D4704B]/50 dark:hover:border-[#D4704B]/40 transition-colors flex flex-col justify-between space-y-4"
               >
                 <div className="space-y-3">
-                  {/* Header: Track Pill + Category + Difficulty + Points */}
+                  {/* Header: PyCode Logo + Category + Difficulty + Points */}
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 truncate max-w-[240px]">
-                      {isCurated ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 shrink-0">
-                          <Sparkles className="w-2.5 h-2.5 text-blue-500" />
-                          <span>RishabhLabs Lab</span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 shrink-0">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                          <span>PyCode Sandbox</span>
-                        </span>
-                      )}
-                      <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 truncate">
+                    <div className="flex items-center gap-1.5 truncate max-w-[260px]">
+                      <div className="w-4 h-4 rounded-full bg-[#D4704B] flex items-center justify-center text-white font-mono font-bold text-[8px] shrink-0">
+                        &gt;_
+                      </div>
+                      <span className="text-[11px] font-bold text-[#D4704B] uppercase tracking-wide shrink-0">
+                        PYCODE
+                      </span>
+                      <span className="text-neutral-300 dark:text-neutral-700 font-bold">·</span>
+                      <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 truncate">
                         {question.category_name || question.category}
                       </span>
                     </div>
@@ -547,14 +476,13 @@ export const PracticeQuestionsArena: React.FC = () => {
                       </span>
 
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-200/60 dark:border-neutral-700/60">
-                        <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                         {question.points} Pts
                       </span>
                     </div>
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-[15px] sm:text-base font-bold text-neutral-900 dark:text-neutral-50 leading-snug tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+                  <h3 className="text-[15px] sm:text-base font-bold text-neutral-900 dark:text-neutral-50 leading-snug tracking-tight group-hover:text-[#D4704B] dark:group-hover:text-[#E28866] transition-colors line-clamp-2">
                     {question.title}
                   </h3>
                 </div>
@@ -569,27 +497,16 @@ export const PracticeQuestionsArena: React.FC = () => {
                     <span>Review Problem</span>
                   </button>
 
-                  {isCurated && question.slug ? (
-                    <Link
-                      to={`/practice/problem/${question.slug}`}
-                      className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white flex items-center gap-2 shadow-xs transition-colors shrink-0"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-current" />
-                      <span>Start in IDE</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  ) : (
-                    <a
-                      href={question.start_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white flex items-center gap-2 shadow-xs transition-colors shrink-0"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-current" />
-                      <span>Start Sandbox</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  )}
+                  <a
+                    href={sandboxUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-[#D4704B] hover:bg-[#c2613d] active:bg-[#b05332] text-white flex items-center gap-2 shadow-xs transition-colors shrink-0 cursor-pointer"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    <span>Start in Sandbox</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
                 </div>
               </div>
             );

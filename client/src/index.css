@@ -114,3 +114,159 @@ a:hover,
   outline: none !important;
   outline-style: none !important;
 }
+
+/* ==========================================================================
+   PyCode Problem Review Modal Typography & Upstream Classes
+   ========================================================================== */
+
+.pycode-review-content {
+  color: #1c1c1f;
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+.dark .pycode-review-content {
+  color: #e4e4e7;
+}
+
+/* Upstream text color aliases */
+.pycode-review-content .text-ink {
+  color: #18181b !important;
+}
+.dark .pycode-review-content .text-ink {
+  color: #f4f4f5 !important;
+}
+
+.pycode-review-content .text-ink\/80 {
+  color: #52525b !important;
+}
+.dark .pycode-review-content .text-ink\/80 {
+  color: #a1a1aa !important;
+}
+
+.pycode-review-content .text-body {
+  color: #27272a !important;
+}
+.dark .pycode-review-content .text-body {
+  color: #d4d4d8 !important;
+}
+
+/* Signature PyCode Terracotta accent */
+.pycode-review-content .text-primary {
+  color: #D4704B !important;
+  font-weight: 700 !important;
+}
+.dark .pycode-review-content .text-primary {
+  color: #E28866 !important;
+}
+
+/* Upstream border classes */
+.pycode-review-content .border-hairline {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+.dark .pycode-review-content .border-hairline {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Upstream soft surfaces for schemas and code blocks */
+.pycode-review-content .bg-surface-soft {
+  background-color: #f4f4f6 !important;
+  border-color: #e4e4e7 !important;
+}
+.dark .pycode-review-content .bg-surface-soft {
+  background-color: #18181c !important;
+  border-color: #27272a !important;
+}
+
+/* Example Blocks - elevated with accent indicator & soft surface */
+.pycode-review-content .border-l-2,
+.pycode-review-content [class*="border-primary"] {
+  border-left-width: 3.5px !important;
+  border-left-color: #D4704B !important;
+  background-color: rgba(212, 112, 75, 0.05);
+  border-radius: 0 1rem 1rem 0;
+  padding: 0.875rem 1.125rem !important;
+  margin-top: 0.625rem !important;
+  margin-bottom: 1.125rem !important;
+}
+.dark .pycode-review-content .border-l-2,
+.dark .pycode-review-content [class*="border-primary"] {
+  background-color: rgba(212, 112, 75, 0.08);
+  border-left-color: #E28866 !important;
+}
+
+/* Inline code tags inside problem descriptions */
+.pycode-review-content code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.375rem;
+  background-color: #f3f4f6;
+  color: #c25934;
+  border: 1px solid #e5e7eb;
+}
+.dark .pycode-review-content code {
+  background-color: #27272a;
+  color: #f59e0b;
+  border-color: #3f3f46;
+}
+
+/* Preformatted code/output blocks */
+.pycode-review-content pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.875rem;
+  background-color: #0f0f11 !important;
+  color: #34d399 !important;
+  border: 1px solid #27272a !important;
+  overflow-x: auto;
+  line-height: 1.5;
+  margin: 0.75rem 0;
+}
+.dark .pycode-review-content pre {
+  background-color: #0c0c0e !important;
+  color: #34d399 !important;
+  border-color: #1f1f23 !important;
+}
+.pycode-review-content pre code {
+  background-color: transparent !important;
+  color: inherit !important;
+  border: none !important;
+  padding: 0 !important;
+  font-weight: 400 !important;
+}
+
+/* Headings inside problem review */
+.pycode-review-content h3,
+.pycode-review-content h4 {
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #52525b;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.dark .pycode-review-content h3,
+.dark .pycode-review-content h4 {
+  color: #a1a1aa;
+}
+
+/* Paragraphs & lists inside review */
+.pycode-review-content p {
+  margin-bottom: 0.875rem;
+}
+.pycode-review-content ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.875rem;
+}
+.pycode-review-content ul li {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
