@@ -274,6 +274,11 @@ export const api = {
     return res;
   },
   getMe: () => request<any>('/auth/me'),
+  getSessionToken: (data: { token?: string; userId?: string; email?: string; role?: string }) =>
+    request<{ success: boolean; token: string; expiresIn: string }>('/auth/session-token', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
   // Onboarding
   completeOnboarding: async (data: any) => {

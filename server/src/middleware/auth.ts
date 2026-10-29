@@ -8,7 +8,7 @@ export interface AuthRequest extends Request {
   user?: IUser;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'rishabhlabs_super_secure_jwt_secret_2026';
+export const JWT_SECRET = process.env.JWT_SECRET || 'rishabhlabs_super_secure_jwt_secret_2026';
 
 export const generateToken = (userId: string, role: string, email?: string) => {
   return jwt.sign({ id: userId, role, email: email ? email.toLowerCase() : undefined }, JWT_SECRET, { expiresIn: '30d' });

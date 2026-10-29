@@ -48,16 +48,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isSupabaseConfigured) return;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT' || (!session && event !== 'INITIAL_SESSION')) {
+      // Only clear credentials on explicit user-initiated sign out
+      if (event === 'SIGNED_OUT') {
         localStorage.removeItem('rishabhlabs_token');
         setUser(null);
         return;
       }
 
       if (session?.user) {
-        // ALWAYS store access_token first so synchronous queries immediately have authorization
-        if (session.access_token) {
-          localStorage.setItem('rishabhlabs_token', session.access_token);
+        // Exchange or upgrade to a 30-day persistent session token
+        try {
+          const tokenRes = await api.getSessionToken({
+            token: session.access_token,
+            userId: session.user.id,
+            email: session.user.email,
+            role: (session.user.user_metadata?.role as string) || 'student',
+          }).catch(() => null);
+          if (tokenRes?.token) {
+            localStorage.setItem('rishabhlabs_token', tokenRes.token);
+          } else if (session.access_token) {
+            localStorage.setItem('rishabhlabs_token', session.access_token);
+          }
+        } catch {
+          if (session.access_token && !localStorage.getItem('rishabhlabs_token')) {
+            localStorage.setItem('rishabhlabs_token', session.access_token);
+          }
         }
 
         // Fetch or create profile in Supabase profiles
@@ -229,6 +244,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               localStorage.setItem(userOnboardedKey, 'true');
             }
 
+            // Renew rolling 30-day session token if returned
+            if (data.token) {
+              localStorage.setItem('rishabhlabs_token', data.token);
+            }
+
             setUser({
               ...data,
               avatar: cleanAvatar,
@@ -240,10 +260,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(false);
             return;
           }
-        } catch {
-          // Token expired or invalid
-          localStorage.removeItem('rishabhlabs_token');
-          api.invalidateCache();
+        } catch (err: any) {
+          // Only clear token if explicitly unauthorized 401; do NOT clear on temporary network disconnect
+          if (err?.message?.includes('401') || err?.message?.includes('Unauthorized')) {
+            localStorage.removeItem('rishabhlabs_token');
+            api.invalidateCache();
+          } else {
+            console.warn('Network or server error during session verification, preserving saved token:', err);
+          }
         }
       }
 
@@ -265,8 +289,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           if (session?.user && session?.access_token) {
-            // ALWAYS store access token first
-            localStorage.setItem('rishabhlabs_token', session.access_token);
+            // Upgrade to 30-day persistent session token
+            try {
+              const tokenRes = await api.getSessionToken({
+                token: session.access_token,
+                userId: session.user.id,
+                email: session.user.email,
+                role: (session.user.user_metadata?.role as string) || 'student',
+              }).catch(() => null);
+              if (tokenRes?.token) {
+                localStorage.setItem('rishabhlabs_token', tokenRes.token);
+              } else {
+                localStorage.setItem('rishabhlabs_token', session.access_token);
+              }
+            } catch {
+              localStorage.setItem('rishabhlabs_token', session.access_token);
+            }
 
             let { data: profile } = await supabase
               .from('profiles')
@@ -364,8 +402,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setUser(null);
-    } catch (err) {
-      localStorage.removeItem('rishabhlabs_token');
+    } catch (err: any) {
+      if (err?.message?.includes('401') || err?.message?.includes('Unauthorized')) {
+        localStorage.removeItem('rishabhlabs_token');
+      } else {
+        console.warn('Transient error in fetchCurrentUser, preserving saved token:', err);
+      }
       setUser(null);
     } finally {
       setLoading(false);
@@ -405,7 +447,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           password: credentials.password,
         });
         if (!error && data.session?.access_token) {
-          localStorage.setItem('rishabhlabs_token', data.session.access_token);
+          try {
+            const tokenRes = await api.getSessionToken({
+              token: data.session.access_token,
+              userId: data.user?.id,
+              email: data.user?.email,
+              role: (data.user?.user_metadata?.role as string) || 'student',
+            }).catch(() => null);
+            if (tokenRes?.token) {
+              localStorage.setItem('rishabhlabs_token', tokenRes.token);
+            } else {
+              localStorage.setItem('rishabhlabs_token', data.session.access_token);
+            }
+          } catch {
+            localStorage.setItem('rishabhlabs_token', data.session.access_token);
+          }
           await fetchCurrentUser();
           supabaseLoggedIn = true;
           return;
@@ -466,7 +522,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             throw new Error('An account with this email already exists. Please sign in.');
           }
         } else if (data.session?.access_token) {
-          localStorage.setItem('rishabhlabs_token', data.session.access_token);
+          try {
+            const tokenRes = await api.getSessionToken({
+              token: data.session.access_token,
+              userId: data.user?.id,
+              email: data.user?.email,
+              role: (data.user?.user_metadata?.role as string) || 'student',
+            }).catch(() => null);
+            if (tokenRes?.token) {
+              localStorage.setItem('rishabhlabs_token', tokenRes.token);
+            } else {
+              localStorage.setItem('rishabhlabs_token', data.session.access_token);
+            }
+          } catch {
+            localStorage.setItem('rishabhlabs_token', data.session.access_token);
+          }
           await fetchCurrentUser();
           return;
         }
