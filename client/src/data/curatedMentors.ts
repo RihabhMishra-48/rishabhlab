@@ -2,7 +2,7 @@ import { Mentor } from "../types";
 
 export const CURATED_MENTORS: Mentor[] = [
   {
-    _id: "mentor-rishabh",
+    _id: "741d6010-d498-4b99-b0bd-4ee6300cf329",
     name: "Rishabh Mishra",
     title: "Founder & Full-Stack Lead",
     company: "RishabhLabs",
@@ -17,7 +17,7 @@ export const CURATED_MENTORS: Mentor[] = [
     domain: "Full-Stack Development"
   },
   {
-    _id: "mentor-arpit",
+    _id: "a49e08e3-9f4d-4215-9223-b7388128357c",
     name: "Arpit Pandey",
     title: "AI & Systems Specialist",
     company: "RishabhLabs",
@@ -32,7 +32,7 @@ export const CURATED_MENTORS: Mentor[] = [
     domain: "AI & Machine Learning"
   },
   {
-    _id: "mentor-harsh",
+    _id: "95bfd62b-cbe8-4bd1-b902-d8045666fa83",
     name: "Harsh Sharma",
     title: "Security & Systems Lead",
     company: "RishabhLabs",

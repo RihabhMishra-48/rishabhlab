@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../services/supabase';
@@ -267,14 +268,29 @@ export const MentorSessionsPage: React.FC = () => {
           Loading your consultation inquiries...
         </div>
       ) : filteredSessions.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#1c1c1c] border border-neutral-200 dark:border-neutral-800">
-          <Calendar className="w-10 h-10 text-neutral-400 mx-auto mb-3" />
-          <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">No inquiries found</h3>
-          <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
-            {statusFilter !== 'all'
-              ? `No consultation records matching "${statusFilter}". Try selecting another tab.`
-              : 'Learner inquiries and scheduled 1:1 sessions will appear here.'}
-          </p>
+        <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200 dark:border-neutral-800 shadow-2xs space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700/80 flex items-center justify-center mx-auto text-neutral-400">
+            <Calendar className="w-6 h-6" />
+          </div>
+          <div className="space-y-1.5 max-w-md mx-auto">
+            <h3 className="text-base font-bold text-neutral-900 dark:text-white">
+              No consultation inquiries yet
+            </h3>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+              {statusFilter !== 'all'
+                ? `No active consultation records matching "${statusFilter}". Try selecting another tab.`
+                : 'When students schedule 1:1 sessions through the Mentorship portal, their live consultation tickets and inquiry briefs will appear here in real time.'}
+            </p>
+          </div>
+          <div className="pt-2 flex items-center justify-center gap-3">
+            <Link
+              to="/mentorship"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold text-xs hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors"
+            >
+              <span>Explore Mentorship Hub</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
@@ -368,6 +384,41 @@ export const MentorSessionsPage: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Real Student Info Strip */}
+                {(session.studentName || session.studentEmail) && (
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-neutral-50/80 dark:bg-[#202024] border border-neutral-200/60 dark:border-neutral-800">
+                    <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center font-bold text-xs text-neutral-800 dark:text-neutral-200 shrink-0 overflow-hidden ring-1 ring-neutral-300 dark:ring-neutral-700">
+                      {session.studentAvatar ? (
+                        <img src={session.studentAvatar} alt={session.studentName} className="w-full h-full object-cover" />
+                      ) : (
+                        (session.studentName?.[0] || 'S').toUpperCase()
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-neutral-900 dark:text-white">
+                          {session.studentName || 'Verified Learner'}
+                        </span>
+                        {session.studentCollege && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 font-medium">
+                            {session.studentCollege}
+                          </span>
+                        )}
+                        {session.studentTrack && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold">
+                            {session.studentTrack}
+                          </span>
+                        )}
+                      </div>
+                      {session.studentEmail && (
+                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">
+                          {session.studentEmail}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Technical Topic & Student Query Message */}
                 <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#222222] border border-neutral-200/70 dark:border-neutral-800 text-xs space-y-2">

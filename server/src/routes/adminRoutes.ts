@@ -428,15 +428,12 @@ router.get('/colleges', async (req, res) => {
             _id: c.id,
             id: c.id,
             name: c.college_name,
-            code: c.short_code,
+            code: c.short_code || (c.college_name ? c.college_name.slice(0, 3).toUpperCase() : 'CAMPUS'),
             location: c.domain || 'India',
-            totalStudents: c.total_enrolled || 2450,
-            activeStudents: c.active_students || 120,
-            averageExecutionRate: c.average_execution_rate || 85,
-            placementRate: '92.0%',
+            totalStudents: c.total_enrolled || 0,
+            activeStudents: c.active_students || 0,
             status: 'Active Partner',
-            mouSigned: true,
-            departments: ['Computer Science', 'Information Technology', 'AI & DS'],
+            departments: Array.isArray(c.departments) ? c.departments : [],
           }));
         }
       } catch (e) {

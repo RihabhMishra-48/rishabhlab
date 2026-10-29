@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { pycodeService } from '../../services/pycodeService';
 import { pycodeCache } from '../../services/pycodeCache';
 import { PracticeQuestion, QuestionCategory } from '../../types/pycode';
+import { CustomDropdown } from '../common/CustomDropdown';
 import {
   Search,
   Filter,
@@ -381,16 +382,17 @@ export const PracticeQuestionsArena: React.FC = () => {
               <Filter className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Difficulty:</span>
             </span>
-            <select
+            <CustomDropdown
               value={selectedDifficulty}
-              onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="px-3 py-2 rounded-xl text-xs font-bold bg-neutral-50 dark:bg-[#222226] border border-neutral-200 dark:border-neutral-700/80 text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 cursor-pointer transition-all"
-            >
-              <option value="all">All Difficulties</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
+              onChange={(val) => setSelectedDifficulty(val)}
+              options={[
+                { value: 'all', label: 'All Difficulties' },
+                { value: 'easy', label: 'Easy' },
+                { value: 'medium', label: 'Medium' },
+                { value: 'hard', label: 'Hard' },
+              ]}
+              size="sm"
+            />
           </div>
         </div>
       </div>

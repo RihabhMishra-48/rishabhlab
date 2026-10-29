@@ -10,7 +10,7 @@
     "build": "npm --prefix server run build && npm --prefix client run build",
     "build:server": "npm --prefix server run build",
     "start": "npm --prefix server run start",
-    "free-ports": "npx --yes kill-port 5001 5173 5174",
+    "free-ports": "npx --yes kill-port 5005 5001 5173 5174",
     "create-admin": "npm --prefix server run create-admin --"
   },
   "devDependencies": {

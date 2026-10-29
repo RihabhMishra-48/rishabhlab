@@ -414,7 +414,10 @@ export const api = {
   },
 
   // College & Admin
-  getCollegeOverview: () => cachedGet<any>('/college/overview', 180000),
+  getCollegeOverview: (collegeIdentifier?: string) => {
+    const qs = collegeIdentifier ? `?identifier=${encodeURIComponent(collegeIdentifier)}` : '';
+    return request<any>(`/college/overview${qs}`);
+  },
   getAdminOverview: () => cachedGet<any>('/admin/overview', 120000),
   getPricingPlans: () => cachedGet<any>('/admin/pricing', 300000),
   updatePricingPlan: async (key: string, data: any) => {

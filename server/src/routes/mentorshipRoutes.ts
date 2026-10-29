@@ -105,6 +105,35 @@ router.post('/request', requireAuth, async (req: AuthRequest, res) => {
     const user = req.user!;
     const { mentorId, topic, contextType, message, preferredSlot } = req.body;
 
+    let targetDate = new Date();
+    if (preferredSlot && typeof preferredSlot === 'string') {
+      const lower = preferredSlot.toLowerCase();
+      if (lower.includes('tomorrow')) {
+        targetDate.setDate(targetDate.getDate() + 1);
+      } else if (lower.includes('saturday')) {
+        const day = targetDate.getDay();
+        const diff = (6 - day + 7) % 7 || 7;
+        targetDate.setDate(targetDate.getDate() + diff);
+      } else if (lower.includes('sunday')) {
+        const day = targetDate.getDay();
+        const diff = (7 - day) % 7 || 7;
+        targetDate.setDate(targetDate.getDate() + diff);
+      } else {
+        targetDate.setDate(targetDate.getDate() + 1);
+      }
+      if (lower.includes('11:00 am')) {
+        targetDate.setHours(11, 0, 0, 0);
+      } else if (lower.includes('4:00 pm')) {
+        targetDate.setHours(16, 0, 0, 0);
+      } else if (lower.includes('6:00 pm')) {
+        targetDate.setHours(18, 0, 0, 0);
+      } else if (lower.includes('8:00 pm')) {
+        targetDate.setHours(20, 0, 0, 0);
+      }
+    } else {
+      targetDate.setDate(targetDate.getDate() + 1);
+    }
+
     let newRequestId = 'req-' + Date.now();
     let newRequest: any = {
       _id: newRequestId,
@@ -112,21 +141,21 @@ router.post('/request', requireAuth, async (req: AuthRequest, res) => {
       mentorId: mentorId || null,
       topic: topic || 'Roadmap & Career Strategy',
       contextType: contextType || 'general',
-      message: message || 'Seeking guidance on technical roadmap and architecture.',
-      preferredSlot: preferredSlot || 'Tomorrow, 6:00 PM IST',
-      status: 'confirmed',
-      meetingLink: 'https://meet.google.com/rl-mentor-call',
-      notesFromMentor: 'Session confirmed! Please have your questions ready.',
+      message: message || '',
+      preferredSlot: preferredSlot || targetDate.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' }),
+      status: 'pending',
+      meetingLink: '',
+      notesFromMentor: '',
       createdAt: new Date(),
     };
 
     if (isSupabaseConfigured() && supabase) {
       try {
-        // Resolve student UUID
-        let validStudentId: string = user._id ? user._id.toString() : '';
+        // Resolve real student UUID from logged-in user profile
+        let validStudentId: string = (user as any).id || (user as any)._id?.toString() || '';
         const isStudentUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(validStudentId);
         if (!isStudentUUID && user.email) {
-          const { data: p } = await supabase.from('profiles').select('id').eq('email', user.email.toLowerCase()).single();
+          const { data: p } = await supabase.from('profiles').select('id').eq('email', user.email.toLowerCase()).maybeSingle();
           if (p?.id) validStudentId = p.id;
         }
 
@@ -134,7 +163,8 @@ router.post('/request', requireAuth, async (req: AuthRequest, res) => {
         let validMentorId = mentorId;
         const isMentorUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(validMentorId);
         if (!isMentorUUID && mentorId) {
-          const { data: m } = await supabase.from('mentors').select('id').or(`name.ilike.%${mentorId}%,id.eq.${mentorId}`).limit(1).single();
+          const searchKey = String(mentorId).replace('mentor-', '');
+          const { data: m } = await supabase.from('mentors').select('id').or(`name.ilike.%${searchKey}%,id.eq.${mentorId}`).limit(1).maybeSingle();
           if (m?.id) validMentorId = m.id;
         }
 
@@ -142,11 +172,11 @@ router.post('/request', requireAuth, async (req: AuthRequest, res) => {
           mentor_id: validMentorId || null,
           student_id: validStudentId || null,
           topic: newRequest.topic,
-          requested_date: new Date(Date.now() + 86400000).toISOString(),
+          requested_date: targetDate.toISOString(),
           student_note: newRequest.message,
-          status: 'confirmed',
-          meeting_link: newRequest.meetingLink,
-          notes_from_mentor: newRequest.notesFromMentor,
+          status: 'pending',
+          meeting_link: '',
+          notes_from_mentor: '',
         }).select().single();
 
         if (inserted && !insErr) {
@@ -170,9 +200,9 @@ router.post('/request', requireAuth, async (req: AuthRequest, res) => {
             contextType: newRequest.contextType,
             message: newRequest.message,
             preferredSlot: newRequest.preferredSlot,
-            status: 'confirmed',
-            meetingLink: newRequest.meetingLink,
-            notesFromMentor: newRequest.notesFromMentor,
+            status: 'pending',
+            meetingLink: '',
+            notesFromMentor: '',
           });
           if (mongoReq && !newRequest.id.includes('-')) {
             newRequest._id = mongoReq._id.toString();
@@ -186,7 +216,7 @@ router.post('/request', requireAuth, async (req: AuthRequest, res) => {
 
     res.status(201).json({
       success: true,
-      message: '1:1 Mentorship session confirmed! Check your workspace below.',
+      message: '1:1 Mentorship request booked successfully! Your mentor will confirm your slot.',
       request: newRequest,
     });
   } catch (err: any) {
@@ -202,10 +232,10 @@ router.get('/my-requests', requireAuth, async (req: AuthRequest, res) => {
     const user = req.user!;
     if (isSupabaseConfigured() && supabase) {
       try {
-        let studentId: string = user._id ? user._id.toString() : '';
+        let studentId: string = (user as any).id || (user as any)._id?.toString() || '';
         const isStudentUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(studentId);
         if (!isStudentUUID && user.email) {
-          const { data: p } = await supabase.from('profiles').select('id').eq('email', user.email.toLowerCase()).single();
+          const { data: p } = await supabase.from('profiles').select('id').eq('email', user.email.toLowerCase()).maybeSingle();
           if (p?.id) studentId = p.id;
         }
 
@@ -223,10 +253,12 @@ router.get('/my-requests', requireAuth, async (req: AuthRequest, res) => {
             _id: r.id,
             id: r.id,
             topic: r.topic,
-            preferredSlot: r.requested_date,
+            preferredSlot: r.requested_date
+              ? new Date(r.requested_date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' })
+              : 'Flexible Timing',
             status: r.status,
-            meetingLink: r.meeting_link,
-            notesFromMentor: r.notes_from_mentor,
+            meetingLink: r.meeting_link || '',
+            notesFromMentor: r.notes_from_mentor || '',
             mentorId: mentorMap.get(r.mentor_id) || { name: 'Senior Mentor' },
             createdAt: r.created_at,
           })));
@@ -257,8 +289,8 @@ router.get('/mentor/sessions', requireAuth, async (req: AuthRequest, res) => {
 
     if (isSupabaseConfigured() && supabase) {
       try {
-        const { data: mentorsList } = await supabase.from('mentors').select('id, name');
-        const mentorMap = new Map((mentorsList || []).map((m: any) => [m.id, m.name]));
+        const { data: mentorsList } = await supabase.from('mentors').select('id, name, title, company, avatar');
+        const mentorMap = new Map((mentorsList || []).map((m: any) => [m.id, m]));
 
         let query = supabase.from('mentorship_requests').select('*').order('created_at', { ascending: false });
 
@@ -275,51 +307,56 @@ router.get('/mentor/sessions', requireAuth, async (req: AuthRequest, res) => {
 
         const { data: sbRequests, error: sbErr } = await query;
         if (!sbErr && sbRequests && sbRequests.length > 0) {
-          sessionsList = sbRequests.map((req: any) => ({
-            _id: req.id,
-            id: req.id,
-            bookingCode: `BK-${req.id.slice(0, 6).toUpperCase()}`,
-            topic: req.topic || 'General Technical Architecture',
-            preferredSlot: req.requested_date
-              ? new Date(req.requested_date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
-              : (req.preferred_slot || 'Today, 7:30 PM IST'),
-            requestedDate: req.requested_date,
-            message: req.student_note || req.message || 'Seeking mentorship review & guidance.',
-            status: req.status || 'pending',
-            meetingLink: req.meeting_link || 'https://meet.google.com/rsh-mentor-call',
-            notesFromMentor: req.notes_from_mentor || '',
-            createdAt: req.created_at,
-            mentorName: mentorMap.get(req.mentor_id) || 'Senior Mentor',
-            mentorId: req.mentor_id,
-          }));
+          // Query real student profiles
+          const studentIds = Array.from(new Set(sbRequests.map((r: any) => r.student_id).filter(Boolean)));
+          const profileMap = new Map();
+          if (studentIds.length > 0) {
+            const { data: profiles } = await supabase
+              .from('profiles')
+              .select('id, email, full_name, avatar_url, college_name, target_goal, field_of_interest')
+              .in('id', studentIds);
+            (profiles || []).forEach((p: any) => profileMap.set(p.id, p));
+          }
+
+          // STRICT REAL DATA: Only return genuine student bookings
+          sessionsList = sbRequests
+            .filter((req: any) => req.student_id)
+            .map((req: any) => {
+              const student = req.student_id ? profileMap.get(req.student_id) : null;
+              const mentor = mentorMap.get(req.mentor_id);
+              return {
+                _id: req.id,
+                id: req.id,
+                bookingCode: `BK-${req.id.slice(0, 6).toUpperCase()}`,
+                topic: req.topic || 'General Technical Architecture',
+                preferredSlot: req.requested_date
+                  ? new Date(req.requested_date).toLocaleString('en-IN', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                      timeZone: 'Asia/Kolkata',
+                    })
+                  : 'Flexible Slot',
+                requestedDate: req.requested_date,
+                message: req.student_note || '',
+                status: req.status || 'pending',
+                meetingLink: req.meeting_link || '',
+                notesFromMentor: req.notes_from_mentor || '',
+                createdAt: req.created_at,
+                mentorName: mentor?.name || 'Assigned Mentor',
+                mentorAvatar: mentor?.avatar || '',
+                mentorTitle: mentor?.title || '',
+                mentorId: req.mentor_id,
+                studentId: req.student_id,
+                studentName: student?.full_name || student?.email?.split('@')[0] || 'Verified Learner',
+                studentEmail: student?.email || '',
+                studentAvatar: student?.avatar_url || '',
+                studentCollege: student?.college_name || '',
+                studentTrack: student?.target_goal || student?.field_of_interest || '',
+              };
+            });
         }
       } catch (e) {
         console.warn('Supabase mentor sessions error:', e);
-      }
-    }
-
-    // Fallback to MongoDB if Supabase returned no rows and Mongo is connected
-    if (sessionsList.length === 0 && mongoose.connection.readyState === 1) {
-      try {
-        const mSessions = await MentorshipRequest.find({}).populate('mentorId', 'name').sort({ createdAt: -1 });
-        if (mSessions && mSessions.length > 0) {
-          sessionsList = mSessions.map((s: any) => ({
-            _id: s._id.toString(),
-            id: s._id.toString(),
-            bookingCode: `BK-${s._id.toString().slice(-6).toUpperCase()}`,
-            topic: s.topic,
-            preferredSlot: s.preferredSlot,
-            message: s.message,
-            status: s.status,
-            meetingLink: s.meetingLink || 'https://meet.google.com/rsh-mentor-call',
-            notesFromMentor: s.notesFromMentor || '',
-            createdAt: s.createdAt,
-            mentorName: s.mentorId?.name || 'Senior Mentor',
-            mentorId: s.mentorId?._id?.toString(),
-          }));
-        }
-      } catch (mErr) {
-        console.warn('Mongo find sessions warning:', mErr);
       }
     }
 
@@ -350,7 +387,7 @@ router.put('/sessions/:id', requireAuth, async (req: AuthRequest, res) => {
       _id: id,
       id,
       status: status || 'confirmed',
-      meetingLink: meetingLink || 'https://meet.google.com/rsh-mentor-call',
+      meetingLink: meetingLink || '',
       notesFromMentor: notesFromMentor || '',
     };
 

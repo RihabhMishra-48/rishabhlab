@@ -5,6 +5,7 @@ import {
 import { api, hasAuthToken } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { UserAvatar } from '../../components/common/UserAvatar';
+import { CustomDropdown } from '../../components/common/CustomDropdown';
 import {
   User as UserIcon,
   Compass,
@@ -857,36 +858,40 @@ export const ProfilePage: React.FC = () => {
                   <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500">
                     Year of Study
                   </label>
-                  <select
+                  <CustomDropdown
                     value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
-                  >
-                    <option value="">Not Specified / Optional</option>
-                    <option value="1st Year">1st Year</option>
-                    <option value="2nd Year">2nd Year</option>
-                    <option value="3rd Year">3rd Year</option>
-                    <option value="4th Year">4th Year</option>
-                    <option value="Post-Graduate">Post-Graduate</option>
-                    <option value="Self-Taught / Working Professional">Self-Taught / Working Professional</option>
-                  </select>
+                    onChange={(val) => setFormData({ ...formData, year: val })}
+                    options={[
+                      { value: '', label: 'Not Specified / Optional' },
+                      { value: '1st Year', label: '1st Year' },
+                      { value: '2nd Year', label: '2nd Year' },
+                      { value: '3rd Year', label: '3rd Year' },
+                      { value: '4th Year', label: '4th Year' },
+                      { value: 'Post-Graduate', label: 'Post-Graduate' },
+                      { value: 'Self-Taught / Working Professional', label: 'Self-Taught / Working Professional' },
+                    ]}
+                    className="w-full"
+                    size="lg"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500">
                     Active Learning Track
                   </label>
-                  <select
+                  <CustomDropdown
                     value={formData.targetGoal}
-                    onChange={(e) => setFormData({ ...formData, targetGoal: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
-                  >
-                    <option value="Web Development">Web Development</option>
-                    <option value="AI / ML">AI / ML</option>
-                    <option value="App Development">App Development</option>
-                    <option value="Cybersecurity">Cybersecurity</option>
-                    <option value="Data / Analytics">Data / Analytics</option>
-                  </select>
+                    onChange={(val) => setFormData({ ...formData, targetGoal: val })}
+                    options={[
+                      { value: 'Web Development', label: 'Web Development' },
+                      { value: 'AI / ML', label: 'AI / ML' },
+                      { value: 'App Development', label: 'App Development' },
+                      { value: 'Cybersecurity', label: 'Cybersecurity' },
+                      { value: 'Data / Analytics', label: 'Data / Analytics' },
+                    ]}
+                    className="w-full"
+                    size="lg"
+                  />
                 </div>
               </div>
 

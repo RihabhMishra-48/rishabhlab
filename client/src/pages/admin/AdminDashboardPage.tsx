@@ -4,7 +4,15 @@ import { api, hasAuthToken } from '../../services/api';
 import { supabase, isSupabaseConfigured } from '../../services/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { UserAvatar } from '../../components/common/UserAvatar';
+import { CustomDropdown, DropdownOption } from '../../components/common/CustomDropdown';
 import { PricingPlan } from '../../types';
+
+const ROLE_OPTIONS: DropdownOption[] = [
+  { value: 'student', label: 'Student (Standard Learner)' },
+  { value: 'mentor', label: 'Mentor (1:1 Office Hours & Reviews)' },
+  { value: 'college_admin', label: 'College Admin (Campus Portal)' },
+  { value: 'super_admin', label: 'Super Admin (Full Authority)' },
+];
 import {
   ShieldAlert,
   Users,
@@ -229,7 +237,29 @@ export const AdminDashboardPage: React.FC = () => {
         }
       }
 
-      const finalColleges = Array.isArray(collegesData) ? collegesData : [];
+      let finalColleges = Array.isArray(collegesData) && collegesData.length > 0 ? collegesData : [];
+
+      if (finalColleges.length === 0 && isSupabaseConfigured && supabase) {
+        const { data: sbColleges } = await supabase
+          .from('colleges')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (sbColleges && sbColleges.length > 0) {
+          finalColleges = sbColleges.map((c: any) => ({
+            _id: c.id,
+            id: c.id,
+            name: c.college_name || c.name,
+            code: c.short_code || c.code || (c.college_name ? c.college_name.slice(0, 3).toUpperCase() : 'CAMPUS'),
+            location: c.domain || c.location || 'India',
+            totalStudents: c.total_enrolled || c.totalStudents || 0,
+            activeStudents: c.active_students || c.activeStudents || 0,
+            status: 'Active Partner',
+            departments: Array.isArray(c.departments) ? c.departments : [],
+            placementRate: '92.0%',
+            mouSigned: true,
+          }));
+        }
+      }
 
       // Keep all live database user records (students, mentors, college admins, and admins)
       // Guarantee current admin user is present if not already in the list
@@ -247,8 +277,10 @@ export const AdminDashboardPage: React.FC = () => {
         });
       }
 
-      // Live mentors from database without mock poisoning or hardcoded name filters
-      finalMentors = Array.isArray(mentorsData) ? mentorsData : [];
+      // Preserve live mentors from Supabase if API returned empty
+      if (finalMentors.length === 0 && Array.isArray(mentorsData) && mentorsData.length > 0) {
+        finalMentors = mentorsData;
+      }
 
       setUsers(finalUsers);
       setMentors(finalMentors);
@@ -258,15 +290,15 @@ export const AdminDashboardPage: React.FC = () => {
       setMissions(finalMissions);
       setPricingPlans(finalPricing);
 
-      const calculatedOverview = overviewData || {
+      const calculatedOverview = {
         metrics: {
-          totalUsers: finalUsers.length,
-          mentors: finalMentors.length,
-          partnerColleges: finalColleges.length,
-          avgCompletionRate: '72%',
-          totalProblems: finalProblems.length,
-          totalRoadmaps: finalRoadmaps.length,
-          totalMissions: finalMissions.length,
+          totalUsers: overviewData?.metrics?.totalUsers || finalUsers.length,
+          mentors: overviewData?.metrics?.mentors || finalMentors.length,
+          partnerColleges: overviewData?.metrics?.partnerColleges || finalColleges.length,
+          avgCompletionRate: overviewData?.metrics?.avgCompletionRate || '72%',
+          totalProblems: overviewData?.metrics?.totalProblems || finalProblems.length,
+          totalRoadmaps: overviewData?.metrics?.totalRoadmaps || finalRoadmaps.length,
+          totalMissions: overviewData?.metrics?.totalMissions || finalMissions.length,
         },
         contentMetrics: {
           totalLessons: 4,
@@ -1222,18 +1254,14 @@ export const AdminDashboardPage: React.FC = () => {
 
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-2">
-                              <select
-                                value={u.role || 'student'}
-                                onChange={(e) => handleUpdateUserRole(uId, e.target.value)}
+                              <CustomDropdown
+                                value={u.role === 'admin' ? 'super_admin' : (u.role || 'student')}
+                                onChange={(newRole) => handleUpdateUserRole(uId, newRole)}
+                                options={ROLE_OPTIONS}
                                 disabled={isUpdating}
-                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-[#242424] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden disabled:opacity-50 cursor-pointer"
-                              >
-                                <option value="student">Student (Standard Learner)</option>
-                                <option value="mentor">Mentor (1:1 Office Hours & Reviews)</option>
-                                <option value="college_admin">College Admin (Campus Portal)</option>
-                                <option value="admin">Admin (Staff & Infrastructure)</option>
-                                <option value="super_admin">Super Admin (Full Authority)</option>
-                              </select>
+                                className="min-w-[210px]"
+                                size="sm"
+                              />
                               {isUpdating && (
                                 <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0" />
                               )}
@@ -1422,28 +1450,6 @@ export const AdminDashboardPage: React.FC = () => {
       {/* ==================================================================== */}
       {activeTab === 'colleges' && (
         <div className="space-y-5">
-          {/* Top Quick Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
-              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">Partner Colleges</span>
-              <span className="text-xl font-extrabold text-neutral-900 dark:text-white mt-1 block">{colleges.length} Campuses</span>
-            </div>
-            <div className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
-              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">Enrolled Students</span>
-              <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">
-                {colleges.reduce((acc, c) => acc + (Number(c.activeStudents) || 0), 0)}+ Active
-              </span>
-            </div>
-            <div className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
-              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">MOU Status</span>
-              <span className="text-xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1 block">100% Signed</span>
-            </div>
-            <div className="p-4 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
-              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">Avg Placement</span>
-              <span className="text-xl font-extrabold text-amber-600 dark:text-amber-400 mt-1 block">91.8%</span>
-            </div>
-          </div>
-
           {/* Colleges Header and Search */}
           <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
             <div className="relative flex-1 max-w-md">
@@ -1513,15 +1519,16 @@ export const AdminDashboardPage: React.FC = () => {
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800 text-xs">
+                      <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800 text-xs flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] text-neutral-400 block font-medium">Students Enrolled</span>
-                          <span className="font-bold text-neutral-800 dark:text-neutral-200">{college.activeStudents || 120}</span>
+                          <span className="text-[10px] text-neutral-400 block font-medium">Registered Students</span>
+                          <span className="font-bold text-neutral-800 dark:text-neutral-200">
+                            {users.filter(u => u.college && college.name && (u.college.toLowerCase() === college.name.toLowerCase() || u.college.toLowerCase().includes(college.code?.toLowerCase() || ''))).length}
+                          </span>
                         </div>
-                        <div>
-                          <span className="text-[10px] text-neutral-400 block font-medium">Placement Rate</span>
-                          <span className="font-bold text-emerald-600 dark:text-emerald-400">{college.placementRate || '92%'}</span>
-                        </div>
+                        <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10">
+                          Active Campus
+                        </span>
                       </div>
 
                       {college.departments && (
@@ -1549,7 +1556,7 @@ export const AdminDashboardPage: React.FC = () => {
 
                     <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center gap-2">
                       <a
-                        href="/college"
+                        href={`/college?id=${encodeURIComponent(college.id || college._id || '')}&name=${encodeURIComponent(college.name || '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 flex items-center justify-center gap-1.5"
@@ -1589,18 +1596,19 @@ export const AdminDashboardPage: React.FC = () => {
               />
             </div>
             <div className="flex items-center gap-2">
-              <select
+              <CustomDropdown
                 value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs font-medium focus:outline-none"
-              >
-                <option value="All">All Categories</option>
-                <option value="Web Development">Web Development</option>
-                <option value="AI & Machine Learning">AI & Machine Learning</option>
-                <option value="Cybersecurity">Cybersecurity</option>
-                <option value="Mobile App Development">Mobile App Development</option>
-                <option value="Data & Analytics">Data & Analytics</option>
-              </select>
+                onChange={(val) => setCategoryFilter(val)}
+                options={[
+                  { value: 'All', label: 'All Categories' },
+                  { value: 'Web Development', label: 'Web Development' },
+                  { value: 'AI & Machine Learning', label: 'AI & Machine Learning' },
+                  { value: 'Cybersecurity', label: 'Cybersecurity' },
+                  { value: 'Mobile App Development', label: 'Mobile App Development' },
+                  { value: 'Data & Analytics', label: 'Data & Analytics' },
+                ]}
+                size="sm"
+              />
               <div className="text-xs text-neutral-500 font-medium">
                 {problems.length} problems loaded
               </div>
@@ -2199,18 +2207,20 @@ export const AdminDashboardPage: React.FC = () => {
                   <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 block mb-1">
                     Domain Specialization
                   </label>
-                  <select
+                  <CustomDropdown
                     value={editingMentor.domain || 'Full-Stack Development'}
-                    onChange={(e) => setEditingMentor({ ...editingMentor, domain: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs"
-                  >
-                    <option value="Full-Stack Development">Full-Stack Development</option>
-                    <option value="AI & Machine Learning">AI & Machine Learning</option>
-                    <option value="Cybersecurity">Cybersecurity</option>
-                    <option value="Mobile App Development">Mobile App Development</option>
-                    <option value="Data & Analytics">Data & Analytics</option>
-                    <option value="Systems & DevOps">Systems & DevOps</option>
-                  </select>
+                    onChange={(val) => setEditingMentor({ ...editingMentor, domain: val })}
+                    options={[
+                      { value: 'Full-Stack Development', label: 'Full-Stack Development' },
+                      { value: 'AI & Machine Learning', label: 'AI & Machine Learning' },
+                      { value: 'Cybersecurity', label: 'Cybersecurity' },
+                      { value: 'Mobile App Development', label: 'Mobile App Development' },
+                      { value: 'Data & Analytics', label: 'Data & Analytics' },
+                      { value: 'Systems & DevOps', label: 'Systems & DevOps' },
+                    ]}
+                    className="w-full"
+                    size="sm"
+                  />
                 </div>
 
                 <div>
@@ -2384,15 +2394,17 @@ export const AdminDashboardPage: React.FC = () => {
                   <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 block mb-1">
                     Difficulty
                   </label>
-                  <select
+                  <CustomDropdown
                     value={editingProblem.difficulty || 'Easy'}
-                    onChange={(e) => setEditingProblem({ ...editingProblem, difficulty: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs"
-                  >
-                    <option value="Easy">Easy</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Hard">Hard</option>
-                  </select>
+                    onChange={(val) => setEditingProblem({ ...editingProblem, difficulty: val })}
+                    options={[
+                      { value: 'Easy', label: 'Easy' },
+                      { value: 'Medium', label: 'Medium' },
+                      { value: 'Hard', label: 'Hard' },
+                    ]}
+                    className="w-full"
+                    size="sm"
+                  />
                 </div>
 
                 <div className="sm:col-span-2">
@@ -2412,17 +2424,19 @@ export const AdminDashboardPage: React.FC = () => {
                   <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 block mb-1">
                     Track / Category
                   </label>
-                  <select
+                  <CustomDropdown
                     value={editingProblem.category || 'Web Development'}
-                    onChange={(e) => setEditingProblem({ ...editingProblem, category: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs"
-                  >
-                    <option value="Web Development">Web Development</option>
-                    <option value="AI & Machine Learning">AI & Machine Learning</option>
-                    <option value="Cybersecurity">Cybersecurity</option>
-                    <option value="Mobile App Development">Mobile App Development</option>
-                    <option value="Data & Analytics">Data & Analytics</option>
-                  </select>
+                    onChange={(val) => setEditingProblem({ ...editingProblem, category: val })}
+                    options={[
+                      { value: 'Web Development', label: 'Web Development' },
+                      { value: 'AI & Machine Learning', label: 'AI & Machine Learning' },
+                      { value: 'Cybersecurity', label: 'Cybersecurity' },
+                      { value: 'Mobile App Development', label: 'Mobile App Development' },
+                      { value: 'Data & Analytics', label: 'Data & Analytics' },
+                    ]}
+                    className="w-full"
+                    size="sm"
+                  />
                 </div>
               </div>
 
@@ -2671,19 +2685,21 @@ export const AdminDashboardPage: React.FC = () => {
 
                         <div>
                           <label className="text-[10px] font-bold text-neutral-500 block mb-0.5">Status</label>
-                          <select
+                          <CustomDropdown
                             value={node.status || 'locked'}
-                            onChange={(e) => {
+                            onChange={(val) => {
                               const updated = [...editingRoadmap.nodes];
-                              updated[idx].status = e.target.value;
+                              updated[idx].status = val;
                               setEditingRoadmap({ ...editingRoadmap, nodes: updated });
                             }}
-                            className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-xs"
-                          >
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="locked">Locked</option>
-                          </select>
+                            options={[
+                              { value: 'in_progress', label: 'In Progress' },
+                              { value: 'completed', label: 'Completed' },
+                              { value: 'locked', label: 'Locked' },
+                            ]}
+                            className="w-full"
+                            size="sm"
+                          />
                         </div>
 
                         <div className="sm:col-span-3">
@@ -2875,20 +2891,22 @@ export const AdminDashboardPage: React.FC = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                           <label className="text-[10px] font-bold text-neutral-500 block mb-0.5">Task Type</label>
-                          <select
+                          <CustomDropdown
                             value={t.type || 'learn'}
-                            onChange={(e) => {
+                            onChange={(val) => {
                               const updated = [...editingMission.tasks];
-                              updated[idx].type = e.target.value;
+                              updated[idx].type = val;
                               setEditingMission({ ...editingMission, tasks: updated });
                             }}
-                            className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-xs"
-                          >
-                            <option value="learn">Learn</option>
-                            <option value="practice">Practice</option>
-                            <option value="build">Build</option>
-                            <option value="ship">Ship</option>
-                          </select>
+                            options={[
+                              { value: 'learn', label: 'Learn' },
+                              { value: 'practice', label: 'Practice' },
+                              { value: 'build', label: 'Build' },
+                              { value: 'ship', label: 'Ship' },
+                            ]}
+                            className="w-full"
+                            size="sm"
+                          />
                         </div>
 
                         <div className="sm:col-span-2">
@@ -3050,16 +3068,12 @@ export const AdminDashboardPage: React.FC = () => {
 
               <div>
                 <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Platform Role</label>
-                <select
-                  value={newUser.role}
-                  onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#2a2a2a] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden font-medium"
-                >
-                  <option value="super_admin">Super Admin (Full Authority)</option>
-                  <option value="admin">Admin (Staff & Infrastructure)</option>
-                  <option value="mentor">Mentor (Consultations & Inquiries)</option>
-                  <option value="college_admin">College Admin (Campus Portal)</option>
-                </select>
+                <CustomDropdown
+                  value={newUser.role === 'admin' ? 'super_admin' : newUser.role}
+                  onChange={(newRole) => setNewUser({ ...newUser, role: newRole })}
+                  options={ROLE_OPTIONS}
+                  className="w-full"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
