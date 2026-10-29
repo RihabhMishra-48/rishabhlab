@@ -59,11 +59,11 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
   const [importNotice, setImportNotice] = useState(false);
   const [fileSearch, setFileSearch] = useState('');
 
-  // Use local override, or props workspace if non-empty, or fallback to STARTER_PYTHON_WORKSPACE
+  // Use local override (user explicitly imported starter), or props workspace if non-empty, otherwise null
   const effectiveWorkspace = useMemo(() => {
     if (localWorkspace) return localWorkspace;
-    if (workspace && workspace.files && workspace.files.length > 0) return workspace;
-    return STARTER_PYTHON_WORKSPACE;
+    if (workspace && Array.isArray(workspace.files) && workspace.files.length > 0) return workspace;
+    return null;
   }, [localWorkspace, workspace]);
 
   const files = effectiveWorkspace?.files || [];
@@ -246,8 +246,41 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
         </div>
       </div>
 
-      {/* 2-Column VS Code-Style Layout with Theme Gray Backgrounds */}
-      <div className="grid grid-cols-1 md:grid-cols-12 min-h-[460px]">
+      {/* Workspace Content: Empty State vs VS Code Explorer */}
+      {files.length === 0 ? (
+        <div className="p-10 sm:p-14 text-center flex flex-col items-center justify-center space-y-4 min-h-[380px]">
+          <div className="w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200/80 dark:border-neutral-700/80 flex items-center justify-center text-neutral-400">
+            <Terminal className="w-7 h-7 text-emerald-500/80" />
+          </div>
+          <div className="space-y-1.5 max-w-md">
+            <h4 className="text-sm font-bold text-neutral-900 dark:text-white">
+              No Saved Terminal Scripts Yet
+            </h4>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+              No Python scripts have been saved or synced from your PyCode terminal yet. Write and save scripts in the PyCode IDE, or import our starter algorithmic scripts to practice.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <button
+              onClick={handleImportStarter}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Import Starter Workspace (16 Scripts)</span>
+            </button>
+            <a
+              href="https://pycode-student.vercel.app/editor"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-bold transition-colors"
+            >
+              <span>Launch PyCode IDE</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-12 min-h-[460px]">
         {/* Left Column: File Explorer (md:col-span-4) */}
         <div className="md:col-span-4 border-r border-neutral-200 dark:border-neutral-800 p-3 bg-neutral-50/70 dark:bg-[#1a1a1a] space-y-2 overflow-y-auto max-h-[560px]">
           <div className="px-1 flex items-center justify-between text-[10px] uppercase font-bold tracking-wider text-neutral-400">
@@ -558,6 +591,7 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
           )}
         </div>
       </div>
+      )}
     </div>
   );
 };

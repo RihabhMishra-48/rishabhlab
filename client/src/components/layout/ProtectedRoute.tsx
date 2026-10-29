@@ -35,7 +35,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Signed in but haven't finished onboarding -> Force Onboarding first!
-  if (requireOnboarded && !user.isOnboarded && location.pathname !== '/onboarding') {
+  const isPrivileged = user.role === 'super_admin' || user.role === 'admin' || user.role === 'mentor' || user.role === 'college_admin';
+  if (requireOnboarded && !user.isOnboarded && !isPrivileged && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 
@@ -47,5 +48,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }
 
-  return children ? <>{children}</> : <Outlet />;
+  if (children) {
+    return <>{children}</>;
+  }
+
+  return <Outlet />;
 };
+
+export default ProtectedRoute;

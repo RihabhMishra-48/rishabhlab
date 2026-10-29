@@ -29,7 +29,7 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
     // 1. Try local JWT first (instant <0.1ms, zero network delay)
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string; email?: string };
-      let user = null;
+      let user: any = null;
       if (mongoose.connection.readyState === 1) {
         if (decoded.id && mongoose.Types.ObjectId.isValid(decoded.id)) {
           user = await User.findById(decoded.id);
@@ -38,18 +38,80 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
           user = await User.findOne({ email: decoded.email.toLowerCase() });
         }
       }
+
+      // Check Supabase profiles for cloud sync
+      let sbProfile: any = null;
+      let sbUser: any = null;
+      if (supabase && (decoded.email || decoded.id)) {
+        try {
+          const query = supabase.from('profiles').select('*');
+          const { data } = decoded.email
+            ? await query.eq('email', decoded.email.toLowerCase()).maybeSingle()
+            : await query.eq('id', decoded.id).maybeSingle();
+          sbProfile = data;
+          if (sbProfile?.id) {
+            const { data: uData } = await supabase.auth.admin.getUserById(sbProfile.id);
+            sbUser = uData?.user;
+          }
+        } catch {}
+      }
+
+      // Resolve effective role (giving precedence to super_admin or admin from any source)
+      let effectiveRole = decoded.role || 'student';
+      if (sbProfile?.role === 'super_admin' || user?.role === 'super_admin') {
+        effectiveRole = 'super_admin';
+      } else if (sbProfile?.role === 'admin' || user?.role === 'admin') {
+        effectiveRole = 'admin';
+      } else if (sbProfile?.role) {
+        effectiveRole = sbProfile.role;
+      } else if (user?.role) {
+        effectiveRole = user.role;
+      }
+
+      const isAdmin = effectiveRole === 'super_admin' || effectiveRole === 'admin';
+
+      // Resolve avatar
+      const metaAvatar = sbUser?.user_metadata?.avatar_url || sbUser?.user_metadata?.picture;
+      const isStockAvatar = (url?: string) => !url || url.includes('unsplash.com') || url.includes('rishabh.webp');
+      let effectiveAvatar = '';
+      if (sbProfile?.avatar_url && !isStockAvatar(sbProfile.avatar_url)) {
+        effectiveAvatar = sbProfile.avatar_url;
+      } else if (metaAvatar && !isStockAvatar(metaAvatar)) {
+        effectiveAvatar = metaAvatar;
+      } else if (user?.avatar && !isStockAvatar(user.avatar)) {
+        effectiveAvatar = user.avatar;
+      } else {
+        effectiveAvatar = sbProfile?.avatar_url || metaAvatar || user?.avatar || '';
+      }
+
+      const effectiveOnboarded = isAdmin || effectiveRole === 'mentor' || effectiveRole === 'college_admin'
+        ? true
+        : Boolean(sbProfile?.is_onboarded || user?.isOnboarded || (sbProfile?.target_goal && sbProfile.target_goal.trim() !== ''));
+
       if (user) {
+        user.role = effectiveRole;
+        if (effectiveAvatar) user.avatar = effectiveAvatar;
+        user.isOnboarded = effectiveOnboarded;
+        if (sbProfile?.college_name && !user.college) user.college = sbProfile.college_name;
         req.user = user;
         return next();
       }
-      if (decoded.id || decoded.email) {
+
+      if (sbProfile || decoded.id || decoded.email) {
         req.user = {
-          _id: decoded.id as any,
-          id: decoded.id,
-          name: decoded.email ? decoded.email.split('@')[0] : 'User',
-          email: decoded.email || '',
-          role: decoded.role || 'student',
-          isOnboarded: true,
+          _id: (sbProfile?.id || decoded.id) as any,
+          id: sbProfile?.id || decoded.id,
+          name: sbProfile?.full_name || sbUser?.user_metadata?.full_name || (decoded.email ? decoded.email.split('@')[0] : 'User'),
+          email: sbProfile?.email || decoded.email || '',
+          role: effectiveRole,
+          avatar: effectiveAvatar,
+          college: sbProfile?.college_name || '',
+          degree: sbProfile?.degree || '',
+          year: sbProfile?.year_of_study || '',
+          targetGoal: sbProfile?.target_goal || sbProfile?.field_of_interest || '',
+          fieldOfInterest: sbProfile?.field_of_interest || sbProfile?.target_goal || '',
+          verificationStatus: sbProfile?.verification_status || 'approved',
+          isOnboarded: effectiveOnboarded,
         } as any;
         return next();
       }
@@ -71,40 +133,70 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
             .eq('id', sbUser.id)
             .maybeSingle();
 
+          const effectiveRole = sbProfile?.role || sbUser.user_metadata?.role || 'student';
+          const isAdmin = effectiveRole === 'super_admin' || effectiveRole === 'admin';
+          const metaAvatar = sbUser.user_metadata?.avatar_url || sbUser.user_metadata?.picture;
+          const effectiveAvatar = sbProfile?.avatar_url || metaAvatar || '';
           const hasChosenGoal = Boolean(sbProfile?.target_goal && sbProfile.target_goal.trim() !== '' && sbProfile.target_goal !== 'Not Set');
-          let user = await User.findOne({ email: userEmail });
-          if (!user && userEmail) {
-            try {
-              user = await User.create({
-                name: sbProfile?.full_name || sbUser.user_metadata?.full_name || userEmail.split('@')[0],
-                email: userEmail,
-                password: 'supabase_oauth_managed',
-                role: sbProfile?.role || 'student',
-                college: sbProfile?.college_name || '',
-                streakDays: sbProfile?.streak_days || 0,
-                totalPoints: sbProfile?.total_points || 0,
-                skillsCompleted: sbProfile?.skills_completed || 0,
-                targetGoal: sbProfile?.target_goal || undefined,
-                isOnboarded: hasChosenGoal,
-              });
-            } catch {
-              // Handle race condition if concurrently created by another request
-              user = await User.findOne({ email: userEmail });
+          const effectiveOnboarded = isAdmin || effectiveRole === 'mentor' || effectiveRole === 'college_admin'
+            ? true
+            : Boolean(sbProfile?.is_onboarded || hasChosenGoal);
+
+          let user = null;
+          if (mongoose.connection.readyState === 1) {
+            user = await User.findOne({ email: userEmail });
+            if (!user && userEmail) {
+              try {
+                user = await User.create({
+                  name: sbProfile?.full_name || sbUser.user_metadata?.full_name || userEmail.split('@')[0],
+                  email: userEmail,
+                  password: 'supabase_oauth_managed',
+                  role: effectiveRole,
+                  college: sbProfile?.college_name || '',
+                  avatar: effectiveAvatar,
+                  streakDays: sbProfile?.streak_days || 0,
+                  totalPoints: sbProfile?.total_points || 0,
+                  skillsCompleted: sbProfile?.skills_completed || 0,
+                  targetGoal: sbProfile?.target_goal || undefined,
+                  isOnboarded: effectiveOnboarded,
+                });
+              } catch {
+                user = await User.findOne({ email: userEmail });
+              }
+            } else if (user) {
+              user.role = effectiveRole;
+              user.isOnboarded = effectiveOnboarded;
+              if (effectiveAvatar) user.avatar = effectiveAvatar;
+              if (sbProfile?.target_goal) (user as any).targetGoal = sbProfile.target_goal;
+              if (typeof sbProfile?.streak_days === 'number') user.streakDays = sbProfile.streak_days;
+              if (typeof sbProfile?.total_points === 'number') user.totalPoints = sbProfile.total_points;
+              if (sbProfile?.full_name) user.name = sbProfile.full_name;
+              await user.save();
             }
-          } else if (user && sbProfile) {
-            user.isOnboarded = hasChosenGoal;
-            (user as any).targetGoal = sbProfile.target_goal || '';
-            if (typeof sbProfile.streak_days === 'number') user.streakDays = sbProfile.streak_days;
-            if (typeof sbProfile.total_points === 'number') user.totalPoints = sbProfile.total_points;
-            if (sbProfile.full_name) user.name = sbProfile.full_name;
-            if (sbProfile.avatar_url) user.avatar = sbProfile.avatar_url;
-            await user.save();
           }
 
           if (user) {
             req.user = user;
             return next();
           }
+
+          // Supabase direct fallback if MongoDB is not connected
+          req.user = {
+            _id: sbUser.id as any,
+            id: sbUser.id,
+            name: sbProfile?.full_name || sbUser.user_metadata?.full_name || userEmail.split('@')[0],
+            email: userEmail,
+            role: effectiveRole,
+            avatar: effectiveAvatar,
+            college: sbProfile?.college_name || '',
+            degree: sbProfile?.degree || '',
+            year: sbProfile?.year_of_study || '',
+            targetGoal: sbProfile?.target_goal || sbProfile?.field_of_interest || '',
+            fieldOfInterest: sbProfile?.field_of_interest || sbProfile?.target_goal || '',
+            verificationStatus: sbProfile?.verification_status || 'approved',
+            isOnboarded: effectiveOnboarded,
+          } as any;
+          return next();
         }
       } catch (sbErr) {
         // Fall through to decoded token check
@@ -116,28 +208,26 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
       const decoded = jwt.decode(token) as any;
       if (decoded && decoded.email && (!decoded.exp || decoded.exp * 1000 > Date.now())) {
         const userEmail = String(decoded.email).toLowerCase().trim();
-        let user = await User.findOne({ email: userEmail });
-        if (!user && userEmail) {
-          try {
-            user = await User.create({
-              name: decoded.user_metadata?.full_name || userEmail.split('@')[0],
-              email: userEmail,
-              password: 'supabase_oauth_managed',
-              role: 'student',
-              college: '',
-              streakDays: 0,
-              totalPoints: 0,
-              skillsCompleted: 0,
-              isOnboarded: false,
-            });
-          } catch {
-            user = await User.findOne({ email: userEmail });
-          }
+        let user = null;
+        if (mongoose.connection.readyState === 1) {
+          user = await User.findOne({ email: userEmail });
         }
+        const role = decoded.role || decoded.user_metadata?.role || 'student';
+        const isAdmin = role === 'super_admin' || role === 'admin';
         if (user) {
           req.user = user;
           return next();
         }
+        req.user = {
+          _id: (decoded.sub || decoded.id) as any,
+          id: decoded.sub || decoded.id,
+          name: decoded.user_metadata?.full_name || userEmail.split('@')[0],
+          email: userEmail,
+          role,
+          avatar: decoded.user_metadata?.avatar_url || decoded.user_metadata?.picture || '',
+          isOnboarded: isAdmin ? true : false,
+        } as any;
+        return next();
       }
     } catch {}
 

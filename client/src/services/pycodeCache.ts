@@ -196,6 +196,21 @@ class PyCodeCache {
 
     if (!profile && !workspace) return null;
 
+    // Detect and purge legacy poisoned mock cache (auto-hydrated 16 starter files or generated bio)
+    if (workspace && Array.isArray(workspace.files)) {
+      const isMockWorkspace = workspace.files.some(
+        (f) => f.filename === 'BinarySearch.py' || f.name === 'BinarySearch.py' || f.name === 'Plotly.py'
+      );
+      if (isMockWorkspace && workspace.total_files === 16) {
+        this.clearUserCache(email);
+        return null;
+      }
+    }
+    if (profile && (profile.username?.startsWith('student_') || profile.bio?.includes('Active Python developer practicing'))) {
+      this.clearUserCache(email);
+      return null;
+    }
+
     const cachedAvatar = profile?.avatar_url || this.getAvatar(email) || null;
     const cachedName = profile?.full_name || this.getName(email) || '';
 
@@ -282,13 +297,23 @@ class PyCodeCache {
   clearUserCache(email: string): void {
     if (!email) return;
     const clean = email.toLowerCase().trim();
-    ['avatar', 'name', 'profile', 'workspace'].forEach((type) => {
-      const key = this.getStorageKey(type, clean);
-      this.memCache.delete(key);
-      try {
-        localStorage.removeItem(key);
-      } catch {}
-    });
+    // 1. Purge matching keys from memCache
+    for (const key of Array.from(this.memCache.keys())) {
+      if (key.includes(clean)) {
+        this.memCache.delete(key);
+      }
+    }
+    // 2. Purge all matching keys from localStorage
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('rishabhlabs_pycode_') || key.startsWith('rishabhlabs_workspace_')) && key.includes(clean)) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+    } catch {}
   }
 }
 

@@ -7,8 +7,6 @@ import {
 } from '../types/pycode';
 import { pycodeCache } from './pycodeCache';
 
-import { STARTER_PYTHON_WORKSPACE } from '../data/starterPythonWorkspace';
-
 // Secure server-side proxy route: API key is held privately on the backend and never revealed to the client
 const PROXY_BASE_URL = '/api/pycode';
 
@@ -39,8 +37,8 @@ class PyCodeService {
         success: false,
         not_found: true,
         error: 'Email is required',
-        user: {} as any,
-        workspace: STARTER_PYTHON_WORKSPACE,
+        user: null as any,
+        workspace: { total_files: 0, folders: [], files: [], file_tree: [] },
         heatmap: { daily_counts: {}, current_streak: 0, longest_streak: 0, solved_questions: [] },
         tests_and_assessments: { total_attempts: 0, past_attempts: [], available_codeathons: [] },
       };
@@ -57,118 +55,71 @@ class PyCodeService {
         const data = await proxyRes.json();
         if (data && data.success && data.user) {
           payload = data;
+        } else if (data && data.not_found) {
+          // Explicitly not registered on PyCode: Purge stale cache & return genuine empty status
+          pycodeCache.clearUserCache(cleanEmail);
+          return {
+            success: false,
+            not_found: true,
+            user: null as any,
+            workspace: { total_files: 0, folders: [], files: [], file_tree: [] },
+            heatmap: { daily_counts: {}, current_streak: 0, longest_streak: 0, solved_questions: [] },
+            tests_and_assessments: { total_attempts: 0, past_attempts: [], available_codeathons: [] },
+          };
         }
       }
     } catch (err) {
       console.warn('PyCode user data proxy note:', err);
     }
 
-    // If still not available or account doesn't exist on PyCode yet, provide seamless starter student profile & workspace
+    // If still not available or account doesn't exist on PyCode yet, return clean empty state
     if (!payload || !payload.success || !payload.user) {
-      const username = cleanEmail.split('@')[0];
-      const displayName = username.charAt(0).toUpperCase() + username.slice(1);
-      payload = {
-        success: true,
-        user: {
-          id: 'student_' + username,
-          email: cleanEmail,
-          username: username,
-          full_name: displayName,
-          avatar_url: null,
-          bio: 'Active Python developer practicing algorithms, patterns & live codeathons.',
-          created_at: new Date().toISOString(),
-          stats: {
-            questions_solved_count: 14,
-            total_submissions: 19,
-            tests_attempted_count: 2,
-            current_streak_days: 4,
-            longest_streak_days: 7,
-          },
-        },
-        workspace: STARTER_PYTHON_WORKSPACE,
-        heatmap: {
-          daily_counts: {},
-          current_streak: 4,
-          longest_streak: 7,
-          solved_questions: [],
-        },
-        tests_and_assessments: {
-          total_attempts: 2,
-          past_attempts: [],
-          available_codeathons: [],
-        },
+      pycodeCache.clearUserCache(cleanEmail);
+      return {
+        success: false,
+        not_found: true,
+        user: null as any,
+        workspace: { total_files: 0, folders: [], files: [], file_tree: [] },
+        heatmap: { daily_counts: {}, current_streak: 0, longest_streak: 0, solved_questions: [] },
+        tests_and_assessments: { total_attempts: 0, past_attempts: [], available_codeathons: [] },
       };
     }
 
-    // Auto-hydrate empty workspace files with genuine Starter Workspace
-    if (
-      !payload.workspace ||
-      payload.workspace.total_files === 0 ||
-      !payload.workspace.files ||
-      payload.workspace.files.length === 0
-    ) {
-      payload.workspace = STARTER_PYTHON_WORKSPACE;
+    // Ensure workspace object is clean and has genuine user files (do NOT inject fake starter workspace)
+    if (!payload.workspace) {
+      payload.workspace = { total_files: 0, folders: [], files: [], file_tree: [] };
     }
 
-    // Auto-hydrate heatmap if empty or 0 count
-    const dailyKeys = Object.keys(payload.heatmap?.daily_counts || {});
-    if (!payload.heatmap || dailyKeys.length === 0) {
-      const counts: Record<string, number> = {};
+    // Ensure heatmap object is valid without injecting fake streaks or dates
+    if (!payload.heatmap) {
+      payload.heatmap = { daily_counts: {}, current_streak: 0, longest_streak: 0, solved_questions: [] };
+    }
 
-      // 1. Aggregate from past test submissions
-      if (payload.tests_and_assessments?.past_attempts?.length) {
-        for (const attempt of payload.tests_and_assessments.past_attempts) {
-          const rawDate = attempt.completed_at || attempt.started_at;
-          if (rawDate) {
-            const dateStr = rawDate.slice(0, 10);
-            const solved = attempt.questions_answered || 1;
-            counts[dateStr] = (counts[dateStr] || 0) + solved;
-          }
+    // Aggregate genuine daily counts from past test attempts if available
+    if (
+      payload.tests_and_assessments?.past_attempts?.length &&
+      (!payload.heatmap.daily_counts || Object.keys(payload.heatmap.daily_counts).length === 0)
+    ) {
+      const counts: Record<string, number> = {};
+      for (const attempt of payload.tests_and_assessments.past_attempts) {
+        const rawDate = attempt.completed_at || attempt.started_at;
+        if (rawDate) {
+          const dateStr = rawDate.slice(0, 10);
+          const solved = attempt.questions_answered || 1;
+          counts[dateStr] = (counts[dateStr] || 0) + solved;
         }
       }
-
-      // 2. Add realistic starter coding streak days
-      const now = new Date();
-      const fmt = (offset: number) => {
-        const d = new Date(now);
-        d.setDate(d.getDate() - offset);
-        return d.toISOString().slice(0, 10);
-      };
-
-      counts[fmt(5)] = (counts[fmt(5)] || 0) + 2;
-      counts[fmt(4)] = (counts[fmt(4)] || 0) + 3;
-      counts[fmt(3)] = (counts[fmt(3)] || 0) + 4;
-      counts[fmt(2)] = (counts[fmt(2)] || 0) + 2;
-      counts[fmt(1)] = (counts[fmt(1)] || 0) + 3;
-      counts[fmt(0)] = (counts[fmt(0)] || 0) + 2;
-
-      const totalSolved = Object.values(counts).reduce((a, b) => a + b, 0);
-
-      payload.heatmap = {
-        daily_counts: counts,
-        current_streak: payload.heatmap?.current_streak || 4,
-        longest_streak: Math.max(payload.heatmap?.longest_streak || 0, 7),
-        solved_questions: payload.heatmap?.solved_questions || [],
-      };
-
-      if (payload.user?.stats) {
-        payload.user.stats.questions_solved_count = Math.max(
-          payload.user.stats.questions_solved_count || 0,
-          totalSolved
-        );
-        payload.user.stats.current_streak_days = payload.heatmap.current_streak;
-        payload.user.stats.longest_streak_days = payload.heatmap.longest_streak;
-      }
+      payload.heatmap.daily_counts = counts;
     }
 
-    // Cache static assets: Profile picture, Student Name, Workspace Files
+    // Cache static assets: Genuine Profile picture, Student Name, Workspace Files
     if (payload.user) {
       pycodeCache.setProfile(cleanEmail, payload.user);
       if (payload.user.avatar_url) {
         pycodeCache.setAvatar(cleanEmail, payload.user.avatar_url);
       }
     }
-    if (payload.workspace) {
+    if (payload.workspace && Array.isArray(payload.workspace.files) && payload.workspace.files.length > 0) {
       pycodeCache.setWorkspace(cleanEmail, payload.workspace);
     }
 

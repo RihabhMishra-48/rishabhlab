@@ -74,18 +74,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
 
           if (profile) {
+            const role = profile.role || 'student';
+            const isAdmin = role === 'super_admin' || role === 'admin';
             const goal = profile.field_of_interest || profile.target_goal || localGoal;
-            // Only genuinely onboarded if profile.is_onboarded is true OR localOnboarded is true
-            const isUserOnboarded = Boolean(profile.is_onboarded || localOnboarded);
+            // Admins, mentors, and college admins are never blocked by onboarding
+            const isUserOnboarded = isAdmin || role === 'mentor' || role === 'college_admin' ? true : Boolean(profile.is_onboarded || localOnboarded);
             const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture;
             const isStockAvatar = profile.avatar_url && (profile.avatar_url.includes('unsplash.com') || profile.avatar_url.includes('rishabh.webp'));
             const userAvatar = (profile.avatar_url && !isStockAvatar) ? profile.avatar_url : (metaAvatar || '');
+
+            // Auto-heal avatar_url and is_onboarded in profiles
+            if (metaAvatar && (!profile.avatar_url || isStockAvatar)) {
+              supabase.from('profiles').update({ avatar_url: metaAvatar }).eq('id', profile.id).then(() => {}, () => {});
+            }
+            if (isAdmin && !profile.is_onboarded) {
+              supabase.from('profiles').update({ is_onboarded: true }).eq('id', profile.id).then(() => {}, () => {});
+            }
 
             setUser({
               id: profile.id,
               name: profile.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
               email: profile.email || session.user.email || '',
-              role: profile.role || 'student',
+              role,
               college: profile.college_name || '',
               degree: profile.degree || '',
               year: profile.year_of_study || '',
@@ -94,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               githubUsername: profile.github_username || '',
               targetGoal: goal,
               fieldOfInterest: goal,
-              verificationStatus: profile.verification_status || (profile.role === 'mentor' ? 'pending' : 'approved'),
+              verificationStatus: profile.verification_status || (role === 'mentor' ? 'pending' : 'approved'),
               mentorOrganization: profile.mentor_organization,
               mentorExperienceYears: profile.mentor_experience_years,
               mentorLinkedin: profile.mentor_linkedin,
@@ -103,11 +113,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
           } else {
             const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '';
+            const userRole = session.user.user_metadata?.role || 'student';
+            const isAdmin = userRole === 'super_admin' || userRole === 'admin';
             setUser({
               id: session.user.id,
               name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
               email: session.user.email || '',
-              role: 'student',
+              role: userRole,
               college: '',
               degree: '',
               year: '',
@@ -117,11 +129,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               targetGoal: localGoal,
               fieldOfInterest: localGoal,
               verificationStatus: 'approved',
-              isOnboarded: localOnboarded,
+              isOnboarded: isAdmin ? true : localOnboarded,
             });
           }
 
-          // Auto-redirect to dashboard/onboarding if returning from OAuth or on landing/auth pages
+          // Auto-redirect to dashboard/admin/onboarding if returning from OAuth or on landing/auth pages
           const isOAuthCallback = window.location.hash.includes('access_token');
           const isAuthOrLandingPage = window.location.pathname === '/login' || window.location.pathname === '/register' || window.location.pathname === '/';
 
@@ -129,10 +141,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (window.location.hash) {
               window.history.replaceState(null, '', window.location.pathname);
             }
-            const isUserOnboarded = profile
-              ? Boolean(profile.is_onboarded || localOnboarded)
-              : localOnboarded;
-            const targetPath = isUserOnboarded ? '/dashboard' : '/onboarding';
+            const activeRole = profile?.role || session.user.user_metadata?.role || 'student';
+            const isAdmin = activeRole === 'super_admin' || activeRole === 'admin';
+            const isUserOnboarded = isAdmin || activeRole === 'mentor' || activeRole === 'college_admin'
+              ? true
+              : (profile ? Boolean(profile.is_onboarded || localOnboarded) : localOnboarded);
+            
+            let targetPath = isUserOnboarded ? '/dashboard' : '/onboarding';
+            if (isAdmin) {
+              targetPath = '/admin';
+            } else if (activeRole === 'mentor') {
+              targetPath = '/mentor/sessions';
+            } else if (activeRole === 'college_admin') {
+              targetPath = '/college';
+            }
+
             if (window.location.pathname !== targetPath) {
               window.location.href = targetPath;
             }
@@ -174,14 +197,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const localOnboarded = localStorage.getItem(userOnboardedKey) === 'true' || localStorage.getItem('rishabhlabs_onboarded') === 'true';
             const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
             const effectiveGoal = data.fieldOfInterest || data.targetGoal || localGoal;
-            const cleanAvatar = data.avatar && !data.avatar.includes('rishabh.webp') && !data.avatar.includes('unsplash.com') ? data.avatar : '';
+            let cleanAvatar = data.avatar && !data.avatar.includes('rishabh.webp') && !data.avatar.includes('unsplash.com') ? data.avatar : (data.avatar || '');
+
+            // Fallback avatar lookup in Supabase profiles if cleanAvatar is empty
+            if (!cleanAvatar && isSupabaseConfigured && data.email) {
+              try {
+                const { data: prof } = await supabase
+                  .from('profiles')
+                  .select('avatar_url')
+                  .eq('email', data.email.toLowerCase())
+                  .maybeSingle();
+                if (prof?.avatar_url && !prof.avatar_url.includes('rishabh.webp') && !prof.avatar_url.includes('unsplash.com')) {
+                  cleanAvatar = prof.avatar_url;
+                }
+              } catch {}
+            }
+
+            const isAdmin = data.role === 'super_admin' || data.role === 'admin';
+            const effectiveOnboarded = isAdmin || data.role === 'mentor' || data.role === 'college_admin'
+              ? true
+              : Boolean(data.isOnboarded || localOnboarded);
+
+            if (effectiveOnboarded) {
+              localStorage.setItem(userOnboardedKey, 'true');
+            }
+
             setUser({
               ...data,
               avatar: cleanAvatar,
               targetGoal: effectiveGoal,
               fieldOfInterest: effectiveGoal,
               verificationStatus: data.verificationStatus || (data.role === 'mentor' ? 'pending' : 'approved'),
-              isOnboarded: Boolean(data.isOnboarded || localOnboarded),
+              isOnboarded: effectiveOnboarded,
             });
             setLoading(false);
             return;
@@ -226,17 +273,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
 
             if (profile) {
+              const role = profile.role || 'student';
+              const isAdmin = role === 'super_admin' || role === 'admin';
               const goal = profile.field_of_interest || profile.target_goal || localGoal;
-              const isUserOnboarded = Boolean(profile.is_onboarded || localOnboarded);
+              const isUserOnboarded = isAdmin || role === 'mentor' || role === 'college_admin'
+                ? true
+                : Boolean(profile.is_onboarded || localOnboarded);
               const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture;
               const isStockAvatar = profile.avatar_url && (profile.avatar_url.includes('unsplash.com') || profile.avatar_url.includes('rishabh.webp'));
               const userAvatar = (profile.avatar_url && !isStockAvatar) ? profile.avatar_url : (metaAvatar || '');
+
+              if (isUserOnboarded) {
+                localStorage.setItem(userOnboardedKey, 'true');
+              }
 
               setUser({
                 id: profile.id,
                 name: profile.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
                 email: profile.email || session.user.email || '',
-                role: profile.role || 'student',
+                role,
                 college: profile.college_name || '',
                 degree: profile.degree || '',
                 year: profile.year_of_study || '',
@@ -245,7 +300,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 githubUsername: profile.github_username || '',
                 targetGoal: goal,
                 fieldOfInterest: goal,
-                verificationStatus: profile.verification_status || (profile.role === 'mentor' ? 'pending' : 'approved'),
+                verificationStatus: profile.verification_status || (role === 'mentor' ? 'pending' : 'approved'),
                 mentorOrganization: profile.mentor_organization,
                 mentorExperienceYears: profile.mentor_experience_years,
                 mentorLinkedin: profile.mentor_linkedin,
@@ -256,11 +311,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               return;
             } else {
               const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '';
+              const userRole = session.user.user_metadata?.role || 'student';
+              const isAdmin = userRole === 'super_admin' || userRole === 'admin';
               setUser({
                 id: session.user.id,
                 name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
                 email: session.user.email || '',
-                role: 'student',
+                role: userRole,
                 college: '',
                 degree: '',
                 year: '',
@@ -270,7 +327,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 targetGoal: localGoal,
                 fieldOfInterest: localGoal,
                 verificationStatus: 'approved',
-                isOnboarded: localOnboarded,
+                isOnboarded: isAdmin ? true : localOnboarded,
               });
               setLoading(false);
               return;
@@ -340,11 +397,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userGoalKey = `rishabhlabs_goal_${res.user.id}`;
       const localOnboarded = localStorage.getItem(userOnboardedKey) === 'true' || localStorage.getItem('rishabhlabs_onboarded') === 'true';
       const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
+      const isAdmin = res.user.role === 'super_admin' || res.user.role === 'admin';
+      const effectiveOnboarded = isAdmin || res.user.role === 'mentor' || res.user.role === 'college_admin'
+        ? true
+        : Boolean(res.user.isOnboarded || localOnboarded);
+      const cleanAvatar = res.user.avatar && !res.user.avatar.includes('rishabh.webp') && !res.user.avatar.includes('unsplash.com') ? res.user.avatar : (res.user.avatar || '');
+
+      if (effectiveOnboarded) {
+        localStorage.setItem(userOnboardedKey, 'true');
+        localStorage.setItem('rishabhlabs_onboarded', 'true');
+      }
+
       setUser({
         ...res.user,
+        avatar: cleanAvatar,
         targetGoal: res.user.targetGoal || localGoal,
-        isOnboarded: Boolean(res.user.isOnboarded || localOnboarded),
+        isOnboarded: effectiveOnboarded,
       });
+      await fetchCurrentUser();
     }
   };
 
@@ -396,10 +466,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const res = await api.verifyOtp(data);
     if (res.token) {
       localStorage.setItem('rishabhlabs_token', res.token);
-      localStorage.removeItem('rishabhlabs_onboarded');
-      localStorage.removeItem('rishabhlabs_goal');
+
+      // If backend provided a Supabase magiclink token hash, establish client-side Supabase session
+      if (res.supabaseTokenHash && isSupabaseConfigured) {
+        try {
+          await supabase.auth.verifyOtp({
+            token_hash: res.supabaseTokenHash,
+            type: 'magiclink',
+          });
+        } catch (sbErr) {
+          console.warn('Supabase session exchange note:', sbErr);
+        }
+      }
+
       api.invalidateCache();
-      setUser(res.user);
+
+      const userOnboardedKey = `rishabhlabs_onboarded_${res.user.id}`;
+      const userGoalKey = `rishabhlabs_goal_${res.user.id}`;
+      const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
+      const isAdmin = res.user.role === 'super_admin' || res.user.role === 'admin';
+      const effectiveOnboarded = isAdmin || res.user.role === 'mentor' || res.user.role === 'college_admin'
+        ? true
+        : Boolean(res.user.isOnboarded || localStorage.getItem(userOnboardedKey) === 'true' || localStorage.getItem('rishabhlabs_onboarded') === 'true');
+
+      if (effectiveOnboarded) {
+        localStorage.setItem(userOnboardedKey, 'true');
+        localStorage.setItem('rishabhlabs_onboarded', 'true');
+      }
+
+      const cleanAvatar = res.user.avatar && !res.user.avatar.includes('rishabh.webp') && !res.user.avatar.includes('unsplash.com') ? res.user.avatar : (res.user.avatar || '');
+
+      setUser({
+        ...res.user,
+        avatar: cleanAvatar,
+        targetGoal: res.user.targetGoal || localGoal,
+        isOnboarded: effectiveOnboarded,
+      });
+
+      await fetchCurrentUser();
     }
   };
 

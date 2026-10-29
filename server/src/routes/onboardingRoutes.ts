@@ -85,7 +85,9 @@ router.post('/complete', requireAuth, async (req: AuthRequest, res) => {
 
     // Update user record in local MongoDB
     if (name && name.trim()) user.name = name.trim();
-    user.role = chosenRole;
+    const isExistingPrivileged = user.role === 'super_admin' || user.role === 'admin';
+    const finalRole = isExistingPrivileged ? user.role : chosenRole;
+    user.role = finalRole;
     if (chosenRole === 'student') {
       user.college = college ? college.trim() : (user.college || '');
       user.degree = degree ? degree.trim() : (user.degree || '');
@@ -155,7 +157,7 @@ router.post('/complete', requireAuth, async (req: AuthRequest, res) => {
           .from('profiles')
           .update({
             full_name: user.name,
-            role: chosenRole,
+            role: finalRole,
             target_goal: selectedGoal,
             field_of_interest: selectedGoal,
             college_name: user.college,

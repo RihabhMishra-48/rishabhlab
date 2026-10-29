@@ -27,10 +27,20 @@ export const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, refreshUser, loading } = useAuth();
 
-  // If unauthenticated, redirect to login
+  // If unauthenticated, redirect to login; if privileged or already onboarded, redirect to appropriate workspace
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login', { replace: true });
+    if (!loading) {
+      if (!user) {
+        navigate('/login', { replace: true });
+      } else if (user.role === 'super_admin' || user.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (user.role === 'mentor') {
+        navigate('/mentor/sessions', { replace: true });
+      } else if (user.role === 'college_admin') {
+        navigate('/college', { replace: true });
+      } else if (user.isOnboarded) {
+        navigate('/dashboard', { replace: true });
+      }
     }
   }, [user, loading, navigate]);
 
@@ -228,12 +238,13 @@ export const OnboardingPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const userKey = user?.id || 'active';
+      const effectiveUserRole = (user?.role && user.role !== 'student') ? user.role : 'student';
       localStorage.setItem(`rishabhlabs_onboarded_${userKey}`, 'true');
       localStorage.setItem(`rishabhlabs_goal_${userKey}`, fieldOfInterest);
-      localStorage.setItem(`rishabhlabs_role_${userKey}`, 'student');
+      localStorage.setItem(`rishabhlabs_role_${userKey}`, effectiveUserRole);
       localStorage.setItem('rishabhlabs_onboarded', 'true');
       localStorage.setItem('rishabhlabs_goal', fieldOfInterest);
-      localStorage.setItem('rishabhlabs_role', 'student');
+      localStorage.setItem('rishabhlabs_role', effectiveUserRole);
       localStorage.setItem('rishabhlabs_onboarding_date', new Date().toISOString());
 
       // 1. Sync to Supabase directly if configured
@@ -242,7 +253,7 @@ export const OnboardingPage: React.FC = () => {
         if (isSupabaseConfigured && user?.id) {
           const profilePayload: any = {
             full_name: fullName.trim() || user?.name || 'Engineer',
-            role: 'student',
+            role: effectiveUserRole,
             target_goal: fieldOfInterest,
             field_of_interest: fieldOfInterest,
             college_name: college.trim() ? college.trim() : null,
@@ -265,7 +276,7 @@ export const OnboardingPage: React.FC = () => {
               .from('profiles')
               .update({
                 full_name: fullName.trim() || user?.name || 'Engineer',
-                role: 'student',
+                role: effectiveUserRole,
                 target_goal: fieldOfInterest,
                 college_name: college.trim() ? college.trim() : null,
                 degree: degree.trim() ? degree.trim() : null,

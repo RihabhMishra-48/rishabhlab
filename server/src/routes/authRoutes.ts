@@ -260,48 +260,135 @@ const handleVerifyOtp = async (req: any, res: any) => {
         },
       });
     } else if (type === 'login') {
-      // OTP Login successful
-      let userId: string = crypto.randomUUID();
-      let role = 'student';
-      let name = cleanEmail.split('@')[0];
-      let isOnboarded = false;
-      let college = '';
+      // OTP Login successful - prioritize Supabase cloud data with Mongo sync
+      let profile: any = null;
+      let sbUser: any = null;
+      let supabaseTokenHash: string | undefined;
 
+      if (isSupabaseConfigured() && supabase) {
+        try {
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', cleanEmail)
+            .maybeSingle();
+          profile = prof;
+
+          if (profile?.id) {
+            const { data: uData } = await supabase.auth.admin.getUserById(profile.id);
+            sbUser = uData?.user;
+          }
+
+          // Generate magiclink token hash so the client can automatically establish a Supabase session
+          const { data: linkData } = await supabase.auth.admin.generateLink({
+            type: 'magiclink',
+            email: cleanEmail,
+          });
+          if (linkData?.properties?.hashed_token) {
+            supabaseTokenHash = linkData.properties.hashed_token;
+          }
+        } catch (sbLookupErr: any) {
+          console.warn('Supabase lookup in OTP login notice:', sbLookupErr?.message || sbLookupErr);
+        }
+      }
+
+      let mongoUser: any = null;
       if (mongoose.connection.readyState === 1) {
-        const user = await User.findOne({ email: cleanEmail });
-        if (user) {
-          userId = user._id.toString();
-          role = user.role;
-          name = user.name;
-          isOnboarded = user.isOnboarded;
-          college = user.college || '';
+        mongoUser = await User.findOne({ email: cleanEmail });
+      }
+
+      // Resolve user ID
+      const userId = profile?.id || (mongoUser ? mongoUser._id.toString() : crypto.randomUUID());
+
+      // Resolve roles - respect admin / super_admin hierarchy
+      let role = 'student';
+      if (profile?.role === 'super_admin' || mongoUser?.role === 'super_admin') {
+        role = 'super_admin';
+      } else if (profile?.role === 'admin' || mongoUser?.role === 'admin') {
+        role = 'admin';
+      } else if (profile?.role === 'mentor' || mongoUser?.role === 'mentor') {
+        role = 'mentor';
+      } else if (profile?.role === 'college_admin' || mongoUser?.role === 'college_admin') {
+        role = 'college_admin';
+      } else {
+        role = profile?.role || mongoUser?.role || 'student';
+      }
+
+      const isAdmin = role === 'super_admin' || role === 'admin';
+
+      // Resolve name
+      const name = profile?.full_name || sbUser?.user_metadata?.full_name || mongoUser?.name || cleanEmail.split('@')[0];
+
+      // Resolve avatar: check profile.avatar_url, auth metadata picture/avatar_url, and mongoUser.avatar
+      const metaAvatar = sbUser?.user_metadata?.avatar_url || sbUser?.user_metadata?.picture;
+      const isStockAvatar = (url?: string) => !url || url.includes('unsplash.com') || url.includes('rishabh.webp');
+      let avatar = '';
+      if (profile?.avatar_url && !isStockAvatar(profile.avatar_url)) {
+        avatar = profile.avatar_url;
+      } else if (metaAvatar && !isStockAvatar(metaAvatar)) {
+        avatar = metaAvatar;
+      } else if (mongoUser?.avatar && !isStockAvatar(mongoUser.avatar)) {
+        avatar = mongoUser.avatar;
+      } else {
+        avatar = profile?.avatar_url || metaAvatar || mongoUser?.avatar || '';
+      }
+
+      const college = profile?.college_name || mongoUser?.college || '';
+      const degree = profile?.degree || mongoUser?.degree || '';
+      const year = profile?.year_of_study || mongoUser?.year || '';
+      const targetGoal = profile?.target_goal || profile?.field_of_interest || mongoUser?.targetGoal || '';
+      const fieldOfInterest = profile?.field_of_interest || profile?.target_goal || mongoUser?.fieldOfInterest || '';
+      const verificationStatus = profile?.verification_status || mongoUser?.verificationStatus || (role === 'mentor' ? 'pending' : 'approved');
+
+      // Admins and mentors are never forced to student onboarding!
+      const isOnboarded = isAdmin || role === 'mentor' || role === 'college_admin'
+        ? true
+        : Boolean(profile?.is_onboarded || mongoUser?.isOnboarded || (targetGoal && targetGoal.trim() !== ''));
+
+      // Auto-heal Supabase profiles if avatar or onboarded state can be updated
+      if (isSupabaseConfigured() && supabase && profile?.id) {
+        const updatesToProfile: any = {};
+        if (isAdmin && !profile.is_onboarded) {
+          updatesToProfile.is_onboarded = true;
         }
-      } else if (isSupabaseConfigured() && supabase) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('email', cleanEmail)
-          .maybeSingle();
-        if (profile) {
-          userId = profile.id;
-          role = profile.role || 'student';
-          name = profile.full_name || name;
-          isOnboarded = Boolean(profile.is_onboarded);
-          college = profile.college_name || '';
+        if (avatar && (!profile.avatar_url || isStockAvatar(profile.avatar_url))) {
+          updatesToProfile.avatar_url = avatar;
         }
+        if (role && role !== profile.role && isAdmin) {
+          updatesToProfile.role = role;
+        }
+        if (Object.keys(updatesToProfile).length > 0) {
+          supabase.from('profiles').update(updatesToProfile).eq('id', profile.id).then(() => {}, () => {});
+        }
+      }
+
+      // Auto-heal Mongo user if connected
+      if (mongoUser) {
+        mongoUser.role = role;
+        if (avatar) mongoUser.avatar = avatar;
+        mongoUser.isOnboarded = isOnboarded;
+        if (college) mongoUser.college = college;
+        mongoUser.save().catch(() => {});
       }
 
       const token = generateToken(userId, role, cleanEmail);
       return res.json({
         success: true,
         token,
+        supabaseTokenHash,
         user: {
           id: userId,
           name,
           email: cleanEmail,
           role,
           college,
+          degree,
+          year,
+          avatar,
           isOnboarded,
+          targetGoal,
+          fieldOfInterest,
+          verificationStatus,
           isEmailVerified: true,
         },
       });
@@ -511,26 +598,55 @@ router.post('/login', async (req, res) => {
         if (user.password === 'supabase_oauth_managed') {
           return res.status(400).json({
             code: 'GOOGLE_AUTH_REQUIRED',
-            message: 'This account was created with Google. Please click "Continue with Google" to sign in.',
+            message: 'This account was created with Google. Please click "Continue with Google" or use the "8-Digit Email OTP" tab to sign in.',
           });
         }
 
         if (user.password) {
           const match = await bcrypt.compare(password, user.password);
           if (match) {
-            const token = generateToken(user._id.toString(), user.role, user.email);
+            let role = user.role;
+            let avatar = user.avatar || '';
+            let isOnboarded = user.isOnboarded;
+
+            if (isSupabaseConfigured() && supabase) {
+              try {
+                const { data: prof } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('email', cleanEmail)
+                  .maybeSingle();
+                if (prof) {
+                  if (prof.role === 'super_admin' || prof.role === 'admin') {
+                    role = prof.role;
+                  }
+                  if (prof.avatar_url && !avatar) {
+                    avatar = prof.avatar_url;
+                  }
+                  if (prof.is_onboarded) {
+                    isOnboarded = true;
+                  }
+                }
+              } catch {}
+            }
+
+            if (role === 'super_admin' || role === 'admin') {
+              isOnboarded = true;
+            }
+
+            const token = generateToken(user._id.toString(), role, user.email);
             return res.json({
               token,
               user: {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                role: user.role,
+                role,
                 college: user.college,
                 degree: user.degree,
                 year: user.year,
-                avatar: user.avatar,
-                isOnboarded: user.isOnboarded,
+                avatar,
+                isOnboarded,
                 targetGoal: user.targetGoal,
                 fieldOfInterest: user.fieldOfInterest,
                 verificationStatus: user.verificationStatus,
@@ -555,19 +671,25 @@ router.post('/login', async (req, res) => {
           .eq('id', sbAuth.user.id)
           .maybeSingle();
 
-        const token = sbAuth.session?.access_token || generateToken(sbAuth.user.id, sbProfile?.role || 'student', cleanEmail);
+        const role = sbProfile?.role || 'student';
+        const isAdmin = role === 'super_admin' || role === 'admin';
+        const metaAvatar = sbAuth.user.user_metadata?.avatar_url || sbAuth.user.user_metadata?.picture;
+        const avatar = sbProfile?.avatar_url || metaAvatar || '';
+        const isOnboarded = isAdmin ? true : Boolean(sbProfile?.is_onboarded);
+
+        const token = sbAuth.session?.access_token || generateToken(sbAuth.user.id, role, cleanEmail);
         return res.json({
           token,
           user: {
             id: sbAuth.user.id,
             name: sbProfile?.full_name || sbAuth.user.user_metadata?.full_name || cleanEmail.split('@')[0],
             email: cleanEmail,
-            role: sbProfile?.role || 'student',
+            role,
             college: sbProfile?.college_name || '',
             degree: sbProfile?.degree || '',
             year: sbProfile?.year_of_study || '',
-            avatar: sbProfile?.avatar_url || '',
-            isOnboarded: Boolean(sbProfile?.is_onboarded),
+            avatar,
+            isOnboarded,
             targetGoal: sbProfile?.target_goal || sbProfile?.field_of_interest || 'Web Development',
             fieldOfInterest: sbProfile?.field_of_interest || sbProfile?.target_goal || 'Web Development',
             verificationStatus: sbProfile?.verification_status || 'approved',
