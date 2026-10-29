@@ -104,25 +104,25 @@ export const WeeklyReviewPage: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-4xl mx-auto">
       {/* Header matching Screen 10 */}
-      <div className="flex items-stretch gap-4 sm:gap-5">
-        <div className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center p-3.5 sm:p-4 shrink-0 shadow-2xs">
+      <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
+        <div className="w-14 h-14 sm:w-[84px] sm:h-[84px] rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center p-2.5 sm:p-4 shrink-0 shadow-2xs">
           <img src="/graphics/rectangle-history-circle-plus.svg" alt="Weekly Review" className="w-full h-full object-contain dark:invert" />
         </div>
-        <div className="flex flex-col justify-between py-0.5">
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 leading-none">
+        <div className="flex flex-col justify-between py-0.5 min-w-0">
+          <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 leading-none">
             Continuous Calibration Loop
           </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight">
+          <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight mt-1 truncate">
             Weekly Review
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none">
+          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none mt-1 truncate">
             {review?.weekLabel || 'Week 1'} • {review?.dateRange || 'Current Week'}
           </p>
         </div>
       </div>
 
       {/* Planned vs Completed Hours Card matching Screen 10 */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-5">
+      <div className="p-4 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
@@ -163,7 +163,7 @@ export const WeeklyReviewPage: React.FC = () => {
       {/* 2-Column Summary matching Screen 10 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Column 1: What you completed */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
+        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
           <div className="flex items-center justify-between pb-1 border-b border-neutral-100 dark:border-neutral-800/80">
             <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
               What you completed
@@ -191,7 +191,7 @@ export const WeeklyReviewPage: React.FC = () => {
         </div>
 
         {/* Column 2: Next week */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
+        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
           <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
             Next week
           </h2>
@@ -207,7 +207,7 @@ export const WeeklyReviewPage: React.FC = () => {
       </div>
 
       {/* Reflection Input Section matching Screen 10 */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
+      <div className="p-4 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             Reflection

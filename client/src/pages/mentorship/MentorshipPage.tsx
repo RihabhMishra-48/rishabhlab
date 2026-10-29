@@ -265,18 +265,18 @@ export const MentorshipPage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
       {/* Header matching Screen 8 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-stretch gap-4 sm:gap-5">
-          <div className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700/80 flex items-center justify-center p-3.5 sm:p-4 shrink-0 shadow-2xs">
+        <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
+          <div className="w-14 h-14 sm:w-[84px] sm:h-[84px] rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700/80 flex items-center justify-center p-2.5 sm:p-4 shrink-0 shadow-2xs">
             <img src="/graphics/mentorship.png" alt="Mentorship & Summit" className="w-full h-full object-contain dark:invert" />
           </div>
-          <div className="flex flex-col justify-between py-0.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 leading-none">
+          <div className="flex flex-col justify-between py-0.5 min-w-0">
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 leading-none">
               Expert Human Layer
             </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight">
+            <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight mt-1 truncate">
               Mentorship
             </h1>
-            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none">
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none mt-1 truncate">
               Get guidance when you need it.
             </p>
           </div>
@@ -320,7 +320,7 @@ export const MentorshipPage: React.FC = () => {
       )}
 
       {/* Hero Book a 1:1 Session Card (Sleek Grayish Monochrome Aesthetic) */}
-      <div className="relative rounded-3xl bg-gradient-to-br from-[#FAFAFA] via-[#F4F4F5] to-[#E4E4E7] dark:from-[#212121] dark:via-[#1A1A1A] dark:to-[#141414] border border-neutral-200/90 dark:border-neutral-800 shadow-sm overflow-hidden p-6 sm:p-8 lg:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
+      <div className="relative rounded-3xl bg-gradient-to-br from-[#FAFAFA] via-[#F4F4F5] to-[#E4E4E7] dark:from-[#212121] dark:via-[#1A1A1A] dark:to-[#141414] border border-neutral-200/90 dark:border-neutral-800 shadow-sm overflow-hidden p-4 sm:p-8 lg:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
         {/* Soft Ambient Neutral Glows */}
         <div className="absolute -top-24 -right-24 w-80 h-80 bg-neutral-200/60 dark:bg-neutral-800/25 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-slate-200/50 dark:bg-neutral-900/30 rounded-full blur-3xl pointer-events-none" />
@@ -373,7 +373,7 @@ export const MentorshipPage: React.FC = () => {
         </div>
 
         {/* Right Graphic with Circular Halo Backdrop (Sleek Grayish Palette) */}
-        <div className="relative z-10 shrink-0 flex items-center justify-center p-3">
+        <div className="relative z-10 shrink-0 flex items-center justify-center p-3 scale-[0.88] xs:scale-100">
           {/* Circular Frosted Grayish Backdrop Aura */}
           <div className="w-56 h-56 rounded-full bg-gradient-to-tr from-neutral-200/90 via-slate-100 to-neutral-200/60 dark:from-neutral-800/90 dark:via-neutral-850 dark:to-neutral-900 border border-neutral-300/80 dark:border-neutral-700/80 flex items-center justify-center relative shadow-inner">
             {/* Top-left Floating Badge */}
@@ -584,7 +584,7 @@ export const MentorshipPage: React.FC = () => {
                 <div className={`h-24 w-full absolute top-0 left-0 bg-gradient-to-r ${theme.topGradient} border-b border-neutral-100 dark:border-neutral-800/40 pointer-events-none`} />
 
                 {/* Card Main Body */}
-                <div className="p-6 space-y-4 relative z-10">
+                <div className="p-4 sm:p-6 space-y-4 relative z-10">
                   {/* Top Header: Large Avatar + Domain Badge */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="relative shrink-0">
@@ -656,7 +656,7 @@ export const MentorshipPage: React.FC = () => {
                 </div>
 
                 {/* Card Action Footer */}
-                <div className="p-5 pt-3.5 border-t border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/50 dark:bg-neutral-900/30 flex items-center justify-between">
+                <div className="p-4 sm:p-5 pt-3.5 border-t border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/50 dark:bg-neutral-900/30 flex items-center justify-between">
                   <div>
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/50">
                       {mentor.hourlyRate}

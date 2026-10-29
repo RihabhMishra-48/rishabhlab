@@ -257,6 +257,20 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
                           return (
                             <div
                               key={day.dateStr}
+                              onClick={(e) => {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setHoveredDay((prev) =>
+                                  prev?.dateStr === day.dateStr
+                                    ? null
+                                    : {
+                                        dateStr: day.dateStr,
+                                        formattedDate: formatDate(day.dateObj),
+                                        count: day.count,
+                                        x: rect.left + rect.width / 2,
+                                        y: rect.top,
+                                      }
+                                );
+                              }}
                               onMouseEnter={(e) => {
                                 const rect = e.currentTarget.getBoundingClientRect();
                                 setHoveredDay({

@@ -429,7 +429,7 @@ export const RoadmapPage: React.FC = () => {
       </div>
 
       {/* Visual Learning Journey Map (Connected SVG Metro Line & Glowing Node Stations) */}
-      <div className="relative p-6 sm:p-8 lg:p-10 bg-white dark:bg-[#212121] rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-sm overflow-hidden space-y-6">
+      <div className="relative p-4 sm:p-8 lg:p-10 bg-white dark:bg-[#212121] rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-sm overflow-hidden space-y-6">
         {/* Subtle grid pattern background */}
         <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
 
@@ -496,7 +496,7 @@ export const RoadmapPage: React.FC = () => {
                   <div
                     key={node.nodeId || index}
                     onClick={() => setSelectedNode(node)}
-                    className="group flex flex-col items-center cursor-pointer relative z-10 transition-transform duration-200"
+                    className="group flex flex-col items-center cursor-pointer relative z-10 transition-colors duration-200"
                   >
                     {/* Glowing Station Circle */}
                     <div className="relative flex items-center justify-center">
@@ -506,7 +506,7 @@ export const RoadmapPage: React.FC = () => {
 
                       <div
                         className={`w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-sm transition-all duration-200 shadow-md ${isSelected
-                          ? 'ring-3 ring-neutral-950 dark:ring-white scale-105'
+                          ? 'ring-3 ring-neutral-950 dark:ring-white ring-offset-2 ring-offset-white dark:ring-offset-[#212121]'
                           : isCompleted
                             ? 'ring-2 ring-emerald-500/30 shadow-emerald-500/10'
                             : isInProgress
@@ -568,7 +568,7 @@ export const RoadmapPage: React.FC = () => {
 
       {/* Selected Node Details Drawer / Card */}
       {selectedNode && (
-        <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-6">
+        <div className="p-4 sm:p-7 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-6">
           <div className="pb-4 border-b border-neutral-100 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
@@ -725,25 +725,25 @@ export const RoadmapPage: React.FC = () => {
       )}
 
       {/* Next Up Card */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
+      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm shrink-0">
             {activeNode?.stepNumber || 1}
           </div>
-          <div>
+          <div className="min-w-0">
             <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
               Active Focus
             </span>
-            <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+            <h3 className="text-sm font-bold text-neutral-900 dark:text-white truncate">
               {activeNode?.title || 'Foundations'}: {activeNode?.subtitle || 'Get Started'}
             </h3>
-            <p className="text-xs text-neutral-500">Pick up where you left off</p>
+            <p className="text-xs text-neutral-500 truncate">Pick up where you left off</p>
           </div>
         </div>
 
         <Link
           to={`/learn?track=${encodeURIComponent(activeTrack)}`}
-          className="p-2.5 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors shadow-2xs"
+          className="p-2.5 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors shadow-2xs shrink-0"
           title="Continue"
         >
           <ArrowRight className="w-4 h-4" />

@@ -216,16 +216,16 @@ export const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-5xl mx-auto">
       {/* Profile Header */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
-          <div className="relative group cursor-pointer" onClick={() => setIsEditModalOpen(true)}>
+      <div className="p-4 sm:p-8 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+        <div className="flex items-center gap-4 sm:gap-5 min-w-0">
+          <div className="relative group cursor-pointer shrink-0" onClick={() => setIsEditModalOpen(true)}>
             <UserAvatar
               src={user?.avatar}
               name={user?.name}
               email={user?.email}
-              size={80}
+              size={72}
               roundedClassName="rounded-3xl"
               className="border-2 border-neutral-200 dark:border-neutral-700 shadow-md group-hover:opacity-85 transition-opacity"
             />
@@ -234,9 +234,9 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-neutral-900 dark:text-white truncate">
                 {user?.name || 'Student'}
               </h1>
               {user?.githubUsername && (
@@ -339,12 +339,12 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       {/* Tabs matching Screen 9 */}
-      <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-2">
+      <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-2 overflow-x-auto no-scrollbar">
         {(['Overview', 'Skills', 'Projects', 'Achievements'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${activeTab === tab
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all ${activeTab === tab
                 ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-2xs'
                 : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2a2a2a]'
               }`}
@@ -355,39 +355,39 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       {/* 4 Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             Roadmap
           </span>
-          <p className="text-2xl font-extrabold text-neutral-900 dark:text-white font-mono">
+          <p className="text-xl sm:text-2xl font-extrabold text-neutral-900 dark:text-white font-mono">
             {stats.roadmapProgress}%
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             Projects
           </span>
-          <p className="text-2xl font-extrabold text-neutral-900 dark:text-white font-mono">
+          <p className="text-xl sm:text-2xl font-extrabold text-neutral-900 dark:text-white font-mono">
             {stats.projectsCount}
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             Streak
           </span>
-          <p className="text-2xl font-extrabold text-orange-500 font-mono">
+          <p className="text-xl sm:text-2xl font-extrabold text-orange-500 font-mono">
             {stats.streakDays}
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             Status
           </span>
-          <p className="text-2xl font-extrabold text-emerald-500 font-mono">
+          <p className="text-xl sm:text-2xl font-extrabold text-emerald-500 font-mono truncate">
             {stats.status}
           </p>
         </div>
@@ -397,7 +397,7 @@ export const ProfilePage: React.FC = () => {
       {activeTab === 'Overview' && (
         <div className="space-y-6">
           {/* Skills Pills */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
+          <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
                 Verified Skills

@@ -251,18 +251,18 @@ export const LearnCatalogPage: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-6xl mx-auto">
       {/* Top Banner */}
-      <div className="flex items-stretch gap-4 sm:gap-5">
-        <div className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center p-3.5 sm:p-4 shrink-0 shadow-2xs">
+      <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
+        <div className="w-14 h-14 sm:w-[84px] sm:h-[84px] rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center p-2.5 sm:p-4 shrink-0 shadow-2xs">
           <img src="/graphics/e-learning.svg" alt="Learn Workspace" className="w-full h-full object-contain dark:invert" />
         </div>
-        <div className="flex flex-col justify-between py-0.5">
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 leading-none">
+        <div className="flex flex-col justify-between py-0.5 min-w-0">
+          <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 leading-none">
             Interactive Learning Catalog
           </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight">
+          <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight mt-1 truncate">
             Learn Workspace
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none">
+          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none mt-1 truncate">
             Focused curriculum aligned with your enrolled career path. Runnable code sandboxes and quizzes included.
           </p>
         </div>
@@ -564,7 +564,7 @@ export const LearnCatalogPage: React.FC = () => {
                   <Link
                     key={les.slug}
                     to={`/learn/${les.track || selectedTrack}/${les.slug}`}
-                    className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-md transition-all flex items-center justify-between group"
+                    className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-2xs hover:shadow-md transition-all flex items-center justify-between group"
                   >
                     <div className="space-y-1.5 min-w-0 pr-4">
                       <div className="flex items-center gap-2">

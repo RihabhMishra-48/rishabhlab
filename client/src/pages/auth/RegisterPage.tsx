@@ -191,8 +191,8 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white dark:bg-[#212121] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-xl p-6 sm:p-8 space-y-6">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 flex items-center justify-center p-3 sm:p-4">
+      <div className="w-full max-w-md bg-white dark:bg-[#212121] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-xl p-4 sm:p-8 space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
           <Link to="/" className="inline-flex items-center gap-2 group mb-1">
@@ -358,7 +358,7 @@ export const RegisterPage: React.FC = () => {
               <label className="block text-center text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                 Enter 8-Digit Code
               </label>
-              <div className="flex items-center justify-center gap-1 sm:gap-1.5" onPaste={handlePaste}>
+              <div className="flex items-center justify-center gap-0.5 xs:gap-1 sm:gap-1.5" onPaste={handlePaste}>
                 {otp.map((digit, idx) => (
                   <input
                     key={idx}
@@ -372,7 +372,7 @@ export const RegisterPage: React.FC = () => {
                     value={digit}
                     onChange={(e) => handleOtpChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
-                    className="w-9 h-11 sm:w-10 sm:h-12 text-center text-base sm:text-lg font-bold font-mono bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-neutral-900 dark:text-white outline-none focus:border-neutral-950 dark:focus:border-white focus:bg-white dark:focus:bg-neutral-800 transition-colors shadow-xs"
+                    className="w-7 h-10 xs:w-8.5 xs:h-11 sm:w-10 sm:h-12 text-center text-sm xs:text-base sm:text-lg font-bold font-mono bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg sm:rounded-xl text-neutral-900 dark:text-white outline-none focus:border-neutral-950 dark:focus:border-white focus:bg-white dark:focus:bg-neutral-800 transition-colors shadow-xs"
                   />
                 ))}
               </div>

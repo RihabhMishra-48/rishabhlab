@@ -81,7 +81,7 @@ export const StudentProfileHeader: React.FC<StudentProfileHeaderProps> = ({
   };
 
   return (
-    <div className="relative overflow-hidden p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-xs">
+    <div className="relative overflow-hidden p-4 sm:p-7 rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-xs">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         {/* User Avatar & Info */}
         <div className="flex items-start sm:items-center gap-4.5">

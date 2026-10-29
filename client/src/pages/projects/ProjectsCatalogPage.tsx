@@ -102,18 +102,18 @@ export const ProjectsCatalogPage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
       {/* Header matching Screen 6 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-stretch gap-4 sm:gap-5">
-          <div className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-800/40 flex items-center justify-center p-3.5 sm:p-4 shrink-0 shadow-2xs">
+        <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
+          <div className="w-14 h-14 sm:w-[84px] sm:h-[84px] rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-800/40 flex items-center justify-center p-2.5 sm:p-4 shrink-0 shadow-2xs">
             <img src="/graphics/support.png" alt="Projects & Launch" className="w-full h-full object-contain dark:invert" />
           </div>
-          <div className="flex flex-col justify-between py-0.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 leading-none">
+          <div className="flex flex-col justify-between py-0.5 min-w-0">
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 leading-none">
               Portfolio Proof-of-Work
             </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight">
+            <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight mt-1 truncate">
               Projects & Engineering Launch
             </h1>
-            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none">
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none mt-1 truncate">
               Build real software projects from scratch. Check off milestones and submit verifiable proof of work.
             </p>
           </div>
@@ -121,7 +121,7 @@ export const ProjectsCatalogPage: React.FC = () => {
 
         <Link
           to={`/projects/${getTargetProjectSlug()}`}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-semibold hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors shadow-2xs self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-semibold hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors shadow-2xs self-start sm:self-auto shrink-0"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Start Target Project</span>

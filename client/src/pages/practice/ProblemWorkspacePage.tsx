@@ -17,7 +17,9 @@ import {
   Sparkles,
   Terminal,
   ChevronDown,
-  Trophy
+  Trophy,
+  BookOpen,
+  Code2
 } from 'lucide-react';
 import { BugIcon } from '../../components/icons/TrackIcons';
 import { CustomDropdown, DropdownOption } from '../../components/common/CustomDropdown';
@@ -46,6 +48,7 @@ export const ProblemWorkspacePage: React.FC = () => {
   const [loading, setLoading] = useState(!initialCurated);
 
   // Execution state
+  const [mobileActiveTab, setMobileActiveTab] = useState<'description' | 'editor' | 'testcases'>('description');
   const [activeBottomTab, setActiveBottomTab] = useState<'testcases' | 'output'>('testcases');
   const [testResults, setTestResults] = useState<any[]>([]);
   const [consoleOutput, setConsoleOutput] = useState('');
@@ -131,6 +134,7 @@ export const ProblemWorkspacePage: React.FC = () => {
     if (!problem) return;
     setIsRunning(true);
     setActiveBottomTab('output');
+    setMobileActiveTab('testcases');
     try {
       const res = await api.runCode(problem.id, code, selectedLanguage);
       setExecutionStatus(res.status);
@@ -164,6 +168,7 @@ export const ProblemWorkspacePage: React.FC = () => {
     if (!problem) return;
     setIsSubmitting(true);
     setActiveBottomTab('output');
+    setMobileActiveTab('testcases');
     try {
       const res = await api.submitCode(problem.id, code, selectedLanguage);
       setExecutionStatus(res.status);
@@ -267,23 +272,23 @@ export const ProblemWorkspacePage: React.FC = () => {
 
   return (
     <div className="h-full w-full flex flex-col bg-[#FAFAFA] dark:bg-[#181818] text-neutral-900 dark:text-neutral-100 overflow-hidden">
-      <header className="h-12 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#171717] px-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2.5 min-w-0">
+      <header className="h-12 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#171717] px-2.5 sm:px-4 flex items-center justify-between shrink-0 gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
           <Link
             to={isSprintProblem ? '/hackathon' : '/practice'}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
+            className="p-1 sm:p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
             title={isSprintProblem ? 'Back to Arena' : 'Back to Problems'}
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <span
-            className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white truncate max-w-[200px] sm:max-w-xs md:max-w-md lg:max-w-lg"
+            className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white truncate max-w-[110px] xs:max-w-[150px] sm:max-w-xs md:max-w-md lg:max-w-lg"
             title={cleanProblemTitle}
           >
             {cleanProblemTitle}
           </span>
           <span
-            className={`text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 ${
+            className={`text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md shrink-0 ${
               problem.difficulty === 'Easy'
                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                 : problem.difficulty === 'Medium'
@@ -296,15 +301,15 @@ export const ProblemWorkspacePage: React.FC = () => {
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {/* Progressive Hint Button */}
           <button
             onClick={openHintModal}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700 text-xs font-bold transition-colors"
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700 text-xs font-bold transition-colors cursor-pointer"
             title="Step-by-step hints"
           >
             <HelpCircle className="w-3.5 h-3.5" />
-            <span>Hints</span>
+            <span className="hidden sm:inline">Hints</span>
           </button>
 
           {/* Custom Language Selector Dropdown */}
@@ -313,26 +318,28 @@ export const ProblemWorkspacePage: React.FC = () => {
             value={selectedLanguage}
             onChange={(val) => handleLanguageChange(val as 'javascript' | 'python')}
             ariaLabel="Select programming language"
+            size="sm"
+            buttonClassName="py-1 px-2 sm:px-3 text-xs"
           />
 
           {/* Run Code Button */}
           <button
             onClick={handleRunCode}
             disabled={isRunning || isSubmitting}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white text-xs font-semibold transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
           >
             <Play className="w-3 h-3 fill-current" />
-            <span>{isRunning ? 'Running...' : 'Run'}</span>
+            <span>{isRunning ? 'Running...' : <><span className="hidden xs:inline">Run</span><span className="xs:hidden">Run</span></>}</span>
           </button>
 
           {/* Submit Button */}
           <button
             onClick={handleSubmitCode}
             disabled={isRunning || isSubmitting}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-2xs disabled:opacity-50"
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-2xs disabled:opacity-50 cursor-pointer"
           >
             <Send className="w-3 h-3" />
-            <span>{isSubmitting ? 'Evaluating...' : 'Submit'}</span>
+            <span>{isSubmitting ? 'Evaluating...' : <><span className="hidden xs:inline">Submit</span><span className="xs:hidden">Submit</span></>}</span>
           </button>
         </div>
       </header>
@@ -382,12 +389,57 @@ export const ProblemWorkspacePage: React.FC = () => {
         </div>
       )}
 
+      {/* Mobile Workspace Segmented Tab Bar (< lg) */}
+      <div className="lg:hidden flex items-center border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1a1a1a] px-2 py-1.5 gap-1 shrink-0 text-xs select-none">
+        <button
+          type="button"
+          onClick={() => setMobileActiveTab('description')}
+          className={`flex-1 py-1.5 px-2 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+            mobileActiveTab === 'description'
+              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-2xs'
+              : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+          }`}
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          <span>Description</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileActiveTab('editor')}
+          className={`flex-1 py-1.5 px-2 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+            mobileActiveTab === 'editor'
+              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-2xs'
+              : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+          }`}
+        >
+          <Code2 className="w-3.5 h-3.5" />
+          <span>Code Editor</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileActiveTab('testcases')}
+          className={`flex-1 py-1.5 px-2 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+            mobileActiveTab === 'testcases'
+              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-2xs'
+              : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+          }`}
+        >
+          <Terminal className="w-3.5 h-3.5" />
+          <span>Tests & Run</span>
+          {testResults.length > 0 && (
+            <span className={`w-1.5 h-1.5 rounded-full ${executionStatus === 'Accepted' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+          )}
+        </button>
+      </div>
+
       {/* Main Split Layout: Left Problem Spec (5 cols), Right Monaco Editor + Test Cases (7 cols) */}
       <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
-        {/* Left Column: Problem Statement & Examples (5 cols) */}
+        {/* Left Column: Problem Statement & Examples (5 cols on lg) */}
         <div
           ref={descriptionPanelRef}
-          className="lg:col-span-5 h-full overflow-y-auto border-r border-neutral-200 dark:border-neutral-800 p-6 space-y-6 bg-white dark:bg-[#171717]"
+          className={`lg:col-span-5 h-full overflow-y-auto border-r border-neutral-200 dark:border-neutral-800 p-4 sm:p-6 space-y-6 bg-white dark:bg-[#171717] ${
+            mobileActiveTab === 'description' ? 'block' : 'hidden lg:block'
+          }`}
         >
           {problem.isDebuggingChallenge && (
             <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs space-y-1">
@@ -497,9 +549,17 @@ export const ProblemWorkspacePage: React.FC = () => {
         </div>
 
         {/* Right Column: Monaco Editor (Top) & Test Case Runner (Bottom) (7 cols) */}
-        <div className="lg:col-span-7 flex flex-col h-full overflow-hidden bg-neutral-900">
+        <div
+          className={`lg:col-span-7 flex-col h-full overflow-hidden bg-neutral-900 ${
+            mobileActiveTab !== 'description' ? 'flex' : 'hidden lg:flex'
+          }`}
+        >
           {/* Monaco Editor Container */}
-          <div className="flex-1 min-h-[320px]">
+          <div
+            className={`min-h-[260px] ${
+              mobileActiveTab === 'testcases' ? 'hidden lg:block lg:flex-1' : 'flex-1 h-full'
+            }`}
+          >
             <Editor
               height="100%"
               language={selectedLanguage}
@@ -523,7 +583,11 @@ export const ProblemWorkspacePage: React.FC = () => {
           </div>
 
           {/* Bottom Execution Panel (LeetCode Style) */}
-          <div className="h-72 border-t border-neutral-700 bg-[#171717] text-neutral-200 flex flex-col overflow-hidden">
+          <div
+            className={`border-t border-neutral-700 bg-[#171717] text-neutral-200 flex flex-col overflow-hidden ${
+              mobileActiveTab === 'editor' ? 'hidden lg:flex lg:h-72' : 'flex-1 lg:h-72'
+            }`}
+          >
             {/* Tab Header Bar */}
             <div className="h-10 px-4 border-b border-neutral-800 bg-[#212121] flex items-center justify-between text-xs shrink-0">
               <div className="flex items-center gap-2">

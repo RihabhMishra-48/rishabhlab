@@ -4,7 +4,7 @@ import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { CommandPalette } from '../common/CommandPalette';
 import { Compass, CheckCircle2 } from 'lucide-react';
-import { HomeChimneyIcon, UserProfileIcon } from '../icons/TrackIcons';
+import { HomeChimneyIcon, UserProfileIcon, DisplayCodeIcon } from '../icons/TrackIcons';
 import { MascotCompanion } from '../common/MascotCompanion';
 
 export const AppLayout: React.FC = () => {
@@ -69,7 +69,7 @@ export const AppLayout: React.FC = () => {
           className={`flex-1 h-full ${
             isFullScreenWorkspace
               ? 'overflow-hidden p-0'
-              : 'overflow-y-auto overscroll-y-contain pb-20 lg:pb-8'
+              : 'overflow-y-auto overscroll-y-contain pb-24 lg:pb-8'
           }`}
         >
           <Outlet />
@@ -78,7 +78,7 @@ export const AppLayout: React.FC = () => {
 
       {/* Mobile Bottom Navigation Bar (Hidden on full-screen workspaces to preserve editor real estate) */}
       {!isFullScreenWorkspace && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-[#171717]/95 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-800 px-6 py-2 flex items-center justify-around shadow-lg">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#171717]/95 backdrop-blur-md border-t border-neutral-200/90 dark:border-neutral-800/90 px-3 sm:px-6 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around shadow-lg">
           <NavLink
             to="/dashboard"
             className={({ isActive }) =>
@@ -101,6 +101,18 @@ export const AppLayout: React.FC = () => {
           >
             <Compass className="w-5 h-5" />
             <span>Roadmap</span>
+          </NavLink>
+
+          <NavLink
+            to="/practice"
+            className={({ isActive }) =>
+              `flex flex-col items-center gap-1 text-[10px] font-medium transition-colors ${
+                isActive ? 'text-blue-600 dark:text-white font-semibold' : 'text-neutral-500'
+              }`
+            }
+          >
+            <DisplayCodeIcon className="w-5 h-5" />
+            <span>Practice</span>
           </NavLink>
 
           <NavLink
@@ -129,7 +141,11 @@ export const AppLayout: React.FC = () => {
         </div>
       )}
 
-      <MascotCompanion />
+      {/* Mascot Companion - tucked away on mobile full-screen workspaces */}
+      <div className={isFullScreenWorkspace ? 'hidden lg:block' : 'block'}>
+        <MascotCompanion />
+      </div>
+      <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
       <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
     </div>
   );

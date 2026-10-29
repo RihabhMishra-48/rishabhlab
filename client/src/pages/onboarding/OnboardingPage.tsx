@@ -339,11 +339,11 @@ export const OnboardingPage: React.FC = () => {
         </div>
 
         {/* Multi-Step Platform Progress Line */}
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-semibold text-neutral-500">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <span className="text-[11px] sm:text-xs font-semibold text-neutral-500 whitespace-nowrap">
             Step {currentStep} of {totalSteps}
           </span>
-          <div className="w-24 sm:w-32 h-2 flex items-center gap-1.5">
+          <div className="w-16 xs:w-24 sm:w-32 h-2 flex items-center gap-1.5 shrink-0">
             {currentStep > 0 && (
               <div
                 style={{ flex: currentStep }}
@@ -364,7 +364,7 @@ export const OnboardingPage: React.FC = () => {
       <main className="max-w-4xl mx-auto w-full my-auto py-6 sm:py-8">
         {showNotSureAssessment ? (
           /* Diagnostic Modal View */
-          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800 shadow-xl space-y-6 animate-in fade-in">
+          <div className="p-4 sm:p-8 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-800 shadow-xl space-y-6 animate-in fade-in">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" />
@@ -474,7 +474,7 @@ export const OnboardingPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-white dark:bg-[#212121] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-xl p-6 sm:p-10 space-y-8">
+          <div className="bg-white dark:bg-[#212121] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-xl p-4 sm:p-10 space-y-6 sm:space-y-8">
             {/* STEP 1: FIELD OF INTEREST (PRIMARY ANCHOR) */}
             {currentStep === 1 && (
               <div className="space-y-6">

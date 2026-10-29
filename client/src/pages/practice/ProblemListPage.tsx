@@ -421,20 +421,20 @@ export const ProblemListPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-0.5 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         <h3 className="text-xs sm:text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">
                           {prob.title}
                         </h3>
                         {prob.isDebuggingChallenge && (
-                          <span className="text-[9px] px-1.5 py-0.5 bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-bold rounded">
+                          <span className="text-[9px] px-1.5 py-0.5 bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-bold rounded shrink-0">
                             Fix the Bug
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 text-[11px] text-neutral-500 dark:text-neutral-400">
-                        <span className="font-medium text-neutral-600 dark:text-neutral-300">{prob.category}</span>
+                      <div className="flex items-center gap-1.5 xs:gap-2 text-[10px] xs:text-[11px] text-neutral-500 dark:text-neutral-400 truncate">
+                        <span className="font-medium text-neutral-600 dark:text-neutral-300 truncate">{prob.category}</span>
                         <span>•</span>
-                        <span>Acceptance: {prob.acceptanceRate || 85}%</span>
+                        <span className="shrink-0">Acc: {prob.acceptanceRate || 85}%</span>
                       </div>
                     </div>
                   </div>

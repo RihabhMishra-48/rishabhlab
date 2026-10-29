@@ -647,16 +647,17 @@ export const LessonDetailPage: React.FC = () => {
       {/* 3-Column Flexible Architecture — Collapsible Sidebars with Persistent Sticky Pinning */}
       <div className="flex flex-col lg:flex-row gap-6 items-stretch">
         {/* Left Column: Course Navigation / Module Outline — Collapsible */}
-        <div className={`shrink-0 self-stretch transition-all duration-300 ease-in-out ${leftSidebarOpen ? 'w-full lg:w-[260px]' : 'w-11'
-          }`}>
+        <div className={`shrink-0 self-stretch transition-all duration-300 ease-in-out ${
+          leftSidebarOpen ? 'w-full lg:w-[260px]' : 'hidden lg:block lg:w-11'
+        }`}>
           <div className={`sticky top-6 ${leftSidebarOpen ? 'overflow-visible' : 'overflow-hidden'
             }`}>
             {leftSidebarOpen ? (
               <div className="relative p-5 rounded-3xl bg-card border border-border/50 shadow-xs space-y-3">
-                {/* Clickable Separator Edge with Docked Toggle Button */}
+                {/* Clickable Separator Edge with Docked Toggle Button (Desktop only) */}
                 <div
                   onClick={toggleLeftSidebar}
-                  className="absolute -right-3.5 top-0 bottom-0 w-7 cursor-pointer group/edge z-20 flex items-start justify-center pt-5 select-none"
+                  className="hidden lg:flex absolute -right-3.5 top-0 bottom-0 w-7 cursor-pointer group/edge z-20 items-start justify-center pt-5 select-none"
                   title="Click anywhere on edge to collapse module navigation"
                 >
                   <div className="absolute left-1/2 -translate-x-1/2 top-3 bottom-3 w-[2px] bg-transparent group-hover/edge:bg-primary/40 rounded-full transition-colors" />
@@ -887,18 +888,19 @@ export const LessonDetailPage: React.FC = () => {
         </div>
 
         {/* Right Column: Quiz & Progress Check — Collapsible */}
-        <div className={`shrink-0 self-stretch transition-all duration-300 ease-in-out ${rightSidebarOpen ? 'w-full lg:w-[280px]' : 'w-11'
-          }`}>
+        <div className={`shrink-0 self-stretch transition-all duration-300 ease-in-out ${
+          rightSidebarOpen ? 'w-full lg:w-[280px]' : 'hidden lg:block lg:w-11'
+        }`}>
           <div className={`sticky top-6 ${rightSidebarOpen ? 'overflow-visible' : 'overflow-hidden'
             }`}>
             {rightSidebarOpen ? (
               <div className="space-y-6">
                 {lesson.quiz && lesson.quiz.length > 0 && (
                   <div className="relative p-5 rounded-3xl bg-card text-card-foreground border border-border/40 shadow-xs space-y-4">
-                    {/* Clickable Separator Edge with Docked Toggle Button */}
+                    {/* Clickable Separator Edge with Docked Toggle Button (Desktop only) */}
                     <div
                       onClick={toggleRightSidebar}
-                      className="absolute -left-3.5 top-0 bottom-0 w-7 cursor-pointer group/edge z-20 flex items-start justify-center pt-5 select-none"
+                      className="hidden lg:flex absolute -left-3.5 top-0 bottom-0 w-7 cursor-pointer group/edge z-20 items-start justify-center pt-5 select-none"
                       title="Click anywhere on edge to collapse quiz panel"
                     >
                       <div className="absolute left-1/2 -translate-x-1/2 top-3 bottom-3 w-[2px] bg-transparent group-hover/edge:bg-primary/40 rounded-full transition-colors" />

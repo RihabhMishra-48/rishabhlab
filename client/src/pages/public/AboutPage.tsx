@@ -62,7 +62,7 @@ export const AboutPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-8 rounded-3xl bg-neutral-950 text-white flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="p-5 sm:p-8 rounded-3xl bg-neutral-950 text-white flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
             <h3 className="text-xl font-bold">Start your execution journey today</h3>
             <p className="text-xs text-neutral-400 mt-1">Free for college learners. No credit card required.</p>

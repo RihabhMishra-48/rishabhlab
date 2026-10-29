@@ -158,24 +158,24 @@ export const DailyMissionPage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
       {/* Header matching Screen 5 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-stretch gap-4 sm:gap-5">
-          <div className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center p-3.5 sm:p-4 shrink-0 shadow-2xs">
+        <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
+          <div className="w-14 h-14 sm:w-[84px] sm:h-[84px] rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center p-2.5 sm:p-4 shrink-0 shadow-2xs">
             <img src="/graphics/daily-calendar.svg" alt="Daily Mission" className="w-full h-full object-contain dark:invert" />
           </div>
-          <div className="flex flex-col justify-between py-0.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 leading-none">
+          <div className="flex flex-col justify-between py-0.5 min-w-0">
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 leading-none">
               Daily Mission Execution
             </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight">
+            <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight truncate mt-1">
               Day {mission?.dayNumber || 1} • {mission?.trackTitle || 'Your Mission'}
             </h1>
-            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none">
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-none truncate mt-1">
               {mission?.dateString || todayFormatted} • Complete daily tasks to build momentum
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <span className="text-xs font-mono text-neutral-500 dark:text-neutral-400 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-[#262626] border border-neutral-200 dark:border-neutral-800">
             {mission?.dateString || todayFormatted}
           </span>
@@ -185,7 +185,7 @@ export const DailyMissionPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Mission Tasks & CTAs (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
+          <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
               <span className="text-xs font-bold text-neutral-900 dark:text-white">
                 Core Execution Queue ({mission?.completedTasksCount || 2} / 4 Done)
@@ -295,7 +295,7 @@ export const DailyMissionPage: React.FC = () => {
         </div>
 
         {/* Right Column: Daily Mission Focus Mode with Daily Calendar Graphic */}
-        <div className="lg:col-span-5 flex flex-col items-center justify-center p-8 rounded-3xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-6">
+        <div className="lg:col-span-5 flex flex-col items-center justify-center p-6 sm:p-8 rounded-3xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-6">
           <div className="relative w-44 h-44 flex items-center justify-center rounded-3xl bg-white dark:bg-neutral-800/90 shadow-md border border-neutral-200/70 dark:border-neutral-700/70 p-8">
             <img
               src="/graphics/daily-calendar.svg"

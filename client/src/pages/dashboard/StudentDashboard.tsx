@@ -456,36 +456,36 @@ export const StudentDashboard: React.FC = () => {
 
       {/* Live Contest & Leaderboard Banner matching Screen Reference */}
       <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#1f1f22] border border-neutral-200/90 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
-        <div className="flex items-center gap-3.5 relative z-10">
+        <div className="flex items-center gap-3.5 relative z-10 min-w-0">
           <div className="w-10 h-10 rounded-2xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 flex items-center justify-center font-extrabold text-sm shadow-xs shrink-0">
             <Trophy className="w-5 h-5 fill-current" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-mono">
                 LIVE ARENA CONTEST
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             </div>
-            <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+            <h3 className="text-sm font-bold text-neutral-900 dark:text-white truncate">
               Weekly Code Sprint #18 is Live • Sprint Rank #14
             </h3>
-            <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1 sm:line-clamp-none">
               3h 42m left to submit. Top 10 coders unlock industry mentor credits.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 relative z-10">
+        <div className="flex items-center gap-2 self-stretch sm:self-auto shrink-0 relative z-10">
           <Link
             to="/hackathon?tab=competitions"
-            className="px-4 py-2 rounded-full text-xs font-bold bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 transition-colors shadow-2xs"
+            className="flex-1 sm:flex-none text-center px-4 py-2 rounded-full text-xs font-bold bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-950 transition-colors shadow-2xs"
           >
             Enter Contest
           </Link>
           <Link
             to="/hackathon?tab=leaderboard"
-            className="px-3.5 py-2 rounded-full text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 text-neutral-800 dark:bg-[#2c2c30] dark:hover:bg-[#38383c] dark:text-neutral-200 border border-neutral-200/80 dark:border-neutral-700/60 transition-colors"
+            className="flex-1 sm:flex-none text-center px-3.5 py-2 rounded-full text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 text-neutral-800 dark:bg-[#2c2c30] dark:hover:bg-[#38383c] dark:text-neutral-200 border border-neutral-200/80 dark:border-neutral-700/60 transition-colors"
           >
             Leaderboard
           </Link>

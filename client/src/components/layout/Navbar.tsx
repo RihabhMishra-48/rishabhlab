@@ -129,7 +129,19 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
 
         {/* Right Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Mobile Command Palette Trigger (< sm) */}
+          {!isPublicPage && onOpenCommandPalette && (
+            <button
+              onClick={onOpenCommandPalette}
+              className="sm:hidden p-2 rounded-full text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              aria-label="Open search command palette"
+              title="Search (⌘K)"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+          )}
+
           {/* Dark / Light Toggle */}
           <button
             onClick={toggleDarkMode}
@@ -263,11 +275,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - Matches Sidebar hidden lg:flex */}
           <button
             ref={mobileButtonRef}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            className="lg:hidden p-2 rounded-lg text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -276,23 +289,94 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div ref={mobileMenuRef} className="md:hidden border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#171717] px-4 pt-2 pb-4 space-y-2 text-sm font-medium">
-          <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Home</Link>
-          <Link to="/features" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Features</Link>
-          <Link to="/pricing" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Pricing</Link>
-          <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">About</Link>
+        <div
+          ref={mobileMenuRef}
+          className="lg:hidden border-b border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-[#171717]/95 backdrop-blur-md px-4 pt-3 pb-5 space-y-2 text-sm font-medium max-h-[calc(100vh-4rem)] overflow-y-auto overscroll-contain animate-in fade-in slide-in-from-top-1"
+        >
+          {isPublicPage && (
+            <div className="space-y-1 pb-2">
+              <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">Home</Link>
+              <Link to="/features" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">Features</Link>
+              <Link to="/pricing" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">Pricing</Link>
+              <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">About</Link>
+            </div>
+          )}
+
           {user && (
-            <>
-              <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800"></div>
-              <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Dashboard</Link>
-              <Link to="/roadmap" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Roadmap</Link>
-              <Link to="/missions" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Daily Mission</Link>
-              <Link to="/practice" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Code Practice</Link>
-              <Link to="/projects" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Projects</Link>
-              <Link to="/hackathon" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Hackathon Mode</Link>
-              <Link to="/mentorship" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Mentorship</Link>
-              <Link to="/weekly-review" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 dark:text-neutral-300">Weekly Review</Link>
-            </>
+            <div className="space-y-1">
+              <div className="px-3 py-2 bg-neutral-100/70 dark:bg-neutral-800/60 rounded-xl mb-2 flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-xs text-neutral-900 dark:text-white truncate">{user.name}</p>
+                  <p className="text-[11px] text-neutral-500 font-mono truncate">{user.email}</p>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 capitalize">
+                  {user.role?.replace('_', ' ') || 'Student'}
+                </span>
+              </div>
+
+              <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">Dashboard</Link>
+              <Link to="/roadmap" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">Roadmap</Link>
+              <Link to="/learn" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">Learn Modules</Link>
+              <Link to="/missions" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">Daily Missions</Link>
+              <Link to="/practice" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">Code Practice</Link>
+              <Link to="/practice/python" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">Python Sandbox & PyCode</Link>
+              <Link to="/projects" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">Projects</Link>
+              <Link to="/hackathon" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">Contests & Arena</Link>
+              <Link to="/mentorship" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">Mentorship</Link>
+              <Link to="/weekly-review" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">Weekly Review</Link>
+              <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800">My Profile</Link>
+
+              {(user.role === 'mentor' || user.role === 'admin' || user.role === 'super_admin') && (
+                <Link to="/mentor/sessions" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-amber-600 dark:text-amber-400 font-semibold hover:bg-amber-500/10">
+                  Mentor Workspace →
+                </Link>
+              )}
+
+              {(user.role === 'college_admin' || user.role === 'admin' || user.role === 'super_admin') && (
+                <Link to="/college" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-emerald-600 dark:text-emerald-400 font-semibold hover:bg-emerald-500/10">
+                  College Portal →
+                </Link>
+              )}
+
+              {(user.role === 'admin' || user.role === 'super_admin') && (
+                <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-xl text-indigo-600 dark:text-indigo-400 font-semibold hover:bg-indigo-500/10">
+                  Admin Dashboard →
+                </Link>
+              )}
+
+              <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800">
+                <button
+                  onClick={async () => {
+                    setMobileMenuOpen(false);
+                    await logout();
+                    navigate('/login');
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-medium flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!user && (
+            <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 flex flex-col gap-2">
+              <Link
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 font-semibold text-xs"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-2.5 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 font-semibold text-xs shadow-xs"
+              >
+                Get Started
+              </Link>
+            </div>
           )}
         </div>
       )}

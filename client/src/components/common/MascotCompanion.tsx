@@ -383,7 +383,7 @@ export const MascotCompanion: React.FC = () => {
       {/* Floating Mascot Widget (Minimized State) */}
       <div
         ref={floatingContainerRef}
-        className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-40 select-none flex flex-col items-end pointer-events-auto"
+        className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] lg:bottom-6 right-3 sm:right-6 z-40 select-none flex flex-col items-end pointer-events-auto"
       >
         {/* Minimal Speech Capsule (strictly 1-2 lines) */}
         {showSpeechBubble && !isOpen && (

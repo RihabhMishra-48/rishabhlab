@@ -52,6 +52,44 @@ body {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   color: #171717;
   background-color: #FAFAFA;
+  overflow-x: hidden;
+  max-width: 100vw;
+  -webkit-text-size-adjust: 100%;
+}
+
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Mobile Touch & Safe Area Utilities */
+.touch-callout-none {
+  -webkit-touch-callout: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Eliminate tap delays on mobile */
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
 }
 
 /* Custom subtle scrollbar */

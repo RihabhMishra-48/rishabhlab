@@ -945,7 +945,7 @@ export const HackathonModePage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               {/* Rank 2 (Silver) */}
               {topThree[1] && (
-                <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col items-center text-center space-y-3.5 relative">
+                <div className="order-2 md:order-1 p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col items-center text-center space-y-3.5 relative">
                   <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-[#2b2b2b] text-neutral-700 dark:text-neutral-300 flex items-center justify-center font-extrabold text-base border border-neutral-200/80 dark:border-neutral-700 font-mono">
                     #2
                   </div>
@@ -971,9 +971,9 @@ export const HackathonModePage: React.FC = () => {
                 </div>
               )}
 
-              {/* Rank 1 (Top Leader Spotlight) */}
+              {/* Rank 1 (Top Leader Spotlight - Shown First on Mobile Stack) */}
               {topThree[0] && (
-                <div className="p-7 sm:p-8 rounded-3xl bg-white dark:bg-[#212121] border-2 border-neutral-900 dark:border-white shadow-md flex flex-col items-center text-center space-y-3.5 relative md:-mt-4">
+                <div className="order-1 md:order-2 p-7 sm:p-8 rounded-3xl bg-white dark:bg-[#212121] border-2 border-neutral-900 dark:border-white shadow-md flex flex-col items-center text-center space-y-3.5 relative md:-mt-4">
                   <div className="absolute -top-3.5 px-3.5 py-1 rounded-full bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 font-bold text-[10px] font-mono shadow-sm flex items-center gap-1.5">
                     <Trophy className="w-3 h-3 text-current" />
                     <span>CAMPUS LEADER</span>
@@ -1008,7 +1008,7 @@ export const HackathonModePage: React.FC = () => {
 
               {/* Rank 3 (Bronze / Runner Up) */}
               {topThree[2] && (
-                <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col items-center text-center space-y-3.5 relative">
+                <div className="order-3 md:order-3 p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm flex flex-col items-center text-center space-y-3.5 relative">
                   <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-[#2b2b2b] text-neutral-700 dark:text-neutral-300 flex items-center justify-center font-extrabold text-base border border-neutral-200/80 dark:border-neutral-700 font-mono">
                     #3
                   </div>
@@ -1057,29 +1057,28 @@ export const HackathonModePage: React.FC = () => {
                     : 'hover:bg-neutral-50 dark:hover:bg-[#1a1a1a]/80'
                     }`}
                 >
-                  <div className="flex items-center gap-4">
-                    <span className={`w-8 text-sm font-bold font-mono ${user.isCurrentUser ? 'text-neutral-900 dark:text-white' : 'text-neutral-400'
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                    <span className={`w-7 sm:w-8 text-xs sm:text-sm font-bold font-mono shrink-0 ${user.isCurrentUser ? 'text-neutral-900 dark:text-white' : 'text-neutral-400'
                       }`}>
                       #{user.rank}
                     </span>
 
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs sm:text-sm font-bold ${user.isCurrentUser ? 'text-neutral-900 dark:text-white' : 'text-neutral-900 dark:text-white'
-                          }`}>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white truncate">
                           {user.name}
                         </span>
                         {user.badge && (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-neutral-200 dark:bg-[#333333] text-neutral-800 dark:text-neutral-200 border border-neutral-300/60 dark:border-neutral-600">
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-neutral-200 dark:bg-[#333333] text-neutral-800 dark:text-neutral-200 border border-neutral-300/60 dark:border-neutral-600 shrink-0">
                             {user.badge}
                           </span>
                         )}
                       </div>
-                      <span className="text-[11px] text-neutral-500 font-mono">{user.college} • {user.track}</span>
+                      <span className="text-[11px] text-neutral-500 font-mono block truncate">{user.college} • {user.track}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6 text-xs font-mono">
+                  <div className="flex items-center gap-3 sm:gap-6 text-xs font-mono shrink-0">
                     <div className="text-right hidden sm:block">
                       <span className="text-[10px] text-neutral-400 font-sans block">Problems</span>
                       <span className="font-bold text-neutral-700 dark:text-neutral-300">{user.problemsSolved} Solved</span>

@@ -184,7 +184,7 @@ export const ProjectWorkspacePage: React.FC = () => {
   const remainedPercent = totalTasks > 0 ? Math.max(0, 100 - currentPercent) : 0;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl mx-auto">
+    <div className="p-3.5 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-6xl mx-auto">
       {/* Back button & Title Header */}
       <div className="space-y-4">
         <Link
@@ -196,13 +196,13 @@ export const ProjectWorkspacePage: React.FC = () => {
         </Link>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white break-words">
                 {project.title}
               </h1>
               <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${project.status === 'Completed'
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 ${project.status === 'Completed'
                     ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
                     : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
                   }`}
@@ -215,7 +215,7 @@ export const ProjectWorkspacePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
             {project.liveDeployUrl && (
               <a
                 href={project.liveDeployUrl}
@@ -243,7 +243,7 @@ export const ProjectWorkspacePage: React.FC = () => {
       </div>
 
       {/* Progress Metric Banner with Dual Progress Lines (Current Progress & Remained) */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         {/* Left Side: Completion Stats & Badges */}
         <div className="space-y-2.5 w-full lg:w-auto">
           <div className="flex items-center gap-2">
@@ -314,8 +314,8 @@ export const ProjectWorkspacePage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Milestones & Task Checklist (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-6">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+          <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-6">
+            <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 pb-3 border-b border-neutral-100 dark:border-neutral-800">
               <h2 className="text-sm font-bold text-neutral-900 dark:text-white">
                 Project Milestone Checklist
               </h2>
@@ -354,12 +354,12 @@ export const ProjectWorkspacePage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2 pl-3">
+                    <div className="space-y-2 pl-2 sm:pl-3">
                       {milestone.tasks.map((task) => (
                         <div
                           key={task.id}
                           onClick={() => handleToggleTask(milestone.id, task.id)}
-                          className={`p-3 rounded-xl border text-xs font-medium flex items-center gap-3 cursor-pointer transition-colors ${task.isCompleted
+                          className={`min-h-[44px] p-3 rounded-xl border text-xs font-medium flex items-center gap-3 cursor-pointer transition-colors ${task.isCompleted
                               ? 'bg-neutral-50 dark:bg-neutral-900/60 border-neutral-200 dark:border-neutral-800/80 text-neutral-400 line-through'
                               : 'bg-white dark:bg-[#262626] border-neutral-200 dark:border-neutral-700/80 text-neutral-800 dark:text-neutral-200 hover:border-neutral-400'
                             }`}
@@ -380,7 +380,7 @@ export const ProjectWorkspacePage: React.FC = () => {
           </div>
 
           {/* Technical Requirements Spec */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-4">
+          <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-4">
             <h3 className="text-xs font-bold text-neutral-900 dark:text-white uppercase tracking-wider">
               Technical Requirements
             </h3>
@@ -398,7 +398,7 @@ export const ProjectWorkspacePage: React.FC = () => {
         {/* Right Column: Proof of Work Submission & Mentor Feedback (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
           {/* Submit Proof of Work Form */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
+          <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-sm space-y-4">
             <div className="space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5" />
@@ -471,7 +471,7 @@ export const ProjectWorkspacePage: React.FC = () => {
           </div>
 
           {/* Mentor Review Card */}
-          <div className="p-6 rounded-3xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
+          <div className="p-4 sm:p-6 rounded-3xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded-md bg-blue-500/10 dark:bg-blue-500/20 p-1 flex items-center justify-center shrink-0">
                 <img src="/graphics/thumbs-up-trust.svg" alt="Code Review" className="w-full h-full object-contain dark:invert" />

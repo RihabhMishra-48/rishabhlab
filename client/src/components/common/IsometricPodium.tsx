@@ -7,7 +7,7 @@ export const Hero3DVisual: React.FC = () => {
       <div className="absolute w-72 h-72 bg-blue-500/10 dark:bg-blue-400/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
 
       {/* Isometric Stage Container */}
-      <div className="relative w-full h-full flex items-center justify-center scale-95 sm:scale-100 transition-transform">
+      <div className="relative w-full h-full flex items-center justify-center scale-[0.82] xs:scale-90 sm:scale-100 transition-transform">
         {/* Floating Base Platform */}
         <div className="absolute w-72 sm:w-80 h-36 bg-white/90 dark:bg-[#262626]/90 rounded-3xl border border-neutral-200/80 dark:border-neutral-700/60 shadow-podium dark:shadow-podium-dark transform -rotate-12 skew-x-12 translate-y-8 flex items-center justify-center backdrop-blur-md">
           {/* Subtle grid lines on platform */}
