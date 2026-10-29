@@ -99,6 +99,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const isStockAvatar = profile.avatar_url && (profile.avatar_url.includes('unsplash.com') || profile.avatar_url.includes('rishabh.webp'));
             const userAvatar = (profile.avatar_url && !isStockAvatar) ? profile.avatar_url : (metaAvatar || '');
 
+            const effectiveEmail = (profile.email || session.user.email || '').toLowerCase();
+            if (userAvatar && effectiveEmail) {
+              localStorage.setItem(`rishabhlabs_avatar_${effectiveEmail}`, userAvatar);
+            }
+
             // Auto-heal avatar_url and is_onboarded in profiles
             if (metaAvatar && (!profile.avatar_url || isStockAvatar)) {
               supabase.from('profiles').update({ avatar_url: metaAvatar }).eq('id', profile.id).then(() => {}, () => {});
@@ -235,6 +240,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               } catch {}
             }
 
+            // Fallback avatar lookup in Supabase Auth session metadata (Google OAuth profile picture)
+            if (!cleanAvatar && isSupabaseConfigured) {
+              try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const metaAvatar = session?.user?.user_metadata?.avatar_url || session?.user?.user_metadata?.picture;
+                if (metaAvatar && !metaAvatar.includes('rishabh.webp') && !metaAvatar.includes('unsplash.com')) {
+                  cleanAvatar = metaAvatar;
+                  if (session?.user?.id) {
+                    supabase.from('profiles').update({ avatar_url: metaAvatar }).eq('id', session.user.id).then(() => {}, () => {});
+                  }
+                }
+              } catch {}
+            }
+
+            // Fallback avatar lookup in persistent localStorage cache
+            if (!cleanAvatar && data.email) {
+              const localCached = localStorage.getItem(`rishabhlabs_avatar_${data.email.toLowerCase()}`);
+              if (localCached && !localCached.includes('rishabh.webp') && !localCached.includes('unsplash.com')) {
+                cleanAvatar = localCached;
+              }
+            }
+
+            // Persist valid avatar in localStorage cache
+            if (cleanAvatar && data.email) {
+              localStorage.setItem(`rishabhlabs_avatar_${data.email.toLowerCase()}`, cleanAvatar);
+            }
+
             const isAdmin = data.role === 'super_admin' || data.role === 'admin';
             const effectiveOnboarded = isAdmin || data.role === 'mentor' || data.role === 'college_admin'
               ? true
@@ -342,6 +374,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const isStockAvatar = profile.avatar_url && (profile.avatar_url.includes('unsplash.com') || profile.avatar_url.includes('rishabh.webp'));
               const userAvatar = (profile.avatar_url && !isStockAvatar) ? profile.avatar_url : (metaAvatar || '');
 
+              if (userAvatar && cleanUserEmail) {
+                localStorage.setItem(`rishabhlabs_avatar_${cleanUserEmail}`, userAvatar);
+              }
+
               if (isUserOnboarded) {
                 localStorage.setItem(userOnboardedKey, 'true');
               }
@@ -371,6 +407,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } else {
               const cleanUserEmail = (session.user.email || '').toLowerCase();
               const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '';
+              if (metaAvatar && cleanUserEmail) {
+                localStorage.setItem(`rishabhlabs_avatar_${cleanUserEmail}`, metaAvatar);
+              }
               let userRole = session.user.user_metadata?.role || 'student';
               if (cleanUserEmail === 'mishrarishabh2006@gmail.com') {
                 userRole = 'super_admin';

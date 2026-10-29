@@ -33,7 +33,8 @@ import {
   UserCog,
   GraduationCap,
   UserCheck,
-  RefreshCw
+  RefreshCw,
+  Building2
 } from 'lucide-react';
 
 type AdminTab = 'users' | 'mentors' | 'colleges' | 'questions' | 'roadmaps' | 'tasks' | 'pricing' | 'overview';
@@ -228,51 +229,7 @@ export const AdminDashboardPage: React.FC = () => {
         }
       }
 
-      const defaultColleges = [
-        {
-          _id: 'col-gla',
-          id: 'col-gla',
-          name: 'GLA University, Mathura',
-          code: 'GLA',
-          location: 'Mathura, Uttar Pradesh',
-          coordinatorName: 'Dr. A. K. Sharma',
-          coordinatorEmail: 'campus.gla@rishabhlab.com',
-          activeStudents: 340,
-          placementRate: '94.2%',
-          departments: ['Computer Science', 'Data Science', 'Cybersecurity'],
-          status: 'Active Partner',
-          mouSigned: true,
-        },
-        {
-          _id: 'col-galgotias',
-          id: 'col-galgotias',
-          name: 'Galgotias University',
-          code: 'GU',
-          location: 'Greater Noida, Uttar Pradesh',
-          coordinatorName: 'Prof. Neha Gupta',
-          coordinatorEmail: 'director.galgotias@rishabhlab.com',
-          activeStudents: 280,
-          placementRate: '91.8%',
-          departments: ['Computer Science & Engg', 'AI & Machine Learning'],
-          status: 'Active Partner',
-          mouSigned: true,
-        },
-        {
-          _id: 'col-amity',
-          id: 'col-amity',
-          name: 'Amity University Noida',
-          code: 'AU',
-          location: 'Noida, Uttar Pradesh',
-          coordinatorName: 'Dr. Rajesh Verma',
-          coordinatorEmail: 'hod.amity@rishabhlab.com',
-          activeStudents: 215,
-          placementRate: '89.5%',
-          departments: ['Information Technology', 'Software Engg'],
-          status: 'Active Partner',
-          mouSigned: true,
-        },
-      ];
-      const finalColleges = (Array.isArray(collegesData) && collegesData.length > 0) ? collegesData : defaultColleges;
+      const finalColleges = Array.isArray(collegesData) ? collegesData : [];
 
       // Keep all live database user records (students, mentors, college admins, and admins)
       // Guarantee current admin user is present if not already in the list
@@ -290,69 +247,8 @@ export const AdminDashboardPage: React.FC = () => {
         });
       }
 
-      // Strictly retain only 3 core mentors: Harsh, Rishabh, and Arpit
-      const allowedMentorNames = ['harsh', 'rishabh', 'arpit'];
-      finalMentors = finalMentors.filter((m: any) =>
-        allowedMentorNames.some((name) => m.name?.toLowerCase().includes(name))
-      );
-
-      const defaultCoreMentors = [
-        {
-          _id: 'mentor-harsh',
-          id: '95bfd62b-cbe8-4bd1-b902-d8045666fa83',
-          name: 'Harsh Sharma',
-          title: 'Cybersecurity & Systems Lead',
-          company: 'RishabhLabs',
-          domain: 'Cybersecurity & Ethical Hacking',
-          avatar: '/avatars/harsh.webp',
-          rating: 4.95,
-          reviewsCount: 68,
-          bio: 'Lead cybersecurity consultant specializing in penetration testing, threat modeling, and secure systems.',
-          hourlyRate: 'Free for Pro',
-          topics: ['Cybersecurity', 'Bug Bounty', 'Pen Testing', 'Network Security'],
-          availability: ['Today, 6:00 PM IST', 'Tomorrow, 8:00 PM IST'],
-          isAvailableToday: true,
-        },
-        {
-          _id: 'mentor-rishabh',
-          id: '741d6010-d498-4b99-b0bd-4ee6300cf329',
-          name: 'Rishabh Mishra',
-          title: 'Principal Architect & Founder',
-          company: 'RishabhLabs',
-          domain: 'Full-Stack & Cloud Architecture',
-          avatar: '/avatars/rishabh.webp',
-          rating: 5.0,
-          reviewsCount: 142,
-          bio: 'Architecting scalable cloud systems, microservices, and leading tech mentorship programs.',
-          hourlyRate: 'Free for Pro',
-          topics: ['Full-Stack', 'Cloud Architecture', 'System Design', 'DevOps'],
-          availability: ['Today, 7:00 PM IST', 'Thursday, 6:30 PM IST'],
-          isAvailableToday: true,
-        },
-        {
-          _id: 'mentor-arpit',
-          id: 'a49e08e3-9f4d-4215-9223-b7388128357c',
-          name: 'Arpit Pandey',
-          title: 'AI & Machine Learning Specialist',
-          company: 'RishabhLabs',
-          domain: 'AI & Data Science',
-          avatar: '/avatars/arpit.webp',
-          rating: 4.9,
-          reviewsCount: 94,
-          bio: 'Specialist in deep learning, neural networks, and applied AI systems.',
-          hourlyRate: 'Free for Pro',
-          topics: ['Machine Learning', 'Deep Learning', 'PyTorch', 'Data Pipelines'],
-          availability: ['Today, 8:30 PM IST', 'Friday, 7:00 PM IST'],
-          isAvailableToday: true,
-        },
-      ];
-
-      for (const dcm of defaultCoreMentors) {
-        const exists = finalMentors.some((m: any) => m.name?.toLowerCase().includes(dcm.name.split(' ')[0].toLowerCase()));
-        if (!exists) {
-          finalMentors.push(dcm);
-        }
-      }
+      // Live mentors from database without mock poisoning or hardcoded name filters
+      finalMentors = Array.isArray(mentorsData) ? mentorsData : [];
 
       setUsers(finalUsers);
       setMentors(finalMentors);
@@ -392,19 +288,17 @@ export const AdminDashboardPage: React.FC = () => {
     fetchAllData();
   }, [user]);
 
-  // Real-time Supabase database listener for profiles & user changes
+  // Real-time Supabase database listener for live database sync across tabs
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
     try {
       const channel = supabase
-        .channel('admin-profiles-realtime')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'profiles' },
-          () => {
-            fetchAllData();
-          }
-        )
+        .channel('admin-db-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchAllData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'mentors' }, () => fetchAllData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'colleges' }, () => fetchAllData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'mentorship_requests' }, () => fetchAllData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pricing_plans' }, () => fetchAllData())
         .subscribe();
 
       return () => {
@@ -637,7 +531,7 @@ export const AdminDashboardPage: React.FC = () => {
   const handleDeleteCollege = async (id: string, name: string) => {
     if (!window.confirm(`Are you sure you want to remove partner institution "${name}"?`)) return;
     try {
-      await api.adminDeleteCollege(id).catch(() => null);
+      await api.adminDeleteCollege(id, name).catch(() => null);
       setColleges((prev) => prev.filter((c) => c._id !== id && c.id !== id && c.name !== name));
       showNotification(`College partner "${name}" removed.`);
     } catch (err: any) {
@@ -1056,11 +950,10 @@ export const AdminDashboardPage: React.FC = () => {
       <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-neutral-200 dark:border-neutral-800 no-scrollbar">
         <button
           onClick={() => setActiveTab('users')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
-            activeTab === 'users'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'users'
               ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
-          }`}
+            }`}
         >
           <UserCog className="w-4 h-4" />
           <span>Team & Member Roles</span>
@@ -1071,11 +964,10 @@ export const AdminDashboardPage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('mentors')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
-            activeTab === 'mentors'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'mentors'
               ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
-          }`}
+            }`}
         >
           <Users className="w-4 h-4" />
           <span>Mentors</span>
@@ -1086,11 +978,10 @@ export const AdminDashboardPage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('colleges')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
-            activeTab === 'colleges'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'colleges'
               ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
-          }`}
+            }`}
         >
           <GraduationCap className="w-4 h-4" />
           <span>Colleges & Partners</span>
@@ -1101,11 +992,10 @@ export const AdminDashboardPage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('questions')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
-            activeTab === 'questions'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'questions'
               ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
-          }`}
+            }`}
         >
           <Code2 className="w-4 h-4" />
           <span>Questions & Problems</span>
@@ -1116,11 +1006,10 @@ export const AdminDashboardPage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('roadmaps')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
-            activeTab === 'roadmaps'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'roadmaps'
               ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
-          }`}
+            }`}
         >
           <Compass className="w-4 h-4" />
           <span>Roadmaps & Nodes</span>
@@ -1131,11 +1020,10 @@ export const AdminDashboardPage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('tasks')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
-            activeTab === 'tasks'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'tasks'
               ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
-          }`}
+            }`}
         >
           <CheckCircle2 className="w-4 h-4" />
           <span>Daily Tasks & Missions</span>
@@ -1146,11 +1034,10 @@ export const AdminDashboardPage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('pricing')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
-            activeTab === 'pricing'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'pricing'
               ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
-          }`}
+            }`}
         >
           <CreditCard className="w-4 h-4" />
           <span>Pricing & Plans</span>
@@ -1161,11 +1048,10 @@ export const AdminDashboardPage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${
-            activeTab === 'overview'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'overview'
               ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
-          }`}
+            }`}
         >
           <Layers className="w-4 h-4" />
           <span>Platform Metrics</span>
@@ -1240,11 +1126,10 @@ export const AdminDashboardPage: React.FC = () => {
                 <button
                   key={rf.id}
                   onClick={() => setUserRoleFilter(rf.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                    userRoleFilter === rf.id
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${userRoleFilter === rf.id
                       ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-2xs'
                       : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                  }`}
+                    }`}
                 >
                   {rf.label}
                 </button>
@@ -1320,17 +1205,16 @@ export const AdminDashboardPage: React.FC = () => {
 
                           <td className="px-4 py-3.5">
                             <span
-                              className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                                u.role === 'super_admin'
+                              className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${u.role === 'super_admin'
                                   ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
                                   : u.role === 'admin'
-                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                                  : u.role === 'mentor'
-                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                  : u.role === 'college_admin'
-                                  ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                                  : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                              }`}
+                                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                    : u.role === 'mentor'
+                                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                      : u.role === 'college_admin'
+                                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                }`}
                             >
                               {u.role || 'student'}
                             </span>
@@ -1413,106 +1297,123 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mentors
-              .filter((m) =>
-                m.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                m.domain?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                m.company?.toLowerCase().includes(searchQuery.toLowerCase())
-              )
-              .map((mentor) => (
-                <div
-                  key={mentor._id || mentor.id || mentor.name}
-                  className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col justify-between space-y-4"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <UserAvatar
-                          src={mentor.avatar}
-                          name={mentor.name}
-                          size="lg"
-                          roundedClassName="rounded-full"
-                        />
-                        <div>
-                          <h3 className="font-bold text-sm text-neutral-900 dark:text-white leading-tight">
-                            {mentor.name}
-                          </h3>
-                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                            {mentor.title} @ {mentor.company}
-                          </p>
+          {mentors.length === 0 ? (
+            <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
+              <Users className="w-10 h-10 text-neutral-400 mx-auto mb-3" />
+              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">No mentors configured yet</h3>
+              <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto mb-4">
+                Add experienced engineering specialists to the platform to open 1:1 consultation slots for learners.
+              </p>
+              <button
+                onClick={() => handleOpenMentorModal()}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors inline-flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add First Mentor</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {mentors
+                .filter((m) =>
+                  m.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  m.domain?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  m.company?.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((mentor) => (
+                  <div
+                    key={mentor._id || mentor.id || mentor.name}
+                    className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col justify-between space-y-4"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <UserAvatar
+                            src={mentor.avatar}
+                            name={mentor.name}
+                            size="lg"
+                            roundedClassName="rounded-full"
+                          />
+                          <div>
+                            <h3 className="font-bold text-sm text-neutral-900 dark:text-white leading-tight">
+                              {mentor.name}
+                            </h3>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                              {mentor.title} @ {mentor.company}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                        <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                        <span>{mentor.rating || 5.0}</span>
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                        {mentor.domain || 'General'}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
-                        {mentor.hourlyRate || 'Free for Pro'}
-                      </span>
-                      {mentor.isAvailableToday && (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                          Active Today
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                          <span>{mentor.rating || 1.0}</span>
                         </span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                          {mentor.domain || 'General'}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
+                          {mentor.hourlyRate || 'Free for Pro'}
+                        </span>
+                        {mentor.isAvailableToday && (
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            Active Today
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-neutral-600 dark:text-neutral-300 line-clamp-3 leading-relaxed">
+                        {mentor.bio}
+                      </p>
+
+                      {mentor.topics && mentor.topics.length > 0 && (
+                        <div className="pt-1">
+                          <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider block mb-1">
+                            Focus Areas
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {(Array.isArray(mentor.topics) ? mentor.topics : []).map((topic: string) => (
+                              <span
+                                key={topic}
+                                className="px-2 py-0.5 rounded text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300"
+                              >
+                                {topic}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       )}
                     </div>
 
-                    <p className="text-xs text-neutral-600 dark:text-neutral-300 line-clamp-3 leading-relaxed">
-                      {mentor.bio}
-                    </p>
-
-                    {mentor.topics && mentor.topics.length > 0 && (
-                      <div className="pt-1">
-                        <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider block mb-1">
-                          Focus Areas
-                        </span>
-                        <div className="flex flex-wrap gap-1">
-                          {(Array.isArray(mentor.topics) ? mentor.topics : []).map((topic: string) => (
-                            <span
-                              key={topic}
-                              className="px-2 py-0.5 rounded text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300"
-                            >
-                              {topic}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenMentorModal(mentor)}
+                        className="flex-1 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 flex items-center justify-center gap-1.5"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>Edit Mentor</span>
+                      </button>
+                      <Link
+                        to="/mentor/sessions"
+                        className="px-3 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 flex items-center justify-center gap-1"
+                        title="View Sessions & Inquiries"
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>Bookings</span>
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteMentor(mentor._id || mentor.id || mentor.name, mentor.name)}
+                        className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold flex items-center justify-center"
+                        title="Remove mentor"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-
-                  <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center gap-2">
-                    <button
-                      onClick={() => handleOpenMentorModal(mentor)}
-                      className="flex-1 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 flex items-center justify-center gap-1.5"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                      <span>Edit Mentor</span>
-                    </button>
-                    <Link
-                      to="/mentor/sessions"
-                      className="px-3 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 flex items-center justify-center gap-1"
-                      title="View Sessions & Inquiries"
-                    >
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>Bookings</span>
-                    </Link>
-                    <button
-                      onClick={() => handleDeleteMentor(mentor._id || mentor.id || mentor.name, mentor.name)}
-                      className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold flex items-center justify-center"
-                      title="Remove mentor"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-          </div>
+                ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -1563,94 +1464,111 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
 
           {/* Colleges Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {colleges
-              .filter((c) =>
-                c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                c.code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                c.location?.toLowerCase().includes(searchQuery.toLowerCase())
-              )
-              .map((college) => (
-                <div
-                  key={college._id || college.id || college.name}
-                  className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col justify-between space-y-4"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-extrabold text-sm flex items-center justify-center shrink-0">
-                          {college.code || college.name.substring(0, 2).toUpperCase()}
+          {colleges.length === 0 ? (
+            <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
+              <Building2 className="w-10 h-10 text-neutral-400 mx-auto mb-3" />
+              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">No partner institutions yet</h3>
+              <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto mb-4">
+                Onboard universities and colleges to track enterprise student metrics, cohorts, and placement performance.
+              </p>
+              <button
+                onClick={() => setCollegeModalOpen(true)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors inline-flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Onboard First College Partner</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {colleges
+                .filter((c) =>
+                  c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  c.code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  c.location?.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((college) => (
+                  <div
+                    key={college._id || college.id || college.name}
+                    className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col justify-between space-y-4"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-extrabold text-sm flex items-center justify-center shrink-0">
+                            {college.code || college.name.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-sm text-neutral-900 dark:text-white leading-tight">
+                              {college.name}
+                            </h3>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                              {college.location}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          <Check className="w-2.5 h-2.5" />
+                          <span>MOU Active</span>
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800 text-xs">
+                        <div>
+                          <span className="text-[10px] text-neutral-400 block font-medium">Students Enrolled</span>
+                          <span className="font-bold text-neutral-800 dark:text-neutral-200">{college.activeStudents || 120}</span>
                         </div>
                         <div>
-                          <h3 className="font-bold text-sm text-neutral-900 dark:text-white leading-tight">
-                            {college.name}
-                          </h3>
-                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                            {college.location}
-                          </p>
+                          <span className="text-[10px] text-neutral-400 block font-medium">Placement Rate</span>
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400">{college.placementRate || '92%'}</span>
                         </div>
                       </div>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                        <Check className="w-2.5 h-2.5" />
-                        <span>MOU Active</span>
-                      </span>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800 text-xs">
-                      <div>
-                        <span className="text-[10px] text-neutral-400 block font-medium">Students Enrolled</span>
-                        <span className="font-bold text-neutral-800 dark:text-neutral-200">{college.activeStudents || 120}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-neutral-400 block font-medium">Placement Rate</span>
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400">{college.placementRate || '92%'}</span>
-                      </div>
-                    </div>
-
-                    {college.departments && (
-                      <div>
-                        <span className="text-[10px] text-neutral-400 font-medium block mb-1">Affiliated Departments:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {(Array.isArray(college.departments) ? college.departments : [college.departments]).map((dept: string, idx: number) => (
-                            <span
-                              key={idx}
-                              className="px-2 py-0.5 rounded-md text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300"
-                            >
-                              {dept}
-                            </span>
-                          ))}
+                      {college.departments && (
+                        <div>
+                          <span className="text-[10px] text-neutral-400 font-medium block mb-1">Affiliated Departments:</span>
+                          <div className="flex flex-wrap gap-1">
+                            {(Array.isArray(college.departments) ? college.departments : [college.departments]).map((dept: string, idx: number) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-0.5 rounded-md text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300"
+                              >
+                                {dept}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {college.coordinatorName && (
-                      <div className="text-[11px] text-neutral-500 dark:text-neutral-400 pt-1">
-                        <span className="font-medium text-neutral-700 dark:text-neutral-300">Lead Coordinator:</span> {college.coordinatorName} ({college.coordinatorEmail})
-                      </div>
-                    )}
-                  </div>
+                      {college.coordinatorName && (
+                        <div className="text-[11px] text-neutral-500 dark:text-neutral-400 pt-1">
+                          <span className="font-medium text-neutral-700 dark:text-neutral-300">Lead Coordinator:</span> {college.coordinatorName} ({college.coordinatorEmail})
+                        </div>
+                      )}
+                    </div>
 
-                  <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center gap-2">
-                    <a
-                      href="/college"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 flex items-center justify-center gap-1.5"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span>View Portal</span>
-                    </a>
-                    <button
-                      onClick={() => handleDeleteCollege(college._id || college.id || college.name, college.name)}
-                      className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold flex items-center justify-center"
-                      title="Remove college partner"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center gap-2">
+                      <a
+                        href="/college"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 flex items-center justify-center gap-1.5"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>View Portal</span>
+                      </a>
+                      <button
+                        onClick={() => handleDeleteCollege(college._id || college.id || college.name, college.name)}
+                        className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold flex items-center justify-center"
+                        title="Remove college partner"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-          </div>
+                ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -1707,8 +1625,8 @@ export const AdminDashboardPage: React.FC = () => {
                     prob.difficulty === 'Hard'
                       ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
                       : prob.difficulty === 'Medium'
-                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                      : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
 
                   return (
                     <div
@@ -1820,13 +1738,12 @@ export const AdminDashboardPage: React.FC = () => {
                           <span className="text-[10px] font-bold uppercase text-neutral-400">
                             Step {node.stepNumber || idx + 1}
                           </span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            node.status === 'completed'
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${node.status === 'completed'
                               ? 'bg-emerald-500/10 text-emerald-500'
                               : node.status === 'in_progress'
-                              ? 'bg-blue-500/10 text-blue-500'
-                              : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400'
-                          }`}>
+                                ? 'bg-blue-500/10 text-blue-500'
+                                : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400'
+                            }`}>
                             {node.status}
                           </span>
                         </div>

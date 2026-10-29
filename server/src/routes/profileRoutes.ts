@@ -8,6 +8,7 @@ import { Roadmap } from '../models/Roadmap';
 const router = Router();
 
 import mongoose from 'mongoose';
+import { supabase } from '../config/supabase';
 
 // GET /api/profile - current authenticated user profile
 router.get('/', requireAuth, async (req: AuthRequest, res) => {
@@ -169,16 +170,64 @@ router.patch('/', requireAuth, async (req: AuthRequest, res) => {
     const user = req.user!;
     const { name, bio, college, degree, year, githubUsername, avatar, targetGoal } = req.body;
 
+    const resolvedAvatar = avatar !== undefined ? (avatar || user.avatar || '') : user.avatar;
+
     if (name) user.name = name;
     if (bio !== undefined) user.bio = bio;
-    if (college) user.college = college;
-    if (degree) user.degree = degree;
-    if (year) user.year = year;
+    if (college !== undefined) user.college = college;
+    if (degree !== undefined) user.degree = degree;
+    if (year !== undefined) user.year = year;
     if (githubUsername !== undefined) user.githubUsername = githubUsername;
-    if (avatar !== undefined) user.avatar = avatar;
+    if (resolvedAvatar !== undefined) user.avatar = resolvedAvatar;
     if (targetGoal !== undefined) (user as any).targetGoal = targetGoal;
 
-    await user.save();
+    // 1. Sync directly to Supabase profiles
+    if (supabase && (user._id || user.email)) {
+      try {
+        const sbUpdate: any = {};
+        if (name) sbUpdate.full_name = name;
+        if (bio !== undefined) sbUpdate.bio = bio;
+        if (college !== undefined) sbUpdate.college_name = college;
+        if (degree !== undefined) sbUpdate.degree = degree;
+        if (year !== undefined) sbUpdate.year_of_study = year;
+        if (githubUsername !== undefined) sbUpdate.github_username = githubUsername;
+        if (avatar) sbUpdate.avatar_url = avatar;
+        if (targetGoal) sbUpdate.target_goal = targetGoal;
+
+        if (Object.keys(sbUpdate).length > 0) {
+          if (user.email) {
+            await supabase.from('profiles').update(sbUpdate).eq('email', user.email.toLowerCase());
+          } else if (user._id) {
+            await supabase.from('profiles').update(sbUpdate).eq('id', user._id.toString());
+          }
+        }
+      } catch (sbErr) {
+        console.warn('Supabase profile update warning:', sbErr);
+      }
+    }
+
+    // 2. Sync to MongoDB if connected
+    if (mongoose.connection.readyState === 1 && user._id) {
+      try {
+        if (typeof (user as any).save === 'function') {
+          await (user as any).save();
+        } else {
+          await User.findByIdAndUpdate(user._id, {
+            name: user.name,
+            bio: user.bio,
+            college: user.college,
+            degree: user.degree,
+            year: user.year,
+            githubUsername: user.githubUsername,
+            avatar: user.avatar,
+            targetGoal: (user as any).targetGoal,
+          });
+        }
+      } catch (mErr) {
+        console.warn('Mongo update profile warning:', mErr);
+      }
+    }
+
     res.json({ success: true, user });
   } catch (err: any) {
     res.status(500).json({ message: err.message });

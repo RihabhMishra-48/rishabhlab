@@ -8,53 +8,72 @@ import { supabase, isSupabaseConfigured } from '../config/supabase';
 const router = Router();
 
 // ============================================================================
-// 1. PUBLIC / CATALOG MENTORS LIST (Restricted to Harsh, Rishabh, Arpit)
+// 1. PUBLIC / CATALOG MENTORS LIST (Real Database-Driven)
 // ============================================================================
 router.get('/', async (req, res) => {
   try {
     const { topic, domain } = req.query;
     let mentors: any[] = [];
 
+    // 1. Fetch live mentors from Supabase
     if (isSupabaseConfigured() && supabase) {
       try {
-        const { data: sbMentors } = await supabase.from('mentors').select('*');
-        if (sbMentors && sbMentors.length > 0) {
-          // Strictly keep only Rishabh Mishra, Arpit Pandey, and Harsh Sharma
-          mentors = sbMentors
-            .filter((m: any) => {
-              const l = (m.name || '').toLowerCase();
-              if (l.includes('khare')) return false;
-              return l.includes('harsh') || l.includes('rishabh') || l.includes('arpit');
-            })
-            .map((m: any) => {
-              const l = (m.name || '').toLowerCase();
-              let avatar = '/avatars/rishabh.webp';
-              if (l.includes('arpit')) avatar = '/avatars/arpit.webp';
-              else if (l.includes('harsh')) avatar = '/avatars/harsh.webp';
-              else if (l.includes('rishabh')) avatar = '/avatars/rishabh.webp';
+        const { data: sbMentors, error: sbErr } = await supabase
+          .from('mentors')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-              return {
-                _id: m.id,
-                id: m.id,
-                name: m.name,
-                title: m.title || 'Senior Mentor',
-                company: m.company || 'RishabhLabs',
-                domain: m.domain || 'Technology',
-                avatar,
-                rating: m.rating || 5.0,
-                reviewsCount: m.reviews_count || (m.experience_years ? m.experience_years * 16 : 85),
-                bio: m.bio || '',
-                hourlyRate: m.hourly_rate_inr ? `₹${m.hourly_rate_inr}` : 'Free for Students',
-                topics: m.topics || ['Roadmap', 'System Design'],
-                availability: m.available_days && m.available_days.length > 0
-                  ? m.available_days.map((d: string) => `${d}, 7:00 PM IST`)
-                  : ['Today, 7:00 PM IST'],
-                isAvailableToday: true,
-              };
-            });
+        if (!sbErr && sbMentors && sbMentors.length > 0) {
+          mentors = sbMentors.map((m: any) => ({
+            _id: m.id,
+            id: m.id,
+            name: m.name,
+            title: m.title || 'Senior Mentor',
+            company: m.company || 'RishabhLabs',
+            domain: m.domain || 'Technology',
+            avatar: m.avatar || '/avatars/default.webp',
+            rating: Number(m.rating) || 5.0,
+            reviewsCount: Number(m.reviews_count) || (m.experience_years ? m.experience_years * 16 : 48),
+            bio: m.bio || '',
+            hourlyRate: m.hourly_rate || (m.hourly_rate_inr ? `₹${m.hourly_rate_inr}` : 'Free for Students'),
+            topics: Array.isArray(m.topics) ? m.topics : ['Roadmap', 'Architecture'],
+            availability: Array.isArray(m.availability)
+              ? m.availability
+              : (Array.isArray(m.available_days) && m.available_days.length > 0
+                ? m.available_days.map((d: string) => `${d}, 7:00 PM IST`)
+                : ['Today, 7:00 PM IST']),
+            isAvailableToday: m.is_available_today !== undefined ? Boolean(m.is_available_today) : true,
+          }));
         }
       } catch (e) {
         console.warn('Supabase mentors fetch warning:', e);
+      }
+    }
+
+    // 2. Fetch from MongoDB if Supabase returned nothing
+    if (mentors.length === 0 && mongoose.connection.readyState === 1) {
+      try {
+        const mMentors = await Mentor.find({}).sort({ createdAt: -1 });
+        if (mMentors && mMentors.length > 0) {
+          mentors = mMentors.map((m: any) => ({
+            _id: m._id.toString(),
+            id: m._id.toString(),
+            name: m.name,
+            title: m.title,
+            company: m.company,
+            domain: m.domain || 'Technology',
+            avatar: m.avatar || '/avatars/default.webp',
+            rating: m.rating || 5.0,
+            reviewsCount: m.reviewsCount || 48,
+            bio: m.bio,
+            hourlyRate: m.hourlyRate || 'Free for Students',
+            topics: m.topics || [],
+            availability: m.availability || ['Today, 7:00 PM IST'],
+            isAvailableToday: m.isAvailableToday !== undefined ? m.isAvailableToday : true,
+          }));
+        }
+      } catch (mErr) {
+        console.warn('Mongo find mentors warning:', mErr);
       }
     }
 
@@ -103,22 +122,65 @@ router.post('/request', requireAuth, async (req: AuthRequest, res) => {
 
     if (isSupabaseConfigured() && supabase) {
       try {
+        // Resolve student UUID
+        let validStudentId: string = user._id ? user._id.toString() : '';
+        const isStudentUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(validStudentId);
+        if (!isStudentUUID && user.email) {
+          const { data: p } = await supabase.from('profiles').select('id').eq('email', user.email.toLowerCase()).single();
+          if (p?.id) validStudentId = p.id;
+        }
+
+        // Resolve mentor UUID
+        let validMentorId = mentorId;
+        const isMentorUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(validMentorId);
+        if (!isMentorUUID && mentorId) {
+          const { data: m } = await supabase.from('mentors').select('id').or(`name.ilike.%${mentorId}%,id.eq.${mentorId}`).limit(1).single();
+          if (m?.id) validMentorId = m.id;
+        }
+
         const { data: inserted, error: insErr } = await supabase.from('mentorship_requests').insert({
-          mentor_id: mentorId || null,
-          student_id: user._id || null,
+          mentor_id: validMentorId || null,
+          student_id: validStudentId || null,
           topic: newRequest.topic,
           requested_date: new Date(Date.now() + 86400000).toISOString(),
           student_note: newRequest.message,
           status: 'confirmed',
           meeting_link: newRequest.meetingLink,
+          notes_from_mentor: newRequest.notesFromMentor,
         }).select().single();
 
         if (inserted && !insErr) {
           newRequest._id = inserted.id;
           newRequest.id = inserted.id;
+        } else if (insErr) {
+          console.warn('Supabase request insert warning:', insErr);
         }
       } catch (e) {
-        console.warn('Supabase request insert warning:', e);
+        console.warn('Supabase request insert exception:', e);
+      }
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        if (mongoose.Types.ObjectId.isValid(mentorId) && mongoose.Types.ObjectId.isValid(user._id)) {
+          const mongoReq = await MentorshipRequest.create({
+            studentId: user._id,
+            mentorId,
+            topic: newRequest.topic,
+            contextType: newRequest.contextType,
+            message: newRequest.message,
+            preferredSlot: newRequest.preferredSlot,
+            status: 'confirmed',
+            meetingLink: newRequest.meetingLink,
+            notesFromMentor: newRequest.notesFromMentor,
+          });
+          if (mongoReq && !newRequest.id.includes('-')) {
+            newRequest._id = mongoReq._id.toString();
+            newRequest.id = mongoReq._id.toString();
+          }
+        }
+      } catch (mErr) {
+        console.warn('Mongo request create warning:', mErr);
       }
     }
 
@@ -140,10 +202,17 @@ router.get('/my-requests', requireAuth, async (req: AuthRequest, res) => {
     const user = req.user!;
     if (isSupabaseConfigured() && supabase) {
       try {
+        let studentId: string = user._id ? user._id.toString() : '';
+        const isStudentUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(studentId);
+        if (!isStudentUUID && user.email) {
+          const { data: p } = await supabase.from('profiles').select('id').eq('email', user.email.toLowerCase()).single();
+          if (p?.id) studentId = p.id;
+        }
+
         const { data: requests } = await supabase
           .from('mentorship_requests')
           .select('*')
-          .eq('student_id', user._id)
+          .eq('student_id', studentId)
           .order('created_at', { ascending: false });
 
         if (requests && requests.length > 0) {
@@ -157,6 +226,7 @@ router.get('/my-requests', requireAuth, async (req: AuthRequest, res) => {
             preferredSlot: r.requested_date,
             status: r.status,
             meetingLink: r.meeting_link,
+            notesFromMentor: r.notes_from_mentor,
             mentorId: mentorMap.get(r.mentor_id) || { name: 'Senior Mentor' },
             createdAt: r.created_at,
           })));
@@ -172,7 +242,7 @@ router.get('/my-requests', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // ============================================================================
-// 4. MENTOR WORKSPACE SESSIONS & INQUIRIES (Strict Student Privacy Guaranteed)
+// 4. MENTOR WORKSPACE SESSIONS & INQUIRIES (Live Database)
 // ============================================================================
 router.get('/mentor/sessions', requireAuth, async (req: AuthRequest, res) => {
   try {
@@ -205,7 +275,6 @@ router.get('/mentor/sessions', requireAuth, async (req: AuthRequest, res) => {
 
         const { data: sbRequests, error: sbErr } = await query;
         if (!sbErr && sbRequests && sbRequests.length > 0) {
-          // STRICT RULE: No student identity, email, degree, college, or role is included
           sessionsList = sbRequests.map((req: any) => ({
             _id: req.id,
             id: req.id,
@@ -213,9 +282,9 @@ router.get('/mentor/sessions', requireAuth, async (req: AuthRequest, res) => {
             topic: req.topic || 'General Technical Architecture',
             preferredSlot: req.requested_date
               ? new Date(req.requested_date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
-              : 'Today, 7:30 PM IST',
+              : (req.preferred_slot || 'Today, 7:30 PM IST'),
             requestedDate: req.requested_date,
-            message: req.student_note || 'Seeking mentorship review & guidance.',
+            message: req.student_note || req.message || 'Seeking mentorship review & guidance.',
             status: req.status || 'pending',
             meetingLink: req.meeting_link || 'https://meet.google.com/rsh-mentor-call',
             notesFromMentor: req.notes_from_mentor || '',
@@ -226,6 +295,31 @@ router.get('/mentor/sessions', requireAuth, async (req: AuthRequest, res) => {
         }
       } catch (e) {
         console.warn('Supabase mentor sessions error:', e);
+      }
+    }
+
+    // Fallback to MongoDB if Supabase returned no rows and Mongo is connected
+    if (sessionsList.length === 0 && mongoose.connection.readyState === 1) {
+      try {
+        const mSessions = await MentorshipRequest.find({}).populate('mentorId', 'name').sort({ createdAt: -1 });
+        if (mSessions && mSessions.length > 0) {
+          sessionsList = mSessions.map((s: any) => ({
+            _id: s._id.toString(),
+            id: s._id.toString(),
+            bookingCode: `BK-${s._id.toString().slice(-6).toUpperCase()}`,
+            topic: s.topic,
+            preferredSlot: s.preferredSlot,
+            message: s.message,
+            status: s.status,
+            meetingLink: s.meetingLink || 'https://meet.google.com/rsh-mentor-call',
+            notesFromMentor: s.notesFromMentor || '',
+            createdAt: s.createdAt,
+            mentorName: s.mentorId?.name || 'Senior Mentor',
+            mentorId: s.mentorId?._id?.toString(),
+          }));
+        }
+      } catch (mErr) {
+        console.warn('Mongo find sessions warning:', mErr);
       }
     }
 
@@ -249,7 +343,7 @@ router.put('/sessions/:id', requireAuth, async (req: AuthRequest, res) => {
       return res.status(403).json({ message: 'Forbidden: insufficient permissions' });
     }
 
-    // Normalizing status to match check constraint: 'pending' | 'confirmed' | 'completed' | 'cancelled'
+    // Normalizing status to match check constraint: 'pending' | 'accepted' | 'confirmed' | 'completed' | 'cancelled'
     if (status === 'accepted') status = 'confirmed';
 
     let updatedSession: any = {
@@ -260,21 +354,27 @@ router.put('/sessions/:id', requireAuth, async (req: AuthRequest, res) => {
       notesFromMentor: notesFromMentor || '',
     };
 
+    // 1. Update in Supabase
     if (isSupabaseConfigured() && supabase) {
       try {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
         const updatePayload: any = {};
         if (status) updatePayload.status = status;
         if (meetingLink !== undefined) updatePayload.meeting_link = meetingLink;
+        if (notesFromMentor !== undefined) updatePayload.notes_from_mentor = notesFromMentor;
         if (preferredSlot !== undefined) updatePayload.requested_date = preferredSlot;
 
-        const { data: updatedSb } = await supabase
-          .from('mentorship_requests')
-          .update(updatePayload)
-          .eq('id', id)
-          .select()
-          .single();
+        let query = supabase.from('mentorship_requests').update(updatePayload);
+        if (isUUID) {
+          query = query.eq('id', id);
+        } else {
+          // If custom id, attempt matching
+          query = query.eq('id', id);
+        }
 
-        if (updatedSb) {
+        const { data: updatedSb, error: sbErr } = await query.select().single();
+
+        if (updatedSb && !sbErr) {
           updatedSession = {
             _id: updatedSb.id,
             id: updatedSb.id,
@@ -282,21 +382,99 @@ router.put('/sessions/:id', requireAuth, async (req: AuthRequest, res) => {
             topic: updatedSb.topic,
             preferredSlot: updatedSb.requested_date
               ? new Date(updatedSb.requested_date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
-              : 'Flexible Slot',
+              : (updatedSb.preferred_slot || 'Flexible Slot'),
             requestedDate: updatedSb.requested_date,
-            message: updatedSb.student_note || '',
+            message: updatedSb.student_note || updatedSb.message || '',
             status: updatedSb.status,
             meetingLink: updatedSb.meeting_link,
-            notesFromMentor: notesFromMentor || '',
+            notesFromMentor: updatedSb.notes_from_mentor || '',
             createdAt: updatedSb.created_at,
           };
+        } else if (sbErr) {
+          console.warn('Supabase update session warning:', sbErr);
         }
       } catch (e) {
         console.warn('Supabase update session error:', e);
       }
     }
 
+    // 2. Update in MongoDB
+    if (mongoose.connection.readyState === 1) {
+      try {
+        if (mongoose.Types.ObjectId.isValid(id)) {
+          const mUpdated = await MentorshipRequest.findByIdAndUpdate(
+            id,
+            {
+              ...(status && { status }),
+              ...(meetingLink !== undefined && { meetingLink }),
+              ...(notesFromMentor !== undefined && { notesFromMentor }),
+              ...(preferredSlot !== undefined && { preferredSlot }),
+            },
+            { new: true }
+          );
+          if (mUpdated) {
+            updatedSession = {
+              _id: mUpdated._id.toString(),
+              id: mUpdated._id.toString(),
+              bookingCode: `BK-${mUpdated._id.toString().slice(-6).toUpperCase()}`,
+              topic: mUpdated.topic,
+              preferredSlot: mUpdated.preferredSlot,
+              message: mUpdated.message,
+              status: mUpdated.status,
+              meetingLink: mUpdated.meetingLink,
+              notesFromMentor: mUpdated.notesFromMentor,
+              createdAt: (mUpdated as any).createdAt || (mUpdated as any).created_at || new Date().toISOString(),
+            };
+          }
+        }
+      } catch (mErr) {
+        console.warn('Mongo update session warning:', mErr);
+      }
+    }
+
     res.json(updatedSession);
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ============================================================================
+// 6. DELETE SESSION / BOOKING INQUIRY
+// ============================================================================
+router.delete('/sessions/:id', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user!;
+    const isSuperAdmin = (user.role as string) === 'super_admin' || (user.role as string) === 'admin';
+
+    if (!isSuperAdmin && user.role !== 'mentor') {
+      return res.status(403).json({ message: 'Forbidden: insufficient permissions' });
+    }
+
+    // 1. Delete from Supabase
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUUID) {
+          await supabase.from('mentorship_requests').delete().eq('id', id);
+        } else {
+          await supabase.from('mentorship_requests').delete().eq('id', id);
+        }
+      } catch (sbErr) {
+        console.warn('Supabase delete session warning:', sbErr);
+      }
+    }
+
+    // 2. Delete from MongoDB
+    if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(id)) {
+      try {
+        await MentorshipRequest.findByIdAndDelete(id);
+      } catch (mErr) {
+        console.warn('Mongo delete session warning:', mErr);
+      }
+    }
+
+    res.json({ success: true, message: 'Session inquiry deleted successfully' });
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }

@@ -450,8 +450,10 @@ export const api = {
     invalidateCache(/college/);
     return res;
   },
-  adminDeleteCollege: async (id: string) => {
-    const res = await request<any>(`/admin/colleges/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  adminDeleteCollege: async (id: string, name?: string) => {
+    const qs = name ? `?name=${encodeURIComponent(name)}` : '';
+    const safeId = id && id !== 'undefined' ? encodeURIComponent(id) : 'by-name';
+    const res = await request<any>(`/admin/colleges/${safeId}${qs}`, { method: 'DELETE' });
     invalidateCache(/college/);
     return res;
   },
@@ -548,6 +550,13 @@ export const api = {
     const res = await request<any>(`/mentorship/sessions/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
+    });
+    invalidateCache(/mentorship/);
+    return res;
+  },
+  mentorDeleteSession: async (id: string) => {
+    const res = await request<any>(`/mentorship/sessions/${id}`, {
+      method: 'DELETE',
     });
     invalidateCache(/mentorship/);
     return res;

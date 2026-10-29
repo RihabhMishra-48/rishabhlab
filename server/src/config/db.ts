@@ -21,8 +21,6 @@ export const connectDB = async () => {
   // On Vercel or production serverless, DO NOT bootstrap MongoMemoryServer
   if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
     console.log('ℹ️ [Database] Running in production/serverless environment without MONGODB_URI. Operating with Supabase as primary datastore.');
-    // Disable Mongoose command buffering so queries fail fast and fall back gracefully to Supabase/curated data
-    mongoose.set('bufferCommands', false);
     return;
   }
 

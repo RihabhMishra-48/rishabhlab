@@ -4,6 +4,7 @@ import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Mentor } from '../../types';
 import { getCuratedMentors } from '../../data/curatedMentors';
+import { supabase, isSupabaseConfigured } from '../../services/supabase';
 import {
   Users,
   Compass,
@@ -108,51 +109,61 @@ export const MentorshipPage: React.FC = () => {
     { id: 'Internship Prep', label: 'Internship Prep', icon: Briefcase, desc: 'Mock interviews & technical questions' },
   ];
 
-  useEffect(() => {
-    const fetchMentors = async () => {
-      try {
-        const data = await api.getMentors();
-        if (data && data.length > 0) {
-          let filtered = data
-            .filter((m: any) => {
-              const l = (m.name || '').toLowerCase();
-              if (l.includes('khare')) return false;
-              return l.includes('harsh') || l.includes('rishabh') || l.includes('arpit');
-            })
-            .map((m: any) => {
-              const l = (m.name || '').toLowerCase();
-              let avatar = '/avatars/rishabh.webp';
-              if (l.includes('arpit')) avatar = '/avatars/arpit.webp';
-              else if (l.includes('harsh')) avatar = '/avatars/harsh.webp';
-              else if (l.includes('rishabh')) avatar = '/avatars/rishabh.webp';
-              return { ...m, avatar };
-            });
-          if (selectedDomain && selectedDomain !== 'All') {
-            const lower = selectedDomain.toLowerCase();
-            const domainFiltered = filtered.filter((m: any) => {
-              const d = (m.domain || '').toLowerCase();
-              if (lower.includes('ai') || lower.includes('ml')) return d.includes('ai') || d.includes('machine');
-              if (lower.includes('web') || lower.includes('full') || lower.includes('stack')) return d.includes('web') || d.includes('full-stack');
-              if (lower.includes('cyber') || lower.includes('sec')) return d.includes('cyber') || d.includes('sec');
-              return d.includes(lower);
-            });
-            if (domainFiltered.length > 0) filtered = domainFiltered;
-          }
-          if (filtered.length > 0) {
-            setMentors(filtered);
-            setSelectedMentor(filtered[0]);
-            return;
-          }
+  const fetchMentors = async () => {
+    try {
+      const data = await api.getMentors();
+      if (Array.isArray(data) && data.length > 0) {
+        let filtered = data.map((m: any) => ({
+          ...m,
+          avatar: m.avatar || '/avatars/default.webp',
+        }));
+        if (selectedDomain && selectedDomain !== 'All') {
+          const lower = selectedDomain.toLowerCase();
+          const domainFiltered = filtered.filter((m: any) => {
+            const d = (m.domain || '').toLowerCase();
+            if (lower.includes('ai') || lower.includes('ml')) return d.includes('ai') || d.includes('machine');
+            if (lower.includes('web') || lower.includes('full') || lower.includes('stack')) return d.includes('web') || d.includes('full-stack');
+            if (lower.includes('cyber') || lower.includes('sec')) return d.includes('cyber') || d.includes('sec');
+            return d.includes(lower);
+          });
+          if (domainFiltered.length > 0) filtered = domainFiltered;
         }
-      } catch (err) {
-        console.warn('API getMentors fallback to curated mentor list:', err);
+        if (filtered.length > 0) {
+          setMentors(filtered);
+          setSelectedMentor(filtered[0]);
+          return;
+        }
       }
+    } catch (err) {
+      console.warn('API getMentors fallback to curated mentor list:', err);
+    }
 
-      const curated = getCuratedMentors(selectedDomain);
-      setMentors(curated);
-      if (curated.length > 0) setSelectedMentor(curated[0]);
-    };
+    const curated = getCuratedMentors(selectedDomain);
+    setMentors(curated);
+    if (curated.length > 0) setSelectedMentor(curated[0]);
+  };
+
+  useEffect(() => {
     fetchMentors();
+  }, [selectedDomain]);
+
+  // Real-time Supabase listener for live mentor catalog updates from Admin
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+    try {
+      const channel = supabase
+        .channel('mentors-catalog-live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'mentors' }, () => {
+          api.invalidateCache(/mentor/);
+          fetchMentors();
+        })
+        .subscribe();
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } catch (e) {
+      console.warn('Realtime mentors subscription notice:', e);
+    }
   }, [selectedDomain]);
 
   useEffect(() => {

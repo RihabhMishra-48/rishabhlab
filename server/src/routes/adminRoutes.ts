@@ -104,61 +104,65 @@ router.get(['/overview', '/metrics'], async (req, res) => {
 router.get('/mentors', async (req, res) => {
   try {
     let mentors: any[] = [];
-    if (mongoose.connection.readyState === 1) {
+
+    // 1. Primary datastore: Live Supabase mentors table
+    if (isSupabaseConfigured() && supabase) {
       try {
-        mentors = await Mentor.find({}).sort({ createdAt: -1 });
+        const { data: sbMentors, error: sbErr } = await supabase
+          .from('mentors')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!sbErr && sbMentors && sbMentors.length > 0) {
+          mentors = sbMentors.map((m: any) => ({
+            _id: m.id,
+            id: m.id,
+            name: m.name,
+            title: m.title || 'Technical Specialist',
+            company: m.company || 'RishabhLabs',
+            domain: m.domain || 'Full-Stack Development',
+            avatar: m.avatar || '/avatars/default.webp',
+            rating: Number(m.rating) || 5.0,
+            reviewsCount: Number(m.reviews_count) || 48,
+            bio: m.bio || '',
+            hourlyRate: m.hourly_rate || (m.hourly_rate_inr ? `₹${m.hourly_rate_inr}` : 'Free for Pro'),
+            topics: Array.isArray(m.topics) ? m.topics : [],
+            availability: Array.isArray(m.availability)
+              ? m.availability
+              : (Array.isArray(m.available_days) ? m.available_days : ['Today, 7:00 PM IST']),
+            isAvailableToday: m.is_available_today !== undefined ? Boolean(m.is_available_today) : true,
+          }));
+        }
+      } catch (e) {
+        console.warn('Supabase find mentors error:', e);
+      }
+    }
+
+    // 2. Fallback / merge with MongoDB if connected
+    if (mentors.length === 0 && mongoose.connection.readyState === 1) {
+      try {
+        const mMentors = await Mentor.find({}).sort({ createdAt: -1 });
+        if (mMentors && mMentors.length > 0) {
+          mentors = mMentors.map((m: any) => ({
+            _id: m._id.toString(),
+            id: m._id.toString(),
+            name: m.name,
+            title: m.title,
+            company: m.company,
+            domain: m.domain || 'General',
+            avatar: m.avatar || '/avatars/default.webp',
+            rating: m.rating,
+            reviewsCount: m.reviewsCount,
+            bio: m.bio,
+            hourlyRate: m.hourlyRate,
+            topics: m.topics,
+            availability: m.availability,
+            isAvailableToday: m.isAvailableToday,
+          }));
+        }
       } catch (e) {
         console.warn('Mongo find mentors error:', e);
       }
-    }
-
-    if (!mentors || mentors.length === 0) {
-      if (isSupabaseConfigured() && supabase) {
-        try {
-          const { data: sbMentors } = await supabase.from('mentors').select('*');
-          if (sbMentors && sbMentors.length > 0) {
-            mentors = sbMentors
-              .filter((m: any) => !m.name?.toLowerCase().includes('khare'))
-              .map((m: any) => {
-                const l = (m.name || '').toLowerCase();
-                let avatar = m.avatar;
-                if (!avatar || avatar.startsWith('http')) {
-                  if (l.includes('arpit')) avatar = '/avatars/arpit.webp';
-                  else if (l.includes('harsh')) avatar = '/avatars/harsh.webp';
-                  else if (l.includes('rishabh')) avatar = '/avatars/rishabh.webp';
-                }
-                return {
-                  _id: m.id,
-                  id: m.id,
-                  ...m,
-                  avatar,
-                };
-              });
-          }
-        } catch (e) {}
-      }
-    }
-
-    if (!mentors || mentors.length === 0) {
-      const { getCleanMentors } = await import('../seed/seedData');
-      const seeded = getCleanMentors().map((m, idx) => ({
-        _id: `mentor-${idx + 1}`,
-        id: `mentor-${idx + 1}`,
-        ...m,
-      }));
-      mentors = seeded;
-      // Filter to retain only Harsh, Rishabh, and Arpit as instructed by user
-      mentors = mentors.filter((m: any) => {
-        const lower = (m.name || '').toLowerCase();
-        return lower.includes('harsh') || lower.includes('rishabh') || lower.includes('arpit');
-      });
-
-      // Ensure each mentor has guaranteed _id and id
-      mentors = mentors.map((m: any, idx: number) => ({
-        ...m,
-        _id: m._id || m.id || `mentor-${idx + 1}`,
-        id: m.id || m._id || `mentor-${idx + 1}`,
-      }));
     }
 
     res.json(mentors);
@@ -173,44 +177,87 @@ router.post('/mentors', async (req, res) => {
     const data = req.body;
     let mentor: any = null;
 
+    const topicsArr = Array.isArray(data.topics)
+      ? data.topics
+      : (data.topics ? String(data.topics).split(',').map((t: string) => t.trim()).filter(Boolean) : ['Roadmap']);
+    const availArr = Array.isArray(data.availability)
+      ? data.availability
+      : (data.availability ? String(data.availability).split(',').map((t: string) => t.trim()).filter(Boolean) : ['Tomorrow, 6:00 PM IST']);
+
+    // 1. Insert into Supabase
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data: inserted, error: sbErr } = await supabase
+          .from('mentors')
+          .insert({
+            name: data.name || 'New Mentor',
+            title: data.title || 'Technical Specialist',
+            company: data.company || 'RishabhLabs',
+            domain: data.domain || 'Full-Stack Development',
+            avatar: data.avatar || '/avatars/default.webp',
+            bio: data.bio || 'Experienced engineering mentor.',
+            topics: topicsArr,
+            availability: availArr,
+            hourly_rate: data.hourlyRate || 'Free for Pro',
+            rating: Number(data.rating) || 5.0,
+            reviews_count: Number(data.reviewsCount) || 12,
+            is_available_today: data.isAvailableToday !== undefined ? Boolean(data.isAvailableToday) : true,
+          })
+          .select()
+          .single();
+
+        if (inserted && !sbErr) {
+          mentor = {
+            _id: inserted.id,
+            id: inserted.id,
+            name: inserted.name,
+            title: inserted.title,
+            company: inserted.company,
+            domain: inserted.domain,
+            avatar: inserted.avatar,
+            bio: inserted.bio,
+            topics: inserted.topics,
+            availability: inserted.availability,
+            hourlyRate: inserted.hourly_rate,
+            rating: inserted.rating,
+            reviewsCount: inserted.reviews_count,
+            isAvailableToday: inserted.is_available_today,
+          };
+        } else if (sbErr) {
+          console.warn('Supabase create mentor error:', sbErr);
+        }
+      } catch (sbErr) {
+        console.warn('Supabase create mentor exception:', sbErr);
+      }
+    }
+
+    // 2. Insert into MongoDB if connected
     if (mongoose.connection.readyState === 1) {
       try {
-        mentor = await Mentor.create({
+        const mongoMentor = await Mentor.create({
           name: data.name || 'New Mentor',
           title: data.title || 'Technical Specialist',
           company: data.company || 'RishabhLabs',
           domain: data.domain || 'Full-Stack Development',
-          avatar: data.avatar || '',
+          avatar: data.avatar || '/avatars/default.webp',
           rating: Number(data.rating) || 5.0,
           reviewsCount: Number(data.reviewsCount) || 10,
           bio: data.bio || '',
           hourlyRate: data.hourlyRate || 'Free for Pro',
-          topics: Array.isArray(data.topics)
-            ? data.topics
-            : (data.topics ? String(data.topics).split(',').map((t: string) => t.trim()).filter(Boolean) : ['Roadmap']),
-          availability: Array.isArray(data.availability)
-            ? data.availability
-            : (data.availability ? String(data.availability).split(',').map((t: string) => t.trim()).filter(Boolean) : ['Tomorrow, 6:00 PM IST']),
+          topics: topicsArr,
+          availability: availArr,
           isAvailableToday: data.isAvailableToday !== undefined ? Boolean(data.isAvailableToday) : true,
         });
+        if (!mentor) {
+          mentor = {
+            ...mongoMentor.toObject(),
+            _id: mongoMentor._id.toString(),
+            id: mongoMentor._id.toString(),
+          };
+        }
       } catch (e) {
         console.warn('Mongo create mentor error:', e);
       }
-    }
-
-    if (isSupabaseConfigured() && supabase) {
-      try {
-        await supabase.from('mentors').insert({
-          name: data.name,
-          title: data.title || 'Technical Specialist',
-          company: data.company || 'RishabhLabs',
-          domain: data.domain || 'Full-Stack Development',
-          bio: data.bio || '',
-          hourly_rate: data.hourlyRate || 'Free for Pro',
-          rating: Number(data.rating) || 5.0,
-          is_available_today: data.isAvailableToday !== undefined ? Boolean(data.isAvailableToday) : true,
-        });
-      } catch (sbErr) {}
     }
 
     if (!mentor) {
@@ -218,6 +265,8 @@ router.post('/mentors', async (req, res) => {
         _id: 'mentor-' + Date.now(),
         id: 'mentor-' + Date.now(),
         ...data,
+        topics: topicsArr,
+        availability: availArr,
       };
     }
 
@@ -232,42 +281,80 @@ router.put('/mentors/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    if (data.topics && typeof data.topics === 'string') {
-      data.topics = data.topics.split(',').map((t: string) => t.trim()).filter(Boolean);
-    }
-    if (data.availability && typeof data.availability === 'string') {
-      data.availability = data.availability.split(',').map((t: string) => t.trim()).filter(Boolean);
-    }
+    const topicsArr = Array.isArray(data.topics)
+      ? data.topics
+      : (data.topics ? String(data.topics).split(',').map((t: string) => t.trim()).filter(Boolean) : undefined);
+    const availArr = Array.isArray(data.availability)
+      ? data.availability
+      : (data.availability ? String(data.availability).split(',').map((t: string) => t.trim()).filter(Boolean) : undefined);
 
     let updated: any = null;
+
+    // 1. Update in Supabase
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const sbPayload: any = {};
+        if (data.name !== undefined) sbPayload.name = data.name;
+        if (data.title !== undefined) sbPayload.title = data.title;
+        if (data.company !== undefined) sbPayload.company = data.company;
+        if (data.domain !== undefined) sbPayload.domain = data.domain;
+        if (data.avatar !== undefined) sbPayload.avatar = data.avatar;
+        if (data.bio !== undefined) sbPayload.bio = data.bio;
+        if (topicsArr !== undefined) sbPayload.topics = topicsArr;
+        if (availArr !== undefined) sbPayload.availability = availArr;
+        if (data.hourlyRate !== undefined) sbPayload.hourly_rate = data.hourlyRate;
+        if (data.rating !== undefined) sbPayload.rating = Number(data.rating);
+        if (data.isAvailableToday !== undefined) sbPayload.is_available_today = Boolean(data.isAvailableToday);
+
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        let query = supabase.from('mentors').update(sbPayload);
+        if (isUUID) {
+          query = query.eq('id', id);
+        } else {
+          query = query.eq('name', data.name || id);
+        }
+        const { data: updatedSb, error: sbErr } = await query.select().single();
+        if (updatedSb && !sbErr) {
+          updated = {
+            _id: updatedSb.id,
+            id: updatedSb.id,
+            name: updatedSb.name,
+            title: updatedSb.title,
+            company: updatedSb.company,
+            domain: updatedSb.domain,
+            avatar: updatedSb.avatar,
+            bio: updatedSb.bio,
+            topics: updatedSb.topics,
+            availability: updatedSb.availability,
+            hourlyRate: updatedSb.hourly_rate,
+            rating: updatedSb.rating,
+            isAvailableToday: updatedSb.is_available_today,
+          };
+        } else if (sbErr) {
+          console.warn('Supabase update mentor error:', sbErr);
+        }
+      } catch (sbErr) {
+        console.warn('Supabase update mentor exception:', sbErr);
+      }
+    }
+
+    // 2. Update in MongoDB
     if (mongoose.connection.readyState === 1) {
       try {
         if (mongoose.Types.ObjectId.isValid(id)) {
-          updated = await Mentor.findByIdAndUpdate(id, data, { new: true });
+          const mUpdated = await Mentor.findByIdAndUpdate(id, { ...data, topics: topicsArr, availability: availArr }, { new: true });
+          if (mUpdated && !updated) updated = mUpdated;
         } else {
-          updated = await Mentor.findOneAndUpdate({ $or: [{ name: id }, { name: data.name }] }, data, { new: true });
+          const mUpdated = await Mentor.findOneAndUpdate({ $or: [{ name: id }, { name: data.name }] }, { ...data, topics: topicsArr, availability: availArr }, { new: true });
+          if (mUpdated && !updated) updated = mUpdated;
         }
-      } catch (e) {}
-    }
-
-    if (isSupabaseConfigured() && supabase) {
-      try {
-        await supabase.from('mentors').upsert({
-          id: id && id.includes('-') && id.length > 20 ? id : undefined,
-          name: data.name,
-          title: data.title,
-          company: data.company,
-          domain: data.domain,
-          bio: data.bio,
-          hourly_rate: data.hourlyRate,
-          rating: data.rating,
-          is_available_today: data.isAvailableToday,
-        });
-      } catch (sbErr) {}
+      } catch (e) {
+        console.warn('Mongo update mentor error:', e);
+      }
     }
 
     if (!updated) {
-      updated = { _id: id, id, ...data };
+      updated = { _id: id, id, ...data, topics: topicsArr, availability: availArr };
     }
 
     res.json(updated);
@@ -282,30 +369,33 @@ router.delete('/mentors/:id', async (req, res) => {
     const { id } = req.params;
     const name = (req.query.name as string) || '';
 
-    // 1. Delete from Supabase if configured
+    // 1. Delete from Supabase
     if (isSupabaseConfigured() && supabase) {
       try {
-        if (id && id !== 'undefined' && id !== 'null' && id !== 'by-name') {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUUID) {
           await supabase.from('mentors').delete().eq('id', id);
         }
         if (name) {
           await supabase.from('mentors').delete().eq('name', name);
-          await supabase.from('profiles').update({ role: 'student' }).eq('full_name', name);
+        } else if (!isUUID && id && id !== 'by-name' && id !== 'undefined') {
+          await supabase.from('mentors').delete().eq('name', id);
         }
       } catch (sbErr) {
         console.warn('Could not delete mentor from Supabase:', sbErr);
       }
     }
 
-    // 2. Delete from MongoDB if ready
+    // 2. Delete from MongoDB
     if (mongoose.connection.readyState === 1) {
       try {
-        if (id && id !== 'undefined' && id !== 'null' && id !== 'by-name' && mongoose.Types.ObjectId.isValid(id)) {
+        if (mongoose.Types.ObjectId.isValid(id)) {
           await Mentor.findByIdAndDelete(id);
         }
-        if (name) {
-          await Mentor.deleteMany({ name: new RegExp(`^${name}$`, 'i') });
-          await User.updateMany({ name: new RegExp(`^${name}$`, 'i'), role: 'mentor' }, { role: 'student' });
+        const targetName = name || (!mongoose.Types.ObjectId.isValid(id) ? id : '');
+        if (targetName && targetName !== 'undefined' && targetName !== 'by-name') {
+          await Mentor.deleteMany({ name: new RegExp(`^${targetName}$`, 'i') });
+          await User.updateMany({ name: new RegExp(`^${targetName}$`, 'i'), role: 'mentor' }, { role: 'student' });
         }
       } catch (mErr) {
         console.warn('Could not delete mentor from Mongo:', mErr);
@@ -324,58 +414,61 @@ router.delete('/mentors/:id', async (req, res) => {
 router.get('/colleges', async (req, res) => {
   try {
     let colleges: any[] = [];
-    if (mongoose.connection.readyState === 1) {
+
+    // 1. Query Supabase
+    if (isSupabaseConfigured() && supabase) {
       try {
-        colleges = await College.find({}).sort({ createdAt: -1 });
-      } catch (e) {}
+        const { data: sbColleges, error: sbErr } = await supabase
+          .from('colleges')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!sbErr && sbColleges && sbColleges.length > 0) {
+          colleges = sbColleges.map((c: any) => ({
+            _id: c.id,
+            id: c.id,
+            name: c.college_name,
+            code: c.short_code,
+            location: c.domain || 'India',
+            totalStudents: c.total_enrolled || 2450,
+            activeStudents: c.active_students || 120,
+            averageExecutionRate: c.average_execution_rate || 85,
+            placementRate: '92.0%',
+            status: 'Active Partner',
+            mouSigned: true,
+            departments: ['Computer Science', 'Information Technology', 'AI & DS'],
+          }));
+        }
+      } catch (e) {
+        console.warn('Supabase find colleges error:', e);
+      }
     }
 
-    if (!colleges || colleges.length === 0) {
-      colleges = [
-        {
-          _id: 'col-1',
-          id: 'col-1',
-          name: 'GLA University',
-          code: 'GLA',
-          location: 'Mathura, Uttar Pradesh',
-          totalStudents: 340,
-          activeStudents: 285,
-          averageExecutionRate: 88,
-          topProjectsCount: 42,
-          activeHackathonTeamsCount: 18,
-          contactEmail: 'placement@gla.ac.in',
-          status: 'Active Partner',
-        },
-        {
-          _id: 'col-2',
-          id: 'col-2',
-          name: 'Galgotias University',
-          code: 'GU',
-          location: 'Greater Noida, Uttar Pradesh',
-          totalStudents: 210,
-          activeStudents: 172,
-          averageExecutionRate: 82,
-          topProjectsCount: 28,
-          activeHackathonTeamsCount: 12,
-          contactEmail: 'dean.engg@galgotiasuniversity.edu.in',
-          status: 'Active Partner',
-        },
-        {
-          _id: 'col-3',
-          id: 'col-3',
-          name: 'Amity University',
-          code: 'AMITY',
-          location: 'Noida, Uttar Pradesh',
-          totalStudents: 195,
-          activeStudents: 150,
-          averageExecutionRate: 79,
-          topProjectsCount: 22,
-          activeHackathonTeamsCount: 9,
-          contactEmail: 'crc@amity.edu',
-          status: 'Pending Verification',
-        },
-      ];
+    // 2. Query MongoDB
+    if (colleges.length === 0 && mongoose.connection.readyState === 1) {
+      try {
+        const mColleges = await College.find({}).sort({ createdAt: -1 });
+        if (mColleges && mColleges.length > 0) {
+          colleges = mColleges.map((c: any) => ({
+            _id: c._id.toString(),
+            id: c._id.toString(),
+            name: c.name,
+            code: c.code,
+            location: c.location,
+            totalStudents: c.totalStudents,
+            activeStudents: c.activeStudents,
+            averageExecutionRate: c.averageExecutionRate,
+            placementRate: '92.0%',
+            status: 'Active Partner',
+            mouSigned: true,
+            departments: ['Computer Science', 'Information Technology', 'AI & DS'],
+          }));
+        }
+      } catch (e) {
+        console.warn('Mongo find colleges error:', e);
+      }
     }
+
     res.json(colleges);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
@@ -385,19 +478,90 @@ router.get('/colleges', async (req, res) => {
 router.post('/colleges', async (req, res) => {
   try {
     const data = req.body;
-    let college: any = {
-      _id: 'col-' + Date.now(),
-      id: 'col-' + Date.now(),
-      ...data,
-      totalStudents: Number(data.totalStudents) || 50,
-      activeStudents: Number(data.activeStudents) || 35,
-      averageExecutionRate: Number(data.averageExecutionRate) || 85,
-    };
+    let college: any = null;
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data: inserted, error: sbErr } = await supabase
+          .from('colleges')
+          .insert({
+            college_name: data.name,
+            short_code: data.code || data.name.substring(0, 3).toUpperCase(),
+            domain: data.location || data.domain || 'college.edu',
+            total_enrolled: Number(data.totalStudents) || 2450,
+            active_students: Number(data.activeStudents) || 120,
+            average_execution_rate: Number(data.averageExecutionRate) || 85,
+          })
+          .select()
+          .single();
+
+        if (inserted && !sbErr) {
+          college = {
+            _id: inserted.id,
+            id: inserted.id,
+            name: inserted.college_name,
+            code: inserted.short_code,
+            location: inserted.domain,
+            totalStudents: inserted.total_enrolled,
+            activeStudents: inserted.active_students,
+            averageExecutionRate: inserted.average_execution_rate,
+            placementRate: '92.0%',
+            status: 'Active Partner',
+            mouSigned: true,
+            departments: Array.isArray(data.departments) ? data.departments : ['Computer Science', 'Information Technology'],
+            coordinatorName: data.coordinatorName,
+            coordinatorEmail: data.coordinatorEmail,
+          };
+        } else if (sbErr) {
+          console.warn('Supabase create college error:', sbErr);
+        }
+      } catch (sbErr) {
+        console.warn('Supabase create college exception:', sbErr);
+      }
+    }
+
     if (mongoose.connection.readyState === 1) {
       try {
-        college = await College.create(college);
-      } catch (e) {}
+        const mCreated = await College.create({
+          name: data.name,
+          code: data.code || data.name.substring(0, 3).toUpperCase(),
+          location: data.location || 'India',
+          totalStudents: Number(data.totalStudents) || 2450,
+          activeStudents: Number(data.activeStudents) || 120,
+          averageExecutionRate: Number(data.averageExecutionRate) || 85,
+        });
+        if (!college) {
+          college = {
+            _id: mCreated._id.toString(),
+            id: mCreated._id.toString(),
+            name: mCreated.name,
+            code: mCreated.code,
+            location: mCreated.location,
+            totalStudents: mCreated.totalStudents,
+            activeStudents: mCreated.activeStudents,
+            averageExecutionRate: mCreated.averageExecutionRate,
+            placementRate: '92.0%',
+            status: 'Active Partner',
+            mouSigned: true,
+            departments: Array.isArray(data.departments) ? data.departments : ['Computer Science'],
+          };
+        }
+      } catch (e) {
+        console.warn('Mongo create college error:', e);
+      }
     }
+
+    if (!college) {
+      college = {
+        _id: 'col-' + Date.now(),
+        id: 'col-' + Date.now(),
+        ...data,
+        placementRate: '92.0%',
+        status: 'Active Partner',
+        mouSigned: true,
+      };
+    }
+
     res.status(201).json(college);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
@@ -407,11 +571,41 @@ router.post('/colleges', async (req, res) => {
 router.delete('/colleges/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(id)) {
+    const name = (req.query.name as string) || '';
+
+    // 1. Delete from Supabase
+    if (isSupabaseConfigured() && supabase) {
       try {
-        await College.findByIdAndDelete(id);
-      } catch (e) {}
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUUID) {
+          await supabase.from('colleges').delete().eq('id', id);
+        }
+        if (name) {
+          await supabase.from('colleges').delete().eq('college_name', name);
+        }
+        if (!isUUID && id && id !== 'undefined' && id !== 'null') {
+          await supabase.from('colleges').delete().or(`college_name.eq.${id},short_code.eq.${id}`);
+        }
+      } catch (sbErr) {
+        console.warn('Could not delete college from Supabase:', sbErr);
+      }
     }
+
+    // 2. Delete from MongoDB
+    if (mongoose.connection.readyState === 1) {
+      try {
+        if (mongoose.Types.ObjectId.isValid(id)) {
+          await College.findByIdAndDelete(id);
+        }
+        const targetName = name || (!mongoose.Types.ObjectId.isValid(id) ? id : '');
+        if (targetName) {
+          await College.deleteMany({ $or: [{ name: new RegExp(`^${targetName}$`, 'i') }, { code: new RegExp(`^${targetName}$`, 'i') }] });
+        }
+      } catch (e) {
+        console.warn('Could not delete college from Mongo:', e);
+      }
+    }
+
     res.json({ success: true, message: 'College partner removed successfully' });
   } catch (err: any) {
     res.status(500).json({ message: err.message });
@@ -492,52 +686,77 @@ router.post('/problems', async (req, res) => {
   try {
     const data = req.body;
     const slug = data.slug || data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const newProb = await CodingProblem.create({
-      title: data.title,
-      slug,
-      difficulty: data.difficulty || 'Easy',
-      category: data.category || 'Web Development',
-      isDebuggingChallenge: Boolean(data.isDebuggingChallenge),
-      brokenBugExplanation: data.brokenBugExplanation || '',
-      descriptionMarkdown: data.descriptionMarkdown || '',
-      examples: data.examples || [],
-      constraints: data.constraints || [],
-      starterCode: data.starterCode || {
-        javascript: '// Write your code here\n',
-        python: '# Write your code here\n',
-      },
-      hints: data.hints || {
-        level1Concept: '',
-        level2Stronger: '',
-        level3Approach: '',
-        level4Mentor: '',
-      },
-      testCases: data.testCases || [],
-      tags: data.tags || [data.category || 'Web Development', data.difficulty || 'Easy'],
-      acceptanceRate: Number(data.acceptanceRate) || 85,
-    });
+    let newProb: any = null;
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        newProb = await CodingProblem.create({
+          title: data.title,
+          slug,
+          difficulty: data.difficulty || 'Easy',
+          category: data.category || 'Web Development',
+          isDebuggingChallenge: Boolean(data.isDebuggingChallenge),
+          brokenBugExplanation: data.brokenBugExplanation || '',
+          descriptionMarkdown: data.descriptionMarkdown || '',
+          examples: data.examples || [],
+          constraints: data.constraints || [],
+          starterCode: data.starterCode || {
+            javascript: '// Write your code here\n',
+            python: '# Write your code here\n',
+          },
+          hints: data.hints || {
+            level1Concept: '',
+            level2Stronger: '',
+            level3Approach: '',
+            level4Mentor: '',
+          },
+          testCases: data.testCases || [],
+          tags: data.tags || [data.category || 'Web Development', data.difficulty || 'Easy'],
+          acceptanceRate: Number(data.acceptanceRate) || 85,
+        });
+      } catch (mErr) {
+        console.warn('Mongo problem create warning:', mErr);
+      }
+    }
 
     // Sync to Supabase if configured
     if (isSupabaseConfigured() && supabase) {
       try {
-        await supabase.from('coding_problems').upsert({
-          slug: newProb.slug,
-          title: newProb.title,
-          difficulty: newProb.difficulty,
-          category: newProb.category,
-          is_debugging_challenge: newProb.isDebuggingChallenge,
-          broken_bug_explanation: newProb.brokenBugExplanation,
-          description_markdown: newProb.descriptionMarkdown,
-          examples: newProb.examples || [],
-          constraints: newProb.constraints || [],
-          starter_code: newProb.starterCode || {},
-          hints: newProb.hints || {},
-          test_cases: newProb.testCases || [],
-          acceptance_rate: `${newProb.acceptanceRate || 85}%`,
-        }, { onConflict: 'slug' });
+        const { data: sbCreated } = await supabase.from('coding_problems').upsert({
+          slug,
+          title: data.title,
+          difficulty: data.difficulty || 'Easy',
+          category: data.category || 'Web Development',
+          is_debugging_challenge: Boolean(data.isDebuggingChallenge),
+          broken_bug_explanation: data.brokenBugExplanation || '',
+          description_markdown: data.descriptionMarkdown || '',
+          examples: data.examples || [],
+          constraints: data.constraints || [],
+          starter_code: data.starterCode || {},
+          hints: data.hints || {},
+          test_cases: data.testCases || [],
+          acceptance_rate: `${data.acceptanceRate || 85}%`,
+        }, { onConflict: 'slug' }).select().single();
+
+        if (sbCreated && !newProb) {
+          newProb = {
+            _id: sbCreated.id,
+            id: sbCreated.id,
+            ...sbCreated,
+          };
+        }
       } catch (err) {
         console.warn('Supabase problem sync warning:', err);
       }
+    }
+
+    if (!newProb) {
+      newProb = {
+        _id: 'prob-' + Date.now(),
+        id: 'prob-' + Date.now(),
+        ...data,
+        slug,
+      };
     }
 
     res.status(201).json(newProb);
@@ -551,30 +770,50 @@ router.put('/problems/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const updated = await CodingProblem.findByIdAndUpdate(id, data, { new: true });
-    if (!updated) return res.status(404).json({ message: 'Problem not found' });
+    let updated: any = null;
+
+    if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(id)) {
+      try {
+        updated = await CodingProblem.findByIdAndUpdate(id, data, { new: true });
+      } catch (mErr) {
+        console.warn('Mongo problem update warning:', mErr);
+      }
+    }
 
     // Sync to Supabase
     if (isSupabaseConfigured() && supabase) {
       try {
-        await supabase.from('coding_problems').upsert({
-          slug: updated.slug,
-          title: updated.title,
-          difficulty: updated.difficulty,
-          category: updated.category,
-          is_debugging_challenge: updated.isDebuggingChallenge,
-          broken_bug_explanation: updated.brokenBugExplanation,
-          description_markdown: updated.descriptionMarkdown,
-          examples: updated.examples || [],
-          constraints: updated.constraints || [],
-          starter_code: updated.starterCode || {},
-          hints: updated.hints || {},
-          test_cases: updated.testCases || [],
-          acceptance_rate: `${updated.acceptanceRate || 85}%`,
-        }, { onConflict: 'slug' });
+        const slug = data.slug || (updated ? updated.slug : id);
+        const { data: sbUpdated } = await supabase.from('coding_problems').upsert({
+          slug,
+          title: data.title,
+          difficulty: data.difficulty,
+          category: data.category,
+          is_debugging_challenge: data.isDebuggingChallenge,
+          broken_bug_explanation: data.brokenBugExplanation,
+          description_markdown: data.descriptionMarkdown,
+          examples: data.examples || [],
+          constraints: data.constraints || [],
+          starter_code: data.starterCode || {},
+          hints: data.hints || {},
+          test_cases: data.testCases || [],
+          acceptance_rate: `${data.acceptanceRate || 85}%`,
+        }, { onConflict: 'slug' }).select().single();
+
+        if (sbUpdated && !updated) {
+          updated = {
+            _id: sbUpdated.id,
+            id: sbUpdated.id,
+            ...sbUpdated,
+          };
+        }
       } catch (err) {
         console.warn('Supabase problem sync warning:', err);
       }
+    }
+
+    if (!updated) {
+      updated = { _id: id, id, ...data };
     }
 
     res.json(updated);
@@ -587,10 +826,23 @@ router.put('/problems/:id', async (req, res) => {
 router.delete('/problems/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const prob = await CodingProblem.findByIdAndDelete(id);
-    if (prob && isSupabaseConfigured() && supabase) {
+    let slug = '';
+    if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(id)) {
       try {
-        await supabase.from('coding_problems').delete().eq('slug', prob.slug);
+        const prob = await CodingProblem.findByIdAndDelete(id);
+        if (prob) slug = prob.slug;
+      } catch (mErr) {}
+    }
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUUID) {
+          await supabase.from('coding_problems').delete().eq('id', id);
+        } else if (slug) {
+          await supabase.from('coding_problems').delete().eq('slug', slug);
+        } else {
+          await supabase.from('coding_problems').delete().or(`id.eq.${id},slug.eq.${id}`);
+        }
       } catch (err) {
         console.warn('Supabase problem delete warning:', err);
       }
@@ -707,17 +959,52 @@ router.post('/roadmaps', async (req, res) => {
   try {
     const data = req.body;
     const slug = data.slug || data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const roadmap = await Roadmap.create({
-      title: data.title,
-      slug,
-      category: data.category || 'Web Development',
-      targetLevel: data.targetLevel || 'Beginner',
-      estimatedDailyTime: data.estimatedDailyTime || '2 hr/day',
-      totalDurationDays: Number(data.totalDurationDays) || 90,
-      totalNodes: data.nodes ? data.nodes.length : 0,
-      completedNodes: 0,
-      nodes: data.nodes || [],
-    });
+    let roadmap: any = null;
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        roadmap = await Roadmap.create({
+          title: data.title,
+          slug,
+          category: data.category || 'Web Development',
+          targetLevel: data.targetLevel || 'Beginner',
+          estimatedDailyTime: data.estimatedDailyTime || '2 hr/day',
+          totalDurationDays: Number(data.totalDurationDays) || 90,
+          totalNodes: data.nodes ? data.nodes.length : 0,
+          completedNodes: 0,
+          nodes: data.nodes || [],
+        });
+      } catch (e) {
+        console.warn('Mongo create roadmap warning:', e);
+      }
+    }
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        await supabase.from('roadmaps').upsert({
+          slug,
+          title: data.title,
+          category: data.category || 'Web Development',
+          target_level: data.targetLevel || 'Beginner',
+          estimated_daily_time: data.estimatedDailyTime || '2 hr/day',
+          total_duration_days: Number(data.totalDurationDays) || 90,
+          total_nodes: data.nodes ? data.nodes.length : 0,
+          nodes: data.nodes || [],
+        }, { onConflict: 'slug' });
+      } catch (sbErr) {
+        console.warn('Supabase create roadmap warning:', sbErr);
+      }
+    }
+
+    if (!roadmap) {
+      roadmap = {
+        _id: 'rd-' + Date.now(),
+        id: 'rd-' + Date.now(),
+        ...data,
+        slug,
+      };
+    }
+
     res.status(201).json(roadmap);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
@@ -733,22 +1020,49 @@ router.put('/roadmaps/:id', async (req, res) => {
       data.totalNodes = data.nodes.length;
       data.completedNodes = data.nodes.filter((n: any) => n.status === 'completed').length;
     }
-    const updated = await Roadmap.findByIdAndUpdate(id, data, { new: true });
-    if (!updated) return res.status(404).json({ message: 'Roadmap not found' });
+    let updated: any = null;
 
-    // Also sync nodes to active user roadmaps in the same category
-    if (updated.category) {
-      await Roadmap.updateMany(
-        { category: updated.category, _id: { $ne: updated._id } },
-        {
-          title: updated.title,
-          targetLevel: updated.targetLevel,
-          estimatedDailyTime: updated.estimatedDailyTime,
-          totalDurationDays: updated.totalDurationDays,
-          nodes: updated.nodes,
-          totalNodes: updated.totalNodes,
+    if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(id)) {
+      try {
+        updated = await Roadmap.findByIdAndUpdate(id, data, { new: true });
+        if (updated?.category) {
+          await Roadmap.updateMany(
+            { category: updated.category, _id: { $ne: updated._id } },
+            {
+              title: updated.title,
+              targetLevel: updated.targetLevel,
+              estimatedDailyTime: updated.estimatedDailyTime,
+              totalDurationDays: updated.totalDurationDays,
+              nodes: updated.nodes,
+              totalNodes: updated.totalNodes,
+            }
+          );
         }
-      );
+      } catch (e) {
+        console.warn('Mongo update roadmap warning:', e);
+      }
+    }
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const slug = data.slug || (updated ? updated.slug : id);
+        await supabase.from('roadmaps').upsert({
+          slug,
+          title: data.title,
+          category: data.category,
+          target_level: data.targetLevel,
+          estimated_daily_time: data.estimatedDailyTime,
+          total_duration_days: Number(data.totalDurationDays) || 90,
+          total_nodes: data.totalNodes || 0,
+          nodes: data.nodes || [],
+        }, { onConflict: 'slug' });
+      } catch (sbErr) {
+        console.warn('Supabase update roadmap warning:', sbErr);
+      }
+    }
+
+    if (!updated) {
+      updated = { _id: id, id, ...data };
     }
 
     res.json(updated);
@@ -761,7 +1075,21 @@ router.put('/roadmaps/:id', async (req, res) => {
 router.delete('/roadmaps/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await Roadmap.findByIdAndDelete(id);
+    if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(id)) {
+      try {
+        await Roadmap.findByIdAndDelete(id);
+      } catch (e) {}
+    }
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUUID) {
+          await supabase.from('roadmaps').delete().eq('id', id);
+        } else {
+          await supabase.from('roadmaps').delete().eq('slug', id);
+        }
+      } catch (e) {}
+    }
     res.json({ success: true, message: 'Roadmap deleted successfully' });
   } catch (err: any) {
     res.status(500).json({ message: err.message });
@@ -923,15 +1251,45 @@ router.get('/missions', async (req, res) => {
 router.post('/missions', async (req, res) => {
   try {
     const data = req.body;
-    const mission = await DailyMission.create({
-      trackTitle: data.trackTitle || 'General',
-      dayNumber: Number(data.dayNumber) || 1,
-      dateString: data.dateString || new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
-      quote: data.quote || 'Small steps lead to extraordinary outcomes.',
-      tasks: data.tasks || [],
-      completedTasksCount: 0,
-      isAllCompleted: false,
-    });
+    let mission: any = null;
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        mission = await DailyMission.create({
+          trackTitle: data.trackTitle || 'General',
+          dayNumber: Number(data.dayNumber) || 1,
+          dateString: data.dateString || new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+          quote: data.quote || 'Small steps lead to extraordinary outcomes.',
+          tasks: data.tasks || [],
+          completedTasksCount: 0,
+          isAllCompleted: false,
+        });
+      } catch (e) {
+        console.warn('Mongo create mission warning:', e);
+      }
+    }
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        await supabase.from('daily_missions').insert({
+          track_title: data.trackTitle || 'General',
+          day_number: Number(data.dayNumber) || 1,
+          date_string: data.dateString || new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+          tasks: data.tasks || [],
+        });
+      } catch (sbErr) {
+        console.warn('Supabase create mission warning:', sbErr);
+      }
+    }
+
+    if (!mission) {
+      mission = {
+        _id: 'ms-' + Date.now(),
+        id: 'ms-' + Date.now(),
+        ...data,
+      };
+    }
+
     res.status(201).json(mission);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
@@ -943,21 +1301,40 @@ router.put('/missions/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const updated = await DailyMission.findByIdAndUpdate(id, data, { new: true });
-    if (!updated) return res.status(404).json({ message: 'Daily Mission not found' });
+    let updated: any = null;
 
-    // Propagate updated tasks and quote to all active student missions matching this track
-    if (updated.trackTitle) {
-      await DailyMission.updateMany(
-        {
-          trackTitle: updated.trackTitle,
-          _id: { $ne: updated._id },
-        },
-        {
-          quote: updated.quote,
-          tasks: updated.tasks,
+    if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(id)) {
+      try {
+        updated = await DailyMission.findByIdAndUpdate(id, data, { new: true });
+        if (updated?.trackTitle) {
+          await DailyMission.updateMany(
+            { trackTitle: updated.trackTitle, _id: { $ne: updated._id } },
+            { quote: updated.quote, tasks: updated.tasks }
+          );
         }
-      );
+      } catch (e) {
+        console.warn('Mongo update mission warning:', e);
+      }
+    }
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUUID) {
+          await supabase.from('daily_missions').update({
+            track_title: data.trackTitle,
+            day_number: data.dayNumber,
+            date_string: data.dateString,
+            tasks: data.tasks,
+          }).eq('id', id);
+        }
+      } catch (sbErr) {
+        console.warn('Supabase update mission warning:', sbErr);
+      }
+    }
+
+    if (!updated) {
+      updated = { _id: id, id, ...data };
     }
 
     res.json(updated);
@@ -970,7 +1347,19 @@ router.put('/missions/:id', async (req, res) => {
 router.delete('/missions/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await DailyMission.findByIdAndDelete(id);
+    if (mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(id)) {
+      try {
+        await DailyMission.findByIdAndDelete(id);
+      } catch (e) {}
+    }
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUUID) {
+          await supabase.from('daily_missions').delete().eq('id', id);
+        }
+      } catch (e) {}
+    }
     res.json({ success: true, message: 'Daily Mission removed successfully' });
   } catch (err: any) {
     res.status(500).json({ message: err.message });
@@ -1079,17 +1468,45 @@ router.put('/pricing/:key', async (req, res) => {
     const { priceMonthly, priceAnnual, tagline, features, name } = req.body;
 
     const updateFields: any = {};
-    if (priceMonthly !== undefined) updateFields.priceMonthly = priceMonthly;
-    if (priceAnnual !== undefined) updateFields.priceAnnual = priceAnnual;
+    if (priceMonthly !== undefined) updateFields.priceMonthly = Number(priceMonthly);
+    if (priceAnnual !== undefined) updateFields.priceAnnual = Number(priceAnnual);
     if (tagline !== undefined) updateFields.tagline = tagline;
     if (features !== undefined) updateFields.features = features;
     if (name !== undefined) updateFields.name = name;
 
-    const plan = await PricingPlan.findOneAndUpdate(
-      { key },
-      updateFields,
-      { new: true }
-    );
+    // 1. Update live Supabase pricing_plans datastore
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const sbUpdate: any = {};
+        if (name !== undefined) sbUpdate.name = name;
+        if (priceMonthly !== undefined) sbUpdate.price_monthly = Number(priceMonthly);
+        if (priceAnnual !== undefined) sbUpdate.price_annual = Number(priceAnnual);
+        if (tagline !== undefined) sbUpdate.description = tagline;
+        if (features !== undefined) sbUpdate.features = features;
+
+        await supabase.from('pricing_plans').update(sbUpdate).eq('id', key);
+      } catch (sbErr) {
+        console.warn('Supabase pricing update warning:', sbErr);
+      }
+    }
+
+    // 2. Update MongoDB only if connection is active
+    let plan: any = null;
+    if (mongoose.connection.readyState === 1) {
+      try {
+        plan = await PricingPlan.findOneAndUpdate(
+          { key },
+          updateFields,
+          { new: true }
+        );
+      } catch (mErr) {
+        console.warn('Mongo pricing update warning:', mErr);
+      }
+    }
+
+    if (!plan) {
+      plan = { key, ...updateFields };
+    }
 
     res.json({ success: true, plan });
   } catch (err: any) {

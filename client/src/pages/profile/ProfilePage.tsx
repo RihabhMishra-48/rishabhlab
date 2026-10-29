@@ -64,10 +64,11 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (user) {
+      const cachedAvatar = user.email ? localStorage.getItem(`rishabhlabs_avatar_${user.email.toLowerCase()}`) : null;
       const cleanAvatar =
         user.avatar && !user.avatar.includes('rishabh.webp') && !user.avatar.includes('unsplash.com')
           ? user.avatar
-          : '';
+          : (cachedAvatar || '');
       setFormData({
         name: user.name || '',
         username: user.githubUsername || '',
@@ -117,7 +118,11 @@ export const ProfilePage: React.FC = () => {
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData((prev) => ({ ...prev, avatar: reader.result as string }));
+        const dataUrl = reader.result as string;
+        setFormData((prev) => ({ ...prev, avatar: dataUrl }));
+        if (user?.email) {
+          localStorage.setItem(`rishabhlabs_avatar_${user.email.toLowerCase()}`, dataUrl);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -129,7 +134,14 @@ export const ProfilePage: React.FC = () => {
     setSaveSuccess(false);
 
     try {
-      // 1. Update backend MongoDB
+      const cachedAvatar = user?.email ? localStorage.getItem(`rishabhlabs_avatar_${user.email.toLowerCase()}`) : null;
+      const effectiveAvatar = formData.avatar || user?.avatar || cachedAvatar || '';
+
+      if (effectiveAvatar && user?.email) {
+        localStorage.setItem(`rishabhlabs_avatar_${user.email.toLowerCase()}`, effectiveAvatar);
+      }
+
+      // 1. Update backend MongoDB / REST API
       await api.updateProfile({
         name: formData.name,
         bio: formData.bio,
@@ -137,7 +149,7 @@ export const ProfilePage: React.FC = () => {
         degree: formData.degree,
         year: formData.year,
         githubUsername: formData.username,
-        avatar: formData.avatar,
+        avatar: effectiveAvatar,
         targetGoal: formData.targetGoal,
         fieldOfInterest: formData.targetGoal,
       });
@@ -156,7 +168,7 @@ export const ProfilePage: React.FC = () => {
             college_name: formData.college.trim() || null,
             degree: formData.degree.trim() || null,
             year_of_study: formData.year.trim() || null,
-            avatar_url: formData.avatar || null,
+            avatar_url: effectiveAvatar || null,
             github_username: formData.username.trim() || null,
             target_goal: formData.targetGoal,
             bio: formData.bio.trim() || null,
@@ -712,7 +724,7 @@ export const ProfilePage: React.FC = () => {
                 <div className="flex items-center gap-4">
                   <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 shrink-0">
                     <UserAvatar
-                      src={formData.avatar}
+                      src={formData.avatar || user?.avatar}
                       name={formData.name || user?.name}
                       email={user?.email}
                       size={64}
@@ -739,10 +751,15 @@ export const ProfilePage: React.FC = () => {
                         <span>Upload Photo</span>
                       </button>
 
-                      {formData.avatar && (
+                      {(formData.avatar || user?.avatar) && (
                         <button
                           type="button"
-                          onClick={() => setFormData((prev) => ({ ...prev, avatar: '' }))}
+                          onClick={() => {
+                            setFormData((prev) => ({ ...prev, avatar: '' }));
+                            if (user?.email) {
+                              localStorage.removeItem(`rishabhlabs_avatar_${user.email.toLowerCase()}`);
+                            }
+                          }}
                           className="px-2.5 py-1.5 text-xs text-red-500 hover:underline"
                         >
                           Remove

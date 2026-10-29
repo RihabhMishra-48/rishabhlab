@@ -19,7 +19,8 @@ import {
   PanelLeftOpen,
   Sparkles,
   Video,
-  Terminal
+  Terminal,
+  ChevronDown
 } from 'lucide-react';
 import { BugIcon, DisplayCodeIcon } from '../icons/TrackIcons';
 import { UserAvatar } from '../common/UserAvatar';
@@ -36,6 +37,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { user } = useAuth();
   const location = useLocation();
 
+  const isAdmin = Boolean(
+    user?.role === 'super_admin' ||
+    user?.role === 'admin' ||
+    user?.email?.toLowerCase() === 'mishrarishabh2006@gmail.com'
+  );
+  const [isAdminUpperCollapsed, setIsAdminUpperCollapsed] = useState<boolean>(true);
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [isDismissed, setIsDismissed] = useState<boolean>(false);
@@ -126,79 +133,114 @@ export const Sidebar: React.FC<SidebarProps> = ({
       >
         {/* Main Navigation Links with Info Tags on Collapsed Hover */}
         <div className="space-y-1">
-          {mainNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive =
-              location.pathname === item.path ||
-              (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
-
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={handleItemClick}
-                onMouseEnter={() => {
-                  setHoveredItem(item.path);
-                  setIsDismissed(false);
-                }}
-                onMouseLeave={() => setHoveredItem((curr) => (curr === item.path ? null : curr))}
-                onFocus={() => {
-                  setActiveItem(item.path);
-                  setIsDismissed(false);
-                }}
-                onBlur={() => setActiveItem((curr) => (curr === item.path ? null : curr))}
-                className={`relative group flex items-center rounded-xl text-xs font-medium transition-colors outline-none focus:outline-none ${isCollapsed
-                  ? 'justify-center w-11 h-10 mx-auto'
-                  : 'gap-3 px-3 py-2.5'
-                  } ${isActive
-                    ? 'bg-neutral-100 text-neutral-950 font-semibold shadow-2xs dark:bg-neutral-800 dark:text-white dark:shadow-sm'
-                    : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100/70 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800/70'
-                  }`}
+          {isAdmin ? (
+            !isCollapsed ? (
+              <button
+                type="button"
+                onClick={() => setIsAdminUpperCollapsed((prev) => !prev)}
+                className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition-colors mb-1 text-left"
+                title={isAdminUpperCollapsed ? 'Expand student navigation' : 'Collapse student navigation'}
               >
-                {item.customGraphic ? (
-                  <img
-                    src={item.customGraphic}
-                    alt={item.label}
-                    className={`w-4 h-4 shrink-0 object-contain transition-all ${isActive
-                      ? 'opacity-100 dark:invert'
-                      : 'opacity-70 group-hover:opacity-100 dark:invert dark:opacity-60 dark:group-hover:opacity-90'
-                      }`}
-                  />
-                ) : (
-                  <Icon
-                    className={`w-4 h-4 shrink-0 transition-colors ${isActive
-                      ? 'text-neutral-950 dark:text-white'
-                      : 'text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-white'
-                      }`}
-                  />
-                )}
+                <div className="flex items-center gap-1.5">
+                  <Compass className="w-3.5 h-3.5" />
+                  <span>Student Navigation</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 font-semibold">
+                    {mainNavItems.length}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isAdminUpperCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+                </div>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsAdminUpperCollapsed((prev) => !prev)}
+                className="w-11 h-8 mx-auto flex items-center justify-center rounded-xl text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition-colors mb-1"
+                title={isAdminUpperCollapsed ? 'Expand student navigation' : 'Collapse student navigation'}
+              >
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isAdminUpperCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+              </button>
+            )
+          ) : null}
 
-                {!isCollapsed && (
-                  <>
-                    <span className="truncate">{item.label}</span>
-                    {item.label === 'Missions' && (
-                      <span className="ml-auto w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-                    )}
-                  </>
-                )}
+          {(!isAdmin || !isAdminUpperCollapsed) && (
+            <div className="space-y-1">
+              {mainNavItems.map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  location.pathname === item.path ||
+                  (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
 
-                {/* Collapsed Info Tag on Hover / Focus - ONLY name text */}
-                {isCollapsed && (
-                  <div
-                    className={`absolute left-full ml-3 inset-y-0 my-auto h-fit z-50 transition-all duration-150 ${isInfoBarOpen(item.path)
-                      ? 'opacity-100 visible'
-                      : 'opacity-0 invisible pointer-events-none'
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={handleItemClick}
+                    onMouseEnter={() => {
+                      setHoveredItem(item.path);
+                      setIsDismissed(false);
+                    }}
+                    onMouseLeave={() => setHoveredItem((curr) => (curr === item.path ? null : curr))}
+                    onFocus={() => {
+                      setActiveItem(item.path);
+                      setIsDismissed(false);
+                    }}
+                    onBlur={() => setActiveItem((curr) => (curr === item.path ? null : curr))}
+                    className={`relative group flex items-center rounded-xl text-xs font-medium transition-colors outline-none focus:outline-none ${isCollapsed
+                      ? 'justify-center w-11 h-10 mx-auto'
+                      : 'gap-3 px-3 py-2.5'
+                      } ${isActive
+                        ? 'bg-neutral-100 text-neutral-950 font-semibold shadow-2xs dark:bg-neutral-800 dark:text-white dark:shadow-sm'
+                        : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100/70 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800/70'
                       }`}
                   >
-                    <div className="relative px-3 py-1.5 rounded-lg bg-neutral-900/95 dark:bg-[#262626]/95 backdrop-blur-md border border-neutral-800 dark:border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
-                      <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-neutral-900 dark:bg-[#262626] border-l border-b border-neutral-800 dark:border-neutral-700/80 rotate-45" />
-                      <span className="font-medium text-white text-xs">{item.label}</span>
-                    </div>
-                  </div>
-                )}
-              </NavLink>
-            );
-          })}
+                    {item.customGraphic ? (
+                      <img
+                        src={item.customGraphic}
+                        alt={item.label}
+                        className={`w-4 h-4 shrink-0 object-contain transition-all ${isActive
+                          ? 'opacity-100 dark:invert'
+                          : 'opacity-70 group-hover:opacity-100 dark:invert dark:opacity-60 dark:group-hover:opacity-90'
+                          }`}
+                      />
+                    ) : (
+                      <Icon
+                        className={`w-4 h-4 shrink-0 transition-colors ${isActive
+                          ? 'text-neutral-950 dark:text-white'
+                          : 'text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-white'
+                          }`}
+                      />
+                    )}
+
+                    {!isCollapsed && (
+                      <>
+                        <span className="truncate">{item.label}</span>
+                        {item.label === 'Missions' && (
+                          <span className="ml-auto w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+                        )}
+                      </>
+                    )}
+
+                    {/* Collapsed Info Tag on Hover / Focus - ONLY name text */}
+                    {isCollapsed && (
+                      <div
+                        className={`absolute left-full ml-3 inset-y-0 my-auto h-fit z-50 transition-all duration-150 ${isInfoBarOpen(item.path)
+                          ? 'opacity-100 visible'
+                          : 'opacity-0 invisible pointer-events-none'
+                          }`}
+                      >
+                        <div className="relative px-3 py-1.5 rounded-lg bg-neutral-900/95 dark:bg-[#262626]/95 backdrop-blur-md border border-neutral-800 dark:border-neutral-700/80 shadow-xl text-left whitespace-nowrap">
+                          <div className="absolute -left-1 inset-y-0 my-auto h-2 w-2 bg-neutral-900 dark:bg-[#262626] border-l border-b border-neutral-800 dark:border-neutral-700/80 rotate-45" />
+                          <span className="font-medium text-white text-xs">{item.label}</span>
+                        </div>
+                      </div>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Specialized Labs & Portals */}

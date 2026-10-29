@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { supabase, isSupabaseConfigured } from '../../services/supabase';
 import {
   Video,
   Calendar,
@@ -17,7 +18,8 @@ import {
   ShieldCheck,
   History,
   FileText,
-  UserCheck
+  UserCheck,
+  Trash2
 } from 'lucide-react';
 
 export const MentorSessionsPage: React.FC = () => {
@@ -58,6 +60,24 @@ export const MentorSessionsPage: React.FC = () => {
     fetchSessions();
   }, []);
 
+  // Real-time listener for live updates across browser windows
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+    try {
+      const channel = supabase
+        .channel('mentor-sessions-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'mentorship_requests' }, () => {
+          fetchSessions();
+        })
+        .subscribe();
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } catch (e) {
+      console.warn('Realtime sessions subscription notice:', e);
+    }
+  }, []);
+
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
       setSavingId(id);
@@ -68,6 +88,20 @@ export const MentorSessionsPage: React.FC = () => {
       showNotification(`Session marked as ${newStatus}!`);
     } catch (err: any) {
       showNotification(err.message || 'Failed to update session.');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleDeleteSession = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this consultation booking permanently?')) return;
+    try {
+      setSavingId(id);
+      await api.mentorDeleteSession(id);
+      setSessions((prev) => prev.filter((s) => s._id !== id && s.id !== id));
+      showNotification('Booking inquiry removed permanently.');
+    } catch (err: any) {
+      showNotification(err.message || 'Failed to delete booking.');
     } finally {
       setSavingId(null);
     }
@@ -342,6 +376,17 @@ export const MentorSessionsPage: React.FC = () => {
                         className="px-3 py-1 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors"
                       >
                         Mark Completed
+                      </button>
+                    )}
+
+                    {(isSuperAdmin || user?.role === 'mentor') && (
+                      <button
+                        onClick={() => handleDeleteSession(sid)}
+                        disabled={isSaving}
+                        className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 text-neutral-400 hover:text-rose-600 hover:border-rose-300 dark:hover:border-rose-800 transition-colors"
+                        title="Delete booking permanently"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>

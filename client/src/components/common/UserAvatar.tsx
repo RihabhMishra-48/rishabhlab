@@ -43,10 +43,11 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   const [imageError, setImageError] = useState(false);
 
   // Check cache for avatar and name if not directly supplied
+  const localAvatar = email ? localStorage.getItem(`rishabhlabs_avatar_${email.toLowerCase().trim()}`) : null;
   const cachedAvatar = email ? pycodeCache.getAvatar(email) : null;
   const cachedName = email ? pycodeCache.getName(email) : null;
 
-  const effectiveSrc = src || cachedAvatar;
+  const effectiveSrc = src || cachedAvatar || localAvatar;
   const displayName = name || cachedName || email?.split('@')[0] || 'User';
   const initial = displayName.trim().charAt(0).toUpperCase() || 'U';
   const colorClass = getColorForName(displayName);
