@@ -9,7 +9,6 @@ import { PracticeQuestionsArena } from '../../components/pycode/PracticeQuestion
 import { CodeathonsHub } from '../../components/pycode/CodeathonsHub';
 import { Link } from 'react-router-dom';
 import {
-  Code2,
   Terminal,
   Trophy,
   LogIn,
@@ -52,35 +51,7 @@ export const PythonHubPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Page Header */}
-      <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-neutral-50 tracking-tight flex items-center gap-3">
-              <Code2 className="w-8 h-8 text-emerald-500 shrink-0" />
-              <span>Python Practice & Codeathon Hub</span>
-            </h1>
-
-            <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 max-w-2xl leading-relaxed">
-              Solve real-world algorithmic problems, compete in proctored live codeathons, and synchronize your terminal workspace files seamlessly with your mentorship journey.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <a
-              href="https://pycode-student.vercel.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-5 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
-            >
-              <span>Open Python Sandbox</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          </div>
-        </div>
-      </div>
-
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Student Profile Quick Stats Header (If Logged In) */}
       {user?.email && (
         <StudentProfileHeader
@@ -90,45 +61,57 @@ export const PythonHubPage: React.FC = () => {
         />
       )}
 
-      {/* Main Feature Segmented Tabs */}
-      <div className="w-full overflow-x-auto no-scrollbar py-1">
-        <div className="inline-flex items-center p-1 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800 gap-1 min-w-max shadow-2xs">
-          <button
-            onClick={() => setActiveTab('practice')}
-            className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-              activeTab === 'practice'
-                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50'
-            }`}
-          >
-            <BookOpen className={`w-4 h-4 shrink-0 ${activeTab === 'practice' ? 'text-emerald-400 dark:text-emerald-600' : 'text-emerald-500'}`} />
-            <span>Practice Arena</span>
-          </button>
+      {/* Main Feature Segmented Tabs & Sandbox Action */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+        <div className="overflow-x-auto no-scrollbar py-1">
+          <div className="inline-flex items-center p-1 rounded-2xl bg-neutral-100 dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800 gap-1 min-w-max shadow-2xs">
+            <button
+              onClick={() => setActiveTab('practice')}
+              className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                activeTab === 'practice'
+                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50'
+              }`}
+            >
+              <BookOpen className={`w-4 h-4 shrink-0 ${activeTab === 'practice' ? 'text-emerald-400 dark:text-emerald-600' : 'text-emerald-500'}`} />
+              <span>Practice Arena</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('codeathons')}
-            className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-              activeTab === 'codeathons'
-                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50'
-            }`}
-          >
-            <Trophy className={`w-4 h-4 shrink-0 ${activeTab === 'codeathons' ? 'text-amber-400 dark:text-amber-600' : 'text-amber-500'}`} />
-            <span>Codeathons & Exams</span>
-          </button>
+            <button
+              onClick={() => setActiveTab('codeathons')}
+              className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                activeTab === 'codeathons'
+                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50'
+              }`}
+            >
+              <Trophy className={`w-4 h-4 shrink-0 ${activeTab === 'codeathons' ? 'text-amber-400 dark:text-amber-600' : 'text-amber-500'}`} />
+              <span>Codeathons & Exams</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('workspace')}
-            className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-              activeTab === 'workspace'
-                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50'
-            }`}
-          >
-            <Terminal className={`w-4 h-4 shrink-0 ${activeTab === 'workspace' ? 'text-blue-400 dark:text-blue-600' : 'text-blue-500'}`} />
-            <span>My Workspace & Heatmap</span>
-          </button>
+            <button
+              onClick={() => setActiveTab('workspace')}
+              className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                activeTab === 'workspace'
+                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50'
+              }`}
+            >
+              <Terminal className={`w-4 h-4 shrink-0 ${activeTab === 'workspace' ? 'text-blue-400 dark:text-blue-600' : 'text-blue-500'}`} />
+              <span>My Workspace & Heatmap</span>
+            </button>
+          </div>
         </div>
+
+        <a
+          href="https://pycode-student.vercel.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors self-start sm:self-auto shrink-0"
+        >
+          <span>Open Python Sandbox</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
       </div>
 
       {/* Tab 1: Practice Arena */}

@@ -395,124 +395,120 @@ export const PracticeQuestionsArena: React.FC = () => {
         </div>
       </div>
 
-      {/* Questions Grid */}
-      {loading && filteredQuestions.length === 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4.5">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div
-              key={i}
-              className="p-6 rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/80 dark:border-neutral-800/80 animate-pulse space-y-4 shadow-xs"
-            >
-              <div className="flex items-center justify-between">
-                <div className="w-28 h-5 rounded-full bg-neutral-200 dark:bg-neutral-800" />
-                <div className="w-16 h-5 rounded-full bg-neutral-200 dark:bg-neutral-800" />
+      {/* Questions Row-wise Table / List (Matching Coding Sandbox & Practice) */}
+      <div className="bg-white dark:bg-[#1a1a1e] rounded-3xl border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xs overflow-hidden">
+        {loading && filteredQuestions.length === 0 ? (
+          <div className="divide-y divide-neutral-100 dark:divide-neutral-800/80">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="p-4 sm:p-5 flex items-center justify-between gap-4 animate-pulse">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-neutral-200 dark:bg-neutral-800" />
+                  <div className="space-y-2">
+                    <div className="w-48 h-4 rounded bg-neutral-200 dark:bg-neutral-800" />
+                    <div className="w-24 h-3 rounded bg-neutral-100 dark:bg-neutral-800/60" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-6 rounded-full bg-neutral-200 dark:bg-neutral-800" />
+                  <div className="w-24 h-8 rounded-xl bg-neutral-200 dark:bg-neutral-800" />
+                </div>
               </div>
-              <div className="w-3/4 h-5 rounded bg-neutral-200 dark:bg-neutral-800" />
-              <div className="w-1/2 h-4 rounded bg-neutral-100 dark:bg-neutral-800/60" />
-              <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800/80 flex justify-between">
-                <div className="w-24 h-8 rounded-xl bg-neutral-100 dark:bg-neutral-800" />
-                <div className="w-28 h-8 rounded-xl bg-neutral-100 dark:bg-neutral-800" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : filteredQuestions.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-xs">
-          <Code2 className="w-10 h-10 text-neutral-400 mx-auto mb-3" />
-          <h3 className="text-sm font-bold text-neutral-900 dark:text-white">No questions found</h3>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-sm mx-auto leading-relaxed">
-            Try adjusting your search query or selecting a different category from the filter tabs above.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4.5">
-          {filteredQuestions.map((question) => {
-            const sandboxUrl =
-              question.start_url ||
-              question.practice_url ||
-              `https://pycode-student.vercel.app/practice/${question.id}`;
+            ))}
+          </div>
+        ) : filteredQuestions.length === 0 ? (
+          <div className="p-12 text-center space-y-2">
+            <Code2 className="w-10 h-10 text-neutral-400 mx-auto mb-3" />
+            <h3 className="text-sm font-bold text-neutral-900 dark:text-white">No questions found</h3>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-sm mx-auto leading-relaxed">
+              Try adjusting your search query or selecting a different category from the filter tabs above.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-neutral-100 dark:divide-neutral-800/80">
+            {filteredQuestions.map((question) => {
+              const sandboxUrl =
+                question.start_url ||
+                question.practice_url ||
+                `https://pycode-student.vercel.app/practice/${question.id}`;
 
-            return (
-              <div
-                key={question.id}
-                className="group p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xs hover:border-blue-500/50 dark:hover:border-blue-500/40 transition-colors flex flex-col justify-between space-y-4"
-              >
-                <div className="space-y-3">
-                  {/* Header: PyCode Logo + Category + Difficulty + Points */}
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5 truncate max-w-[260px]">
-                      <div className="w-4 h-4 rounded-full bg-[#D4704B] flex items-center justify-center text-white font-mono font-bold text-[8px] shrink-0">
+              const isEasy = question.difficulty === 'easy';
+              const isMedium = question.difficulty === 'medium';
+
+              return (
+                <div
+                  key={question.id}
+                  className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-neutral-50/80 dark:hover:bg-[#25252a] transition-colors group"
+                >
+                  {/* Left: Terminal Icon + Title & Category */}
+                  <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-[#25252a] border border-neutral-200/70 dark:border-neutral-700/70 flex items-center justify-center shrink-0">
+                      <div className="w-5 h-5 rounded-md bg-[#D4704B] flex items-center justify-center text-white font-mono font-bold text-[9px] shadow-2xs">
                         &gt;_
                       </div>
-                      <span className="text-[11px] font-bold text-[#D4704B] uppercase tracking-wide shrink-0">
-                        PYCODE
-                      </span>
-                      <span className="text-neutral-300 dark:text-neutral-700 font-bold">·</span>
-                      <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 truncate">
-                        {question.category_name || question.category}
-                      </span>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          question.difficulty === 'easy'
-                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
-                            : question.difficulty === 'medium'
-                            ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20'
-                            : 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20'
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            question.difficulty === 'easy'
-                              ? 'bg-emerald-500'
-                              : question.difficulty === 'medium'
-                              ? 'bg-amber-500'
-                              : 'bg-rose-500'
-                          }`}
-                        />
-                        {question.difficulty}
-                      </span>
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-neutral-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+                          {question.title}
+                        </h3>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold uppercase tracking-wider bg-[#D4704B]/10 text-[#D4704B] border border-[#D4704B]/20">
+                          PYCODE
+                        </span>
+                      </div>
 
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-200/60 dark:border-neutral-700/60">
-                        {question.points} Pts
-                      </span>
+                      <div className="flex items-center gap-2.5 text-[11px] text-neutral-500 dark:text-neutral-400 flex-wrap">
+                        <span className="font-medium text-neutral-600 dark:text-neutral-300 truncate max-w-xs">
+                          {question.category_name || question.category}
+                        </span>
+                        <span>•</span>
+                        <span className="font-mono font-semibold text-neutral-700 dark:text-neutral-300">
+                          {question.points} Pts
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Title */}
-                  <h3 className="text-[15px] sm:text-base font-bold text-neutral-900 dark:text-neutral-50 leading-snug tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
-                    {question.title}
-                  </h3>
-                </div>
+                  {/* Right: Difficulty badge + Actions */}
+                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-neutral-100 dark:border-neutral-800">
+                    <span
+                      className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border shrink-0 capitalize ${
+                        isEasy
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
+                          : isMedium
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25'
+                          : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/25'
+                      }`}
+                    >
+                      {question.difficulty}
+                    </span>
 
-                {/* Action Buttons Row */}
-                <div className="flex items-center justify-between gap-3 pt-3.5 border-t border-neutral-100 dark:border-neutral-800/80">
-                  <button
-                    onClick={() => setReviewingQuestion(question)}
-                    className="px-3.5 py-2 rounded-xl text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <Eye className="w-3.5 h-3.5 text-neutral-400" />
-                    <span>Review Problem</span>
-                  </button>
+                    <button
+                      onClick={() => setReviewingQuestion(question)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-neutral-400" />
+                      <span className="hidden md:inline">Review Problem</span>
+                      <span className="md:hidden">Review</span>
+                    </button>
 
-                  <a
-                    href={sandboxUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white flex items-center gap-2 shadow-xs transition-colors shrink-0 cursor-pointer"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>Start in Sandbox</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                    <a
+                      href={sandboxUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white flex items-center gap-1.5 shadow-2xs transition-colors shrink-0 cursor-pointer"
+                    >
+                      <Play className="w-3 h-3 fill-current" />
+                      <span>Start in Sandbox</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Review Modal */}
       <QuestionReviewModal
