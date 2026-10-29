@@ -94,6 +94,9 @@ const startServer = async () => {
   }
 
   // Local development / standalone container mode
+  let retryCount = 0;
+  const maxRetries = 3;
+
   const server = app.listen(PORT, () => {
     console.log(`🚀 [Rishabh Labs Backend] Server running on http://localhost:${PORT}`);
     console.log(`📡 [Rishabh Labs Backend] Core API mounted at http://localhost:${PORT}/api`);
@@ -106,6 +109,41 @@ const startServer = async () => {
       });
     }
   });
+
+  // Handle port conflicts gracefully (prevents unhandled EADDRINUSE crash)
+  server.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code === 'EADDRINUSE') {
+      if (retryCount < maxRetries) {
+        retryCount++;
+        console.warn(`⚠️ [Port ${PORT} In Use] Waiting for previous process socket to release... Retrying in 1s (${retryCount}/${maxRetries})`);
+        setTimeout(() => {
+          try {
+            server.close();
+          } catch (_) {}
+          server.listen(PORT);
+        }, 1000);
+      } else {
+        console.error(`\n❌ [Rishabh Labs Backend] Port ${PORT} is already occupied by an active process.`);
+        console.error(`👉 Run "npm run free-ports" or terminate the existing process.\n`);
+        process.exit(1);
+      }
+    } else {
+      console.error('❌ [Server Error]:', err);
+      process.exit(1);
+    }
+  });
+
+  // Graceful shutdown: ensures socket is immediately freed on reload / exit
+  const gracefulShutdown = () => {
+    console.log('\n🛑 [Rishabh Labs Backend] Gracefully releasing port and closing server...');
+    server.close(() => {
+      process.exit(0);
+    });
+    setTimeout(() => process.exit(0), 1500);
+  };
+
+  process.once('SIGTERM', gracefulShutdown);
+  process.once('SIGINT', gracefulShutdown);
 
   return server;
 };

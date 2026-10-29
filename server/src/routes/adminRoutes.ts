@@ -425,33 +425,61 @@ router.delete('/colleges/:id', async (req, res) => {
 // GET /api/admin/problems
 router.get('/problems', async (req, res) => {
   try {
-    let problems = await CodingProblem.find({}).sort({ createdAt: -1 });
+    let problems: any[] = [];
+    if (mongoose.connection.readyState === 1) {
+      try {
+        problems = await CodingProblem.find({}).sort({ createdAt: -1 });
+      } catch (mErr) {
+        console.warn('Mongo CodingProblem query note:', mErr);
+      }
+    }
+    if (problems.length === 0 && isSupabaseConfigured() && supabase) {
+      try {
+        const { data: sbProbs } = await supabase.from('coding_problems').select('*').order('created_at', { ascending: false });
+        if (sbProbs && sbProbs.length > 0) {
+          problems = sbProbs.map((p: any) => ({
+            _id: p.id,
+            id: p.id,
+            title: p.title,
+            slug: p.slug,
+            difficulty: p.difficulty,
+            category: p.category,
+            isDebuggingChallenge: p.is_debugging_challenge,
+            brokenBugExplanation: p.broken_bug_explanation || '',
+            descriptionMarkdown: p.description_markdown || '',
+            examples: p.examples || [],
+            constraints: p.constraints || [],
+            starterCode: p.starter_code || {},
+            hints: p.hints || {},
+            testCases: p.test_cases || [],
+            tags: [p.category, p.difficulty],
+            acceptanceRate: parseFloat(p.acceptance_rate) || 85,
+          }));
+        }
+      } catch (sbErr) {
+        console.warn('Supabase CodingProblem query note:', sbErr);
+      }
+    }
     if (problems.length === 0) {
       const { ALL_CODING_PROBLEMS } = await import('../seed/seedCodingProblems');
-      for (const p of ALL_CODING_PROBLEMS) {
-        await CodingProblem.create({
-          title: p.title,
-          slug: p.slug,
-          difficulty: p.difficulty,
-          category: p.category,
-          isDebuggingChallenge: p.is_debugging_challenge,
-          brokenBugExplanation: p.broken_bug_explanation || '',
-          descriptionMarkdown: p.description_markdown,
-          examples: p.examples || [],
-          constraints: p.constraints || [],
-          starterCode: p.starter_code || { javascript: '', python: '' },
-          hints: {
-            level1Concept: p.hints?.level1Concept || '',
-            level2Stronger: p.hints?.level2Stronger || '',
-            level3Approach: p.hints?.level3Approach || '',
-            level4Mentor: p.hints?.level4Mentor || '',
-          },
-          testCases: p.test_cases || [],
-          tags: [p.category, p.difficulty],
-          acceptanceRate: parseFloat(p.acceptance_rate) || 85,
-        });
-      }
-      problems = await CodingProblem.find({}).sort({ createdAt: -1 });
+      problems = ALL_CODING_PROBLEMS.map((p: any, i: number) => ({
+        _id: `prob-${i}`,
+        id: `prob-${i}`,
+        title: p.title,
+        slug: p.slug,
+        difficulty: p.difficulty,
+        category: p.category,
+        isDebuggingChallenge: p.is_debugging_challenge,
+        brokenBugExplanation: p.broken_bug_explanation || '',
+        descriptionMarkdown: p.description_markdown,
+        examples: p.examples || [],
+        constraints: p.constraints || [],
+        starterCode: p.starter_code || {},
+        hints: p.hints || {},
+        testCases: p.test_cases || [],
+        tags: [p.category, p.difficulty],
+        acceptanceRate: parseFloat(p.acceptance_rate) || 85,
+      }));
     }
     res.json(problems);
   } catch (err: any) {
@@ -580,64 +608,93 @@ router.delete('/problems/:id', async (req, res) => {
 // GET /api/admin/roadmaps
 router.get('/roadmaps', async (req, res) => {
   try {
-    let roadmaps = await Roadmap.find({}).sort({ updatedAt: -1 });
+    let roadmaps: any[] = [];
+    if (mongoose.connection.readyState === 1) {
+      try {
+        roadmaps = await Roadmap.find({}).sort({ updatedAt: -1 });
+      } catch (mErr) {
+        console.warn('Mongo Roadmap query note:', mErr);
+      }
+    }
+    if (roadmaps.length === 0 && isSupabaseConfigured() && supabase) {
+      try {
+        const { data: sbRoadmaps } = await supabase.from('roadmaps').select('*');
+        if (sbRoadmaps && sbRoadmaps.length > 0) {
+          roadmaps = sbRoadmaps.map((r: any) => ({
+            _id: r.id,
+            id: r.id,
+            title: r.title,
+            slug: r.slug,
+            category: r.category,
+            targetLevel: r.target_level || 'Beginner',
+            estimatedDailyTime: r.estimated_daily_time || '2 hr/day',
+            totalDurationDays: r.total_duration_days || 90,
+            nodes: r.nodes || [],
+          }));
+        }
+      } catch (sbErr) {
+        console.warn('Supabase Roadmap query note:', sbErr);
+      }
+    }
     if (roadmaps.length === 0) {
-      // Seed default roadmap track
-      const seeded = await Roadmap.create({
-        title: 'Web Development Execution Track',
-        slug: 'web-development',
-        category: 'Web Development',
-        targetLevel: 'Beginner',
-        estimatedDailyTime: '2 hr/day',
-        totalDurationDays: 90,
-        totalNodes: 6,
-        completedNodes: 1,
-        nodes: [
-          {
-            nodeId: 'node-1',
-            stepNumber: 1,
-            title: 'Foundations & Architecture',
-            subtitle: 'Terminal, Git, Modern Web Architecture',
-            description: 'Build terminal fluency, configure Git remote workflows, understand DNS, client-server models, and HTTP headers.',
-            category: 'Core',
-            status: 'completed',
-            estimatedHours: 15,
-            skillsCovered: ['Git', 'GitHub', 'CLI', 'HTTP Basics'],
-            lessonsCount: 6,
-            projectsCount: 1,
-            iconName: 'Terminal',
-          },
-          {
-            nodeId: 'node-2',
-            stepNumber: 2,
-            title: 'HTML5, CSS & ES6+ JavaScript',
-            subtitle: 'Modern ES6+, DOM & Responsive Systems',
-            description: 'Master semantic HTML5, CSS Grid/Flexbox layouts, array methods, asynchronous promises, and real-time DOM updates.',
-            category: 'Frontend Core',
-            status: 'in_progress',
-            estimatedHours: 35,
-            skillsCovered: ['HTML5', 'CSS Grid', 'ES6+ JavaScript', 'Array Methods', 'DOM APIs'],
-            lessonsCount: 12,
-            projectsCount: 2,
-            iconName: 'Code',
-          },
-          {
-            nodeId: 'node-3',
-            stepNumber: 3,
-            title: 'React 19 & Component Architecture',
-            subtitle: 'Hooks, State Management & Tailwind CSS',
-            description: 'Build modular user interfaces with React 19 hooks, component composition, and responsive Tailwind design tokens.',
-            category: 'Frontend Framework',
-            status: 'locked',
-            estimatedHours: 40,
-            skillsCovered: ['React 19', 'Tailwind CSS', 'Custom Hooks', 'State Management'],
-            lessonsCount: 14,
-            projectsCount: 3,
-            iconName: 'Layout',
-          },
-        ],
-      });
-      roadmaps = [seeded];
+      roadmaps = [
+        {
+          _id: 'rm-web-dev',
+          id: 'rm-web-dev',
+          title: 'Web Development Execution Track',
+          slug: 'web-development',
+          category: 'Web Development',
+          targetLevel: 'Beginner',
+          estimatedDailyTime: '2 hr/day',
+          totalDurationDays: 90,
+          totalNodes: 6,
+          completedNodes: 1,
+          nodes: [
+            {
+              nodeId: 'node-1',
+              stepNumber: 1,
+              title: 'Foundations & Architecture',
+              subtitle: 'Terminal, Git, Modern Web Architecture',
+              description: 'Build terminal fluency, configure Git remote workflows, understand DNS, client-server models, and HTTP headers.',
+              category: 'Core',
+              status: 'completed',
+              estimatedHours: 15,
+              skillsCovered: ['Git', 'GitHub', 'CLI', 'HTTP Basics'],
+              lessonsCount: 6,
+              projectsCount: 1,
+              iconName: 'Terminal',
+            },
+            {
+              nodeId: 'node-2',
+              stepNumber: 2,
+              title: 'HTML5, CSS & ES6+ JavaScript',
+              subtitle: 'Modern ES6+, DOM & Responsive Systems',
+              description: 'Master semantic HTML5, CSS Grid/Flexbox layouts, array methods, asynchronous promises, and real-time DOM updates.',
+              category: 'Frontend Core',
+              status: 'in_progress',
+              estimatedHours: 35,
+              skillsCovered: ['HTML5', 'CSS Grid', 'ES6+ JavaScript', 'Array Methods', 'DOM APIs'],
+              lessonsCount: 12,
+              projectsCount: 2,
+              iconName: 'Code',
+            },
+            {
+              nodeId: 'node-3',
+              stepNumber: 3,
+              title: 'React 19 & Component Architecture',
+              subtitle: 'Hooks, State Management & Tailwind CSS',
+              description: 'Build modular user interfaces with React 19 hooks, component composition, and responsive Tailwind design tokens.',
+              category: 'Frontend Framework',
+              status: 'locked',
+              estimatedHours: 40,
+              skillsCovered: ['React 19', 'Hooks', 'Tailwind CSS', 'Vite'],
+              lessonsCount: 15,
+              projectsCount: 3,
+              iconName: 'Layout',
+            },
+          ],
+        },
+      ];
     }
     res.json(roadmaps);
   } catch (err: any) {
@@ -718,11 +775,37 @@ router.delete('/roadmaps/:id', async (req, res) => {
 // GET /api/admin/missions
 router.get('/missions', async (req, res) => {
   try {
-    let missions = await DailyMission.find({}).sort({ updatedAt: -1 });
+    let missions: any[] = [];
+    if (mongoose.connection.readyState === 1) {
+      try {
+        missions = await DailyMission.find({}).sort({ updatedAt: -1 });
+      } catch (mErr) {
+        console.warn('Mongo DailyMission query note:', mErr);
+      }
+    }
+    if (missions.length === 0 && isSupabaseConfigured() && supabase) {
+      try {
+        const { data: sbMissions } = await supabase.from('daily_missions').select('*');
+        if (sbMissions && sbMissions.length > 0) {
+          missions = sbMissions.map((m: any) => ({
+            _id: m.id,
+            id: m.id,
+            dayNumber: m.day_number || 1,
+            trackTitle: m.track_title || 'Web Development',
+            dateString: m.date_string || new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+            quote: m.quote || 'Consistency is what transforms average into excellence.',
+            tasks: m.tasks || [],
+          }));
+        }
+      } catch (sbErr) {
+        console.warn('Supabase DailyMission query note:', sbErr);
+      }
+    }
     if (missions.length === 0) {
-      // Seed default missions
-      const defaultMissions = [
+      missions = [
         {
+          _id: 'mission-web-1',
+          id: 'mission-web-1',
           dayNumber: 1,
           trackTitle: 'Web Development',
           dateString: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
@@ -773,10 +856,10 @@ router.get('/missions', async (req, res) => {
               proofRequired: true,
             },
           ],
-          completedTasksCount: 0,
-          isAllCompleted: false,
         },
         {
+          _id: 'mission-ai-1',
+          id: 'mission-ai-1',
           dayNumber: 1,
           trackTitle: 'AI & Machine Learning',
           dateString: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
@@ -827,15 +910,8 @@ router.get('/missions', async (req, res) => {
               proofRequired: true,
             },
           ],
-          completedTasksCount: 0,
-          isAllCompleted: false,
         },
       ];
-
-      for (const m of defaultMissions) {
-        await DailyMission.create(m as any);
-      }
-      missions = await DailyMission.find({}).sort({ updatedAt: -1 });
     }
     res.json(missions);
   } catch (err: any) {
@@ -908,9 +984,35 @@ router.delete('/missions/:id', async (req, res) => {
 // GET /api/admin/pricing (Public / Pricing Page)
 router.get('/pricing', async (req, res) => {
   try {
-    let plans = await PricingPlan.find({});
+    let plans: any[] = [];
+    if (mongoose.connection.readyState === 1) {
+      try {
+        plans = await PricingPlan.find({});
+      } catch (mErr) {
+        console.warn('Mongo PricingPlan query note:', mErr);
+      }
+    }
+    if (plans.length === 0 && isSupabaseConfigured() && supabase) {
+      try {
+        const { data: sbPlans } = await supabase.from('pricing_plans').select('*');
+        if (sbPlans && sbPlans.length > 0) {
+          plans = sbPlans.map((pr: any) => ({
+            key: pr.id || pr.name?.toLowerCase(),
+            name: pr.name,
+            priceMonthly: pr.price_monthly ?? pr.price ?? 0,
+            priceAnnual: pr.price_annual ?? ((pr.price || 0) * 10),
+            currency: '₹',
+            tagline: pr.description || '',
+            isPopular: Boolean(pr.is_popular),
+            features: Array.isArray(pr.features) ? pr.features : [],
+          }));
+        }
+      } catch (sbErr) {
+        console.warn('Supabase pricing query note:', sbErr);
+      }
+    }
     if (plans.length === 0) {
-      plans = await PricingPlan.create([
+      plans = [
         {
           key: 'free',
           name: 'Free',
@@ -962,7 +1064,7 @@ router.get('/pricing', async (req, res) => {
             'Internship & placement interview drills',
           ],
         },
-      ]);
+      ];
     }
     res.json(plans);
   } catch (err: any) {

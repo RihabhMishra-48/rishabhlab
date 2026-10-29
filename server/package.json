@@ -7,6 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "free-port": "npx --yes kill-port 5001",
     "seed": "tsx src/seed/seedData.ts",
     "create-admin": "tsx src/scripts/createAdmin.ts"
   },
