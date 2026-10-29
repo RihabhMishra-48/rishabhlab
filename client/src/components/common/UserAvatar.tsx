@@ -33,7 +33,9 @@ const getColorForName = (str: string) => {
 };
 
 const FAILED_AVATARS_STORAGE_KEY = 'rishabhlabs_failed_avatars';
-const failedAvatarUrls = new Set<string>();
+const failedAvatarUrls = new Set<string>([
+  'https://lh3.googleusercontent.com/a/ACg8ocJ0KvIuzezERY_6bEwJem1AdMYaIKgBkzf9fJzqmY9dpHTZDeg=s96-c',
+]);
 
 // Pre-hydrate failed avatar URLs from sessionStorage to avoid repeating 429s/404s
 if (typeof window !== 'undefined') {
@@ -61,33 +63,6 @@ const recordFailedAvatar = (url: string) => {
   }
 };
 
-/**
- * Resolves verified core team avatars directly to authentic local assets.
- */
-export const resolveTeamAvatar = (
-  src?: string | null,
-  name?: string | null,
-  email?: string | null
-): string | null => {
-  const n = (name || '').toLowerCase();
-  const e = (email || '').toLowerCase();
-  const s = src || '';
-
-  // Keep existing verified local avatar path
-  if (s.startsWith('/avatars/')) return s;
-
-  if (n.includes('arpit') || e.includes('arpit') || e.includes('officialcrikit') || s.includes('ACg8ocJ0KvIuzezERY')) {
-    return '/avatars/arpit.webp';
-  }
-  if (n.includes('rishabh') || e.includes('rishabh') || e.includes('mishrarishabh2006')) {
-    return '/avatars/rishabh.webp';
-  }
-  if (n.includes('harsh') || e.includes('harsh')) {
-    return '/avatars/harsh.webp';
-  }
-  return src || null;
-};
-
 export const UserAvatar: React.FC<UserAvatarProps> = ({
   src,
   name,
@@ -101,16 +76,15 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   const cachedAvatar = email ? pycodeCache.getAvatar(email) : null;
   const cachedName = email ? pycodeCache.getName(email) : null;
 
-  const rawSrc = src || cachedAvatar || localAvatar;
+  const effectiveSrc = src || cachedAvatar || localAvatar;
   const displayName = name || cachedName || email?.split('@')[0] || 'User';
-  const effectiveSrc = resolveTeamAvatar(rawSrc, displayName, email);
 
-  const [imageError, setImageError] = useState(() =>
-    effectiveSrc ? failedAvatarUrls.has(effectiveSrc) : false
-  );
+  const isBroken = !effectiveSrc || failedAvatarUrls.has(effectiveSrc) || effectiveSrc.includes('ACg8ocJ0KvIuzezERY');
+
+  const [imageError, setImageError] = useState(() => isBroken);
 
   useEffect(() => {
-    if (effectiveSrc && failedAvatarUrls.has(effectiveSrc)) {
+    if (effectiveSrc && (failedAvatarUrls.has(effectiveSrc) || effectiveSrc.includes('ACg8ocJ0KvIuzezERY'))) {
       setImageError(true);
     } else {
       setImageError(false);
@@ -124,6 +98,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   const isValidSrc =
     effectiveSrc &&
     !imageError &&
+    !isBroken &&
     !failedAvatarUrls.has(effectiveSrc) &&
     !effectiveSrc.includes('placeholder') &&
     !effectiveSrc.includes('your-avatar');

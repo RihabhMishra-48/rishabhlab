@@ -12,21 +12,10 @@ import { Roadmap } from '../models/Roadmap';
 import { DailyMission } from '../models/DailyMission';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
 
-const resolveUserAvatar = (rawAvatar?: string | null, name?: string | null, email?: string | null) => {
-  const n = (name || '').toLowerCase();
-  const e = (email || '').toLowerCase();
-  const a = rawAvatar || '';
-  if (a.startsWith('/avatars/')) return a;
-  if (n.includes('arpit') || e.includes('arpit') || e.includes('officialcrikit') || a.includes('ACg8ocJ0KvIuzezERY')) {
-    return '/avatars/arpit.webp';
-  }
-  if (n.includes('rishabh') || e.includes('rishabh') || e.includes('mishrarishabh2006')) {
-    return '/avatars/rishabh.webp';
-  }
-  if (n.includes('harsh') || e.includes('harsh')) {
-    return '/avatars/harsh.webp';
-  }
-  return rawAvatar || null;
+const sanitizeAvatar = (url?: string | null) => {
+  if (!url) return null;
+  if (url.includes('ACg8ocJ0KvIuzezERY')) return null; // rate-limited broken Google avatar
+  return url;
 };
 
 const router = Router();
@@ -138,7 +127,7 @@ router.get('/mentors', async (req, res) => {
             title: m.title || 'Technical Specialist',
             company: m.company || 'RishabhLabs',
             domain: m.domain || 'Full-Stack Development',
-            avatar: resolveUserAvatar(m.avatar, m.name) || '/avatars/default.webp',
+            avatar: sanitizeAvatar(m.avatar) || '/avatars/default.webp',
             rating: Number(m.rating) || 5.0,
             reviewsCount: Number(m.reviews_count) || 48,
             bio: m.bio || '',
@@ -1556,7 +1545,7 @@ router.get('/users', async (req, res) => {
             degree: p.degree || '',
             year: p.year_of_study || '',
             role: p.role || 'student',
-            avatar: resolveUserAvatar(p.avatar_url || p.avatar, p.full_name || p.name, p.email),
+            avatar: sanitizeAvatar(p.avatar_url || p.avatar),
             targetGoal: p.target_goal || p.field_of_interest || 'Web Development',
             fieldOfInterest: p.field_of_interest || p.target_goal || 'Web Development',
             skillsCompleted: p.skills_completed || 0,
@@ -1591,7 +1580,7 @@ router.get('/users', async (req, res) => {
               degree: mu.degree || '',
               year: mu.year || '',
               role: mu.role || 'student',
-              avatar: resolveUserAvatar(mu.avatar, mu.name, mu.email),
+              avatar: sanitizeAvatar(mu.avatar),
               targetGoal: mu.targetGoal || '',
               fieldOfInterest: mu.fieldOfInterest || '',
               skillsCompleted: mu.skillsCompleted || 0,

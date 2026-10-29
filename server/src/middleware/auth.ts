@@ -4,21 +4,10 @@ import mongoose from 'mongoose';
 import { User, IUser } from '../models/User';
 import { supabase } from '../config/supabase';
 
-const resolveTeamAvatar = (rawAvatar?: string | null, name?: string | null, email?: string | null) => {
-  const n = (name || '').toLowerCase();
-  const e = (email || '').toLowerCase();
-  const a = rawAvatar || '';
-  if (a.startsWith('/avatars/')) return a;
-  if (n.includes('arpit') || e.includes('arpit') || e.includes('officialcrikit') || a.includes('ACg8ocJ0KvIuzezERY')) {
-    return '/avatars/arpit.webp';
-  }
-  if (n.includes('rishabh') || e.includes('rishabh') || e.includes('mishrarishabh2006')) {
-    return '/avatars/rishabh.webp';
-  }
-  if (n.includes('harsh') || e.includes('harsh')) {
-    return '/avatars/harsh.webp';
-  }
-  return rawAvatar || '';
+const sanitizeAvatar = (url?: string | null) => {
+  if (!url) return '';
+  if (url.includes('ACg8ocJ0KvIuzezERY')) return ''; // rate-limited broken Google avatar
+  return url;
 };
 
 export interface AuthRequest extends Request {
@@ -100,7 +89,7 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
       } else {
         effectiveAvatar = sbProfile?.avatar_url || metaAvatar || user?.avatar || '';
       }
-      effectiveAvatar = resolveTeamAvatar(effectiveAvatar, sbProfile?.full_name || user?.name, decoded.email || sbProfile?.email || user?.email);
+      effectiveAvatar = sanitizeAvatar(effectiveAvatar);
 
       const effectiveOnboarded = isAdmin || effectiveRole === 'mentor' || effectiveRole === 'college_admin'
         ? true
@@ -155,7 +144,7 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
           const isAdmin = effectiveRole === 'super_admin' || effectiveRole === 'admin';
           const metaAvatar = sbUser.user_metadata?.avatar_url || sbUser.user_metadata?.picture;
           const rawAvatar = sbProfile?.avatar_url || metaAvatar || '';
-          const effectiveAvatar = resolveTeamAvatar(rawAvatar, sbProfile?.full_name || sbUser.user_metadata?.full_name, userEmail);
+          const effectiveAvatar = sanitizeAvatar(rawAvatar);
           const hasChosenGoal = Boolean(sbProfile?.target_goal && sbProfile.target_goal.trim() !== '' && sbProfile.target_goal !== 'Not Set');
           const effectiveOnboarded = isAdmin || effectiveRole === 'mentor' || effectiveRole === 'college_admin'
             ? true

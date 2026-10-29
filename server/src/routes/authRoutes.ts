@@ -12,21 +12,10 @@ import { sendOtpEmail } from '../services/emailService';
 
 const router = Router();
 
-const resolveTeamAvatar = (rawAvatar?: string | null, name?: string | null, email?: string | null) => {
-  const n = (name || '').toLowerCase();
-  const e = (email || '').toLowerCase();
-  const a = rawAvatar || '';
-  if (a.startsWith('/avatars/')) return a;
-  if (n.includes('arpit') || e.includes('arpit') || e.includes('officialcrikit') || a.includes('ACg8ocJ0KvIuzezERY')) {
-    return '/avatars/arpit.webp';
-  }
-  if (n.includes('rishabh') || e.includes('rishabh') || e.includes('mishrarishabh2006')) {
-    return '/avatars/rishabh.webp';
-  }
-  if (n.includes('harsh') || e.includes('harsh')) {
-    return '/avatars/harsh.webp';
-  }
-  return rawAvatar || '';
+const sanitizeAvatar = (url?: string | null) => {
+  if (!url) return '';
+  if (url.includes('ACg8ocJ0KvIuzezERY')) return ''; // rate-limited broken Google avatar
+  return url;
 };
 
 // ==========================================
@@ -350,7 +339,7 @@ const handleVerifyOtp = async (req: any, res: any) => {
       } else {
         avatar = profile?.avatar_url || metaAvatar || mongoUser?.avatar || '';
       }
-      avatar = resolveTeamAvatar(avatar, name, cleanEmail);
+      avatar = sanitizeAvatar(avatar);
 
       const college = profile?.college_name || mongoUser?.college || '';
       const degree = profile?.degree || mongoUser?.degree || '';
@@ -694,7 +683,7 @@ router.post('/login', async (req, res) => {
         const isAdmin = role === 'super_admin' || role === 'admin';
         const metaAvatar = sbAuth.user.user_metadata?.avatar_url || sbAuth.user.user_metadata?.picture;
         const rawAvatar = sbProfile?.avatar_url || metaAvatar || '';
-        const avatar = resolveTeamAvatar(rawAvatar, sbProfile?.full_name || sbAuth.user.user_metadata?.full_name, cleanEmail);
+        const avatar = sanitizeAvatar(rawAvatar);
         const isOnboarded = isAdmin ? true : Boolean(sbProfile?.is_onboarded);
 
         const token = generateToken(sbAuth.user.id, role, cleanEmail);
