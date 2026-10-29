@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../services/supabase';
+import { UserAvatar } from '../../components/common/UserAvatar';
 import {
   Video,
   Calendar,
@@ -388,13 +389,12 @@ export const MentorSessionsPage: React.FC = () => {
                 {/* Real Student Info Strip */}
                 {(session.studentName || session.studentEmail) && (
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-neutral-50/80 dark:bg-[#202024] border border-neutral-200/60 dark:border-neutral-800">
-                    <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center font-bold text-xs text-neutral-800 dark:text-neutral-200 shrink-0 overflow-hidden ring-1 ring-neutral-300 dark:ring-neutral-700">
-                      {session.studentAvatar ? (
-                        <img src={session.studentAvatar} alt={session.studentName} className="w-full h-full object-cover" />
-                      ) : (
-                        (session.studentName?.[0] || 'S').toUpperCase()
-                      )}
-                    </div>
+                    <UserAvatar
+                      src={session.studentAvatar}
+                      name={session.studentName}
+                      email={session.studentEmail}
+                      size="sm"
+                    />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs font-bold text-neutral-900 dark:text-white">

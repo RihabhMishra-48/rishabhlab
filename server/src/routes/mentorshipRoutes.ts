@@ -5,6 +5,23 @@ import { Mentor, MentorshipRequest } from '../models/Mentorship';
 import { getCleanMentors } from '../seed/seedData';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
 
+const resolveUserAvatar = (rawAvatar?: string | null, name?: string | null, email?: string | null) => {
+  const n = (name || '').toLowerCase();
+  const e = (email || '').toLowerCase();
+  const a = rawAvatar || '';
+  if (a.startsWith('/avatars/')) return a;
+  if (n.includes('arpit') || e.includes('arpit') || e.includes('officialcrikit') || a.includes('ACg8ocJ0KvIuzezERY')) {
+    return '/avatars/arpit.webp';
+  }
+  if (n.includes('rishabh') || e.includes('rishabh') || e.includes('mishrarishabh2006')) {
+    return '/avatars/rishabh.webp';
+  }
+  if (n.includes('harsh') || e.includes('harsh')) {
+    return '/avatars/harsh.webp';
+  }
+  return rawAvatar || null;
+};
+
 const router = Router();
 
 // ============================================================================
@@ -31,7 +48,7 @@ router.get('/', async (req, res) => {
             title: m.title || 'Senior Mentor',
             company: m.company || 'RishabhLabs',
             domain: m.domain || 'Technology',
-            avatar: m.avatar || '/avatars/default.webp',
+            avatar: resolveUserAvatar(m.avatar, m.name) || '/avatars/default.webp',
             rating: Number(m.rating) || 5.0,
             reviewsCount: Number(m.reviews_count) || (m.experience_years ? m.experience_years * 16 : 48),
             bio: m.bio || '',
@@ -343,13 +360,13 @@ router.get('/mentor/sessions', requireAuth, async (req: AuthRequest, res) => {
                 notesFromMentor: req.notes_from_mentor || '',
                 createdAt: req.created_at,
                 mentorName: mentor?.name || 'Assigned Mentor',
-                mentorAvatar: mentor?.avatar || '',
+                mentorAvatar: resolveUserAvatar(mentor?.avatar, mentor?.name) || '',
                 mentorTitle: mentor?.title || '',
                 mentorId: req.mentor_id,
                 studentId: req.student_id,
                 studentName: student?.full_name || student?.email?.split('@')[0] || 'Verified Learner',
                 studentEmail: student?.email || '',
-                studentAvatar: student?.avatar_url || '',
+                studentAvatar: resolveUserAvatar(student?.avatar_url, student?.full_name, student?.email) || '',
                 studentCollege: student?.college_name || '',
                 studentTrack: student?.target_goal || student?.field_of_interest || '',
               };

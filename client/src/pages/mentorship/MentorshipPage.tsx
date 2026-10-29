@@ -6,6 +6,7 @@ import { Mentor } from '../../types';
 import { getCuratedMentors } from '../../data/curatedMentors';
 import { supabase, isSupabaseConfigured } from '../../services/supabase';
 import { CustomDropdown } from '../../components/common/CustomDropdown';
+import { UserAvatar } from '../../components/common/UserAvatar';
 import {
   Users,
   Compass,
@@ -404,11 +405,12 @@ export const MentorshipPage: React.FC = () => {
                 <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium">Verified Mentors</span>
                 <div className="flex -space-x-2">
                   {mentors.slice(0, 3).map((m) => (
-                    <img
-                      key={m._id}
+                    <UserAvatar
+                      key={m._id || m.name}
                       src={m.avatar}
-                      alt={m.name}
-                      className="w-6 h-6 rounded-full object-cover ring-2 ring-white dark:ring-neutral-800 shadow-2xs"
+                      name={m.name}
+                      size="xs"
+                      className="ring-2 ring-white dark:ring-neutral-800 shadow-2xs"
                     />
                   ))}
                 </div>
@@ -445,10 +447,12 @@ export const MentorshipPage: React.FC = () => {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
-                    <img
-                      src={s.mentorAvatar || '/avatars/default.webp'}
-                      alt={s.mentorName}
-                      className="w-9 h-9 rounded-xl object-cover ring-1 ring-neutral-200 dark:ring-neutral-700 shrink-0"
+                    <UserAvatar
+                      src={s.mentorAvatar}
+                      name={s.mentorName}
+                      size="md"
+                      roundedClassName="rounded-xl"
+                      className="ring-1 ring-neutral-200 dark:ring-neutral-700 shrink-0"
                     />
                     <div className="min-w-0">
                       <h4 className="text-xs font-bold text-neutral-900 dark:text-white truncate">
@@ -584,18 +588,12 @@ export const MentorshipPage: React.FC = () => {
                   {/* Top Header: Large Avatar + Domain Badge */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="relative shrink-0">
-                      <img
-                        src={mentor.avatar || (mentor.name?.toLowerCase().includes('arpit') ? '/avatars/arpit.webp' : mentor.name?.toLowerCase().includes('harsh') ? '/avatars/harsh.webp' : '/avatars/rishabh.webp')}
-                        alt={mentor.name}
-                        className={`w-20 h-20 sm:w-22 sm:h-22 rounded-2xl object-cover border-2 border-white dark:border-neutral-800 shadow-md ring-2 ${theme.avatarBorder}`}
-                        onError={(e: any) => {
-                          const l = (mentor.name || '').toLowerCase();
-                          e.target.src = l.includes('arpit')
-                            ? '/avatars/arpit.webp'
-                            : l.includes('harsh')
-                            ? '/avatars/harsh.webp'
-                            : '/avatars/rishabh.webp';
-                        }}
+                      <UserAvatar
+                        src={mentor.avatar}
+                        name={mentor.name}
+                        size="xl"
+                        roundedClassName="rounded-2xl"
+                        className={`w-20 h-20 sm:w-22 sm:h-22 border-2 border-white dark:border-neutral-800 shadow-md ring-2 ${theme.avatarBorder}`}
                       />
                       <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#202020]" />
                     </div>
