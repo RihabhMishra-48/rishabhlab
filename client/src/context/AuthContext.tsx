@@ -74,8 +74,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
 
           if (profile) {
-            const role = profile.role || 'student';
-            const isAdmin = role === 'super_admin' || role === 'admin';
+            const isMishraSuperAdmin = session.user.email?.toLowerCase() === 'mishrarishabh2006@gmail.com';
+            const role = isMishraSuperAdmin ? 'super_admin' : (profile.role || 'student');
+            const isAdmin = role === 'super_admin' || role === 'admin' || isMishraSuperAdmin;
             const goal = profile.field_of_interest || profile.target_goal || localGoal;
             // Admins, mentors, and college admins are never blocked by onboarding
             const isUserOnboarded = isAdmin || role === 'mentor' || role === 'college_admin' ? true : Boolean(profile.is_onboarded || localOnboarded);
@@ -87,7 +88,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (metaAvatar && (!profile.avatar_url || isStockAvatar)) {
               supabase.from('profiles').update({ avatar_url: metaAvatar }).eq('id', profile.id).then(() => {}, () => {});
             }
-            if (isAdmin && !profile.is_onboarded) {
+            if (isMishraSuperAdmin && profile.role !== 'super_admin') {
+              supabase.from('profiles').update({ role: 'super_admin', is_onboarded: true }).eq('id', profile.id).then(() => {}, () => {});
+            } else if (isAdmin && !profile.is_onboarded) {
               supabase.from('profiles').update({ is_onboarded: true }).eq('id', profile.id).then(() => {}, () => {});
             }
 
@@ -113,8 +116,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
           } else {
             const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '';
-            const userRole = session.user.user_metadata?.role || 'student';
-            const isAdmin = userRole === 'super_admin' || userRole === 'admin';
+            const isMishraSuperAdmin = session.user.email?.toLowerCase() === 'mishrarishabh2006@gmail.com';
+            const userRole = isMishraSuperAdmin ? 'super_admin' : (session.user.user_metadata?.role || 'student');
+            const isAdmin = userRole === 'super_admin' || userRole === 'admin' || isMishraSuperAdmin;
             setUser({
               id: session.user.id,
               name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
@@ -141,18 +145,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (window.location.hash) {
               window.history.replaceState(null, '', window.location.pathname);
             }
-            const activeRole = profile?.role || session.user.user_metadata?.role || 'student';
-            const isAdmin = activeRole === 'super_admin' || activeRole === 'admin';
+            const isMishraSuperAdmin = session.user.email?.toLowerCase() === 'mishrarishabh2006@gmail.com';
+            const activeRole = isMishraSuperAdmin ? 'super_admin' : (profile?.role || session.user.user_metadata?.role || 'student');
+            const isAdmin = activeRole === 'super_admin' || activeRole === 'admin' || isMishraSuperAdmin;
             const isUserOnboarded = isAdmin || activeRole === 'mentor' || activeRole === 'college_admin'
               ? true
               : (profile ? Boolean(profile.is_onboarded || localOnboarded) : localOnboarded);
             
+            // Standard login always lands on daily dashboard; only dedicated portal routes navigate to their portals
             let targetPath = isUserOnboarded ? '/dashboard' : '/onboarding';
-            if (isAdmin) {
+            const currentPath = window.location.pathname;
+            if (currentPath === '/admin/login' && isAdmin) {
               targetPath = '/admin';
-            } else if (activeRole === 'mentor') {
+            } else if (currentPath === '/mentor/login' && activeRole === 'mentor') {
               targetPath = '/mentor/sessions';
-            } else if (activeRole === 'college_admin') {
+            } else if (currentPath === '/college/login' && activeRole === 'college_admin') {
               targetPath = '/college';
             }
 
@@ -261,11 +268,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // ALWAYS store access token first
             localStorage.setItem('rishabhlabs_token', session.access_token);
 
-            const { data: profile } = await supabase
+            let { data: profile } = await supabase
               .from('profiles')
               .select('*')
               .eq('id', session.user.id)
               .maybeSingle();
+
+            // Resilient lookup by email if id didn't match directly
+            if (!profile && session.user.email) {
+              const { data: profByEmail } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('email', session.user.email.toLowerCase())
+                .maybeSingle();
+              profile = profByEmail;
+            }
 
             const userOnboardedKey = `rishabhlabs_onboarded_${session.user.id}`;
             const userGoalKey = `rishabhlabs_goal_${session.user.id}`;
@@ -273,7 +290,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const localGoal = localStorage.getItem(userGoalKey) || localStorage.getItem('rishabhlabs_goal') || undefined;
 
             if (profile) {
-              const role = profile.role || 'student';
+              const cleanUserEmail = (profile.email || session.user.email || '').toLowerCase();
+              let role = profile.role || 'student';
+              if (cleanUserEmail === 'mishrarishabh2006@gmail.com') {
+                role = 'super_admin';
+              }
               const isAdmin = role === 'super_admin' || role === 'admin';
               const goal = profile.field_of_interest || profile.target_goal || localGoal;
               const isUserOnboarded = isAdmin || role === 'mentor' || role === 'college_admin'
@@ -290,7 +311,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setUser({
                 id: profile.id,
                 name: profile.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-                email: profile.email || session.user.email || '',
+                email: cleanUserEmail,
                 role,
                 college: profile.college_name || '',
                 degree: profile.degree || '',
@@ -310,13 +331,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setLoading(false);
               return;
             } else {
+              const cleanUserEmail = (session.user.email || '').toLowerCase();
               const metaAvatar = session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '';
-              const userRole = session.user.user_metadata?.role || 'student';
+              let userRole = session.user.user_metadata?.role || 'student';
+              if (cleanUserEmail === 'mishrarishabh2006@gmail.com') {
+                userRole = 'super_admin';
+              }
               const isAdmin = userRole === 'super_admin' || userRole === 'admin';
               setUser({
                 id: session.user.id,
                 name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-                email: session.user.email || '',
+                email: cleanUserEmail,
                 role: userRole,
                 college: '',
                 degree: '',

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Editor from '@monaco-editor/react';
 import { WorkspaceFile, FileTreeNode } from '../../types/pycode';
-import { STARTER_PYTHON_WORKSPACE } from '../../data/starterPythonWorkspace';
 import { useAuth } from '../../context/AuthContext';
+import { pycodeCache } from '../../services/pycodeCache';
 import {
   Folder,
   FolderOpen,
@@ -19,8 +19,13 @@ import {
   Link as LinkIcon,
   MessageCircle,
   MoreVertical,
-  Sparkles,
-  Search
+  Search,
+  Plus,
+  Upload,
+  FilePlus,
+  X,
+  FileText,
+  Sparkles
 } from 'lucide-react';
 
 interface StudentWorkspaceViewerProps {
@@ -54,15 +59,32 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
   workspace,
   loading = false,
 }) => {
-  const { isDarkMode } = useAuth();
+  const { user, isDarkMode } = useAuth();
   const [localWorkspace, setLocalWorkspace] = useState<any>(null);
-  const [importNotice, setImportNotice] = useState(false);
   const [fileSearch, setFileSearch] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newFileName, setNewFileName] = useState('main.py');
+  const [starterTemplate, setStarterTemplate] = useState<'empty' | 'script' | 'datascience'>('script');
+  const [uploadNotice, setUploadNotice] = useState<string | null>(null);
 
-  // Use local override (user explicitly imported starter), or props workspace if non-empty, otherwise null
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Use local override (user created/uploaded file), or genuine props workspace, otherwise null
   const effectiveWorkspace = useMemo(() => {
     if (localWorkspace) return localWorkspace;
-    if (workspace && Array.isArray(workspace.files) && workspace.files.length > 0) return workspace;
+    if (workspace && Array.isArray(workspace.files) && workspace.files.length > 0) {
+      // Discard legacy mock starter workspace files if passed via stale cache or props
+      const isMock = workspace.files.some(
+        (f: any) =>
+          f.name?.includes('BinarySearch') ||
+          f.name?.includes('Plotly') ||
+          f.name?.includes('Armstrong') ||
+          f.filename?.includes('BinarySearch') ||
+          f.filename?.includes('Plotly')
+      );
+      if (isMock) return null;
+      return workspace;
+    }
     return null;
   }, [localWorkspace, workspace]);
 
@@ -105,14 +127,95 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
     }
   }, [files, selectedFile]);
 
-  const handleImportStarter = () => {
-    setLocalWorkspace(STARTER_PYTHON_WORKSPACE);
-    if (STARTER_PYTHON_WORKSPACE.files.length > 0) {
-      setSelectedFile(STARTER_PYTHON_WORKSPACE.files[0]);
-      setExpandedFolders({ DSA: true, visualisations: false, algorithms: false });
+  // Automated redirect to PyCode editor for file creation
+  const handleCreateFileRedirect = (fileName?: string) => {
+    const raw = (fileName || newFileName || 'main.py').trim();
+    const safeName = raw.endsWith('.py') ? raw : `${raw}.py`;
+    const targetUrl = `https://pycode-student.vercel.app/editor?file=${encodeURIComponent(safeName)}&new=true${
+      user?.email ? `&email=${encodeURIComponent(user.email)}` : ''
+    }`;
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    setShowCreateModal(false);
+  };
+
+  // Automated direct file creation inside workspace viewer
+  const handleCreateLocalFile = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const raw = (newFileName || 'main.py').trim();
+    const safeName = raw.endsWith('.py') ? raw : `${raw}.py`;
+
+    let code = '# ' + safeName + '\n';
+    if (starterTemplate === 'script') {
+      code = `"""\n${safeName}\nCreated on ${new Date().toLocaleDateString()}\n"""\n\ndef main():\n    print("Hello from ${safeName}!")\n\nif __name__ == "__main__":\n    main()\n`;
+    } else if (starterTemplate === 'datascience') {
+      code = `import numpy as np\nimport pandas as pd\n\n# Data science script: ${safeName}\n`;
     }
-    setImportNotice(true);
-    setTimeout(() => setImportNotice(false), 2500);
+
+    const newFile: WorkspaceFile = {
+      name: safeName,
+      filename: safeName,
+      folder: 'root',
+      code,
+      last_modified: new Date().toISOString(),
+      open_editor_url: `https://pycode-student.vercel.app/editor?file=${encodeURIComponent(safeName)}`,
+      share_url: `https://pycode-student.vercel.app/editor?file=${encodeURIComponent(safeName)}`,
+    };
+
+    const currentFiles = effectiveWorkspace?.files || [];
+    const updatedFiles = [newFile, ...currentFiles.filter((f: any) => f.name !== safeName)];
+    const newWs = {
+      total_files: updatedFiles.length,
+      folders: ['root'],
+      files: updatedFiles,
+      file_tree: updatedFiles.map((f: any) => ({ type: 'file' as const, name: f.name, path: f.name })),
+    };
+
+    setLocalWorkspace(newWs);
+    setSelectedFile(newFile);
+    setShowCreateModal(false);
+    setNewFileName('main.py');
+    setUploadNotice(`Created ${safeName} successfully!`);
+    setTimeout(() => setUploadNotice(null), 3000);
+    if (user?.email) {
+      pycodeCache.setWorkspace(user.email, newWs);
+    }
+  };
+
+  // Automated file upload handler (.py, .txt, .pyw)
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const uploaded = e.target.files?.[0];
+    if (!uploaded) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const code = (event.target?.result as string) || '';
+      const safeName = uploaded.name || 'uploaded_script.py';
+      const newFile: WorkspaceFile = {
+        name: safeName,
+        filename: safeName,
+        folder: 'root',
+        code,
+        last_modified: new Date(uploaded.lastModified || Date.now()).toISOString(),
+        open_editor_url: `https://pycode-student.vercel.app/editor?file=${encodeURIComponent(safeName)}`,
+        share_url: `https://pycode-student.vercel.app/editor?file=${encodeURIComponent(safeName)}`,
+      };
+      const currentFiles = effectiveWorkspace?.files || [];
+      const updatedFiles = [newFile, ...currentFiles.filter((f: any) => f.name !== safeName)];
+      const newWs = {
+        total_files: updatedFiles.length,
+        folders: ['root'],
+        files: updatedFiles,
+        file_tree: updatedFiles.map((f: any) => ({ type: 'file' as const, name: f.name, path: f.name })),
+      };
+      setLocalWorkspace(newWs);
+      setSelectedFile(newFile);
+      setUploadNotice(`Uploaded ${safeName} (${(uploaded.size / 1024).toFixed(1)} KB) successfully!`);
+      setTimeout(() => setUploadNotice(null), 3500);
+      if (user?.email) {
+        pycodeCache.setWorkspace(user.email, newWs);
+      }
+    };
+    reader.readAsText(uploaded);
+    e.target.value = '';
   };
 
   const handleSelectFile = (file: WorkspaceFile) => {
@@ -218,29 +321,55 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
     <div className="rounded-3xl bg-white dark:bg-[#1a1a1e] border border-neutral-200/90 dark:border-neutral-800/90 shadow-xs overflow-hidden">
       {/* Workspace Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-[#202024]">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <Code2 className="w-4 h-4 text-emerald-500" />
           <h3 className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white">
-            Saved Terminal Workspace ({effectiveWorkspace?.total_files || files.length} Python Scripts)
+            Saved Terminal Workspace ({files.length} Python {files.length === 1 ? 'Script' : 'Scripts'})
           </h3>
+          {uploadNotice && (
+            <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold animate-pulse">
+              {uploadNotice}
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Primary Create File button - redirects to PyCode online editor */}
           <button
-            onClick={handleImportStarter}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 text-xs font-bold transition-colors cursor-pointer"
-            title="Import or reset 16 starter Python scripts across DSA & Visualisations"
+            onClick={() => handleCreateFileRedirect()}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
+            title="Create a new Python file in PyCode IDE"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>{importNotice ? '16 Scripts Imported! ✓' : 'Import Starter Workspace'}</span>
+            <Plus className="w-3.5 h-3.5" />
+            <span>Create File</span>
+          </button>
+
+          {/* Quick inline creation */}
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 text-xs font-bold transition-colors cursor-pointer"
+            title="Create a file directly in this workspace"
+          >
+            <FilePlus className="w-3.5 h-3.5" />
+            <span>New Script</span>
+          </button>
+
+          {/* Automated Upload button */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 text-xs font-bold transition-colors cursor-pointer"
+            title="Upload Python file (.py, .txt, .pyw) from your computer"
+          >
+            <Upload className="w-3.5 h-3.5 text-blue-500" />
+            <span>Upload</span>
           </button>
 
           <a
-            href="https://pycode-student.vercel.app/editor"
+            href={`https://pycode-student.vercel.app/editor${user?.email ? `?email=${encodeURIComponent(user.email)}` : ''}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold transition-colors shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold transition-colors shadow-xs"
           >
-            <span>Launch PyCode IDE</span>
+            <span>Launch IDE</span>
             <ExternalLink className="w-3 h-3" />
           </a>
         </div>
@@ -249,30 +378,51 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
       {/* Workspace Content: Empty State vs VS Code Explorer */}
       {files.length === 0 ? (
         <div className="p-10 sm:p-14 text-center flex flex-col items-center justify-center space-y-4 min-h-[380px]">
-          <div className="w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200/80 dark:border-neutral-700/80 flex items-center justify-center text-neutral-400">
-            <Terminal className="w-7 h-7 text-emerald-500/80" />
+          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+            <FileCode className="w-8 h-8" />
           </div>
           <div className="space-y-1.5 max-w-md">
-            <h4 className="text-sm font-bold text-neutral-900 dark:text-white">
-              No Saved Terminal Scripts Yet
+            <h4 className="text-base font-bold text-neutral-900 dark:text-white">
+              No Python Files Found
             </h4>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
-              No Python scripts have been saved or synced from your PyCode terminal yet. Write and save scripts in the PyCode IDE, or import our starter algorithmic scripts to practice.
+              No saved scripts found for this account. Click 'Create File' to start writing in the PyCode IDE, or upload your code file directly.
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            {/* Primary: Create File - Redirects directly to PyCode */}
             <button
-              onClick={handleImportStarter}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
+              onClick={() => handleCreateFileRedirect()}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Import Starter Workspace (16 Scripts)</span>
+              <Plus className="w-4 h-4" />
+              <span>Create File</span>
             </button>
+
+            {/* Automated file upload */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-bold transition-colors cursor-pointer border border-neutral-200 dark:border-neutral-700"
+            >
+              <Upload className="w-3.5 h-3.5 text-blue-500" />
+              <span>Upload File (.py)</span>
+            </button>
+
+            {/* Quick in-place file creation */}
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 text-xs font-bold transition-colors cursor-pointer"
+            >
+              <FilePlus className="w-3.5 h-3.5" />
+              <span>New Script Here</span>
+            </button>
+
+            {/* Open IDE */}
             <a
-              href="https://pycode-student.vercel.app/editor"
+              href={`https://pycode-student.vercel.app/editor${user?.email ? `?email=${encodeURIComponent(user.email)}` : ''}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-bold transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold transition-colors shadow-xs"
             >
               <span>Launch PyCode IDE</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -591,6 +741,112 @@ export const StudentWorkspaceViewer: React.FC<StudentWorkspaceViewerProps> = ({
           )}
         </div>
       </div>
+      )}
+
+      {/* Hidden file input for automated local file upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".py,.txt,.pyw"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+
+      {/* Quick Create File Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#202024] border border-neutral-200 dark:border-neutral-800 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileCode className="w-5 h-5 text-emerald-500" />
+                <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+                  Create Python File
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="p-1 rounded-lg text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateLocalFile} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
+                  File Name
+                </label>
+                <input
+                  type="text"
+                  value={newFileName}
+                  onChange={(e) => setNewFileName(e.target.value)}
+                  placeholder="e.g. main.py, solution.py"
+                  className="w-full px-3 py-2 rounded-xl text-xs font-mono bg-neutral-50 dark:bg-[#161618] border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden focus:border-emerald-500"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
+                  Starter Template
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setStarterTemplate('empty')}
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
+                      starterTemplate === 'empty'
+                        ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                        : 'border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400'
+                    }`}
+                  >
+                    Empty File
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStarterTemplate('script')}
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
+                      starterTemplate === 'script'
+                        ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                        : 'border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400'
+                    }`}
+                  >
+                    Main Script
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStarterTemplate('datascience')}
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
+                      starterTemplate === 'datascience'
+                        ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                        : 'border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400'
+                    }`}
+                  >
+                    Data Science
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => handleCreateFileRedirect(newFileName)}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Open in PyCode IDE</span>
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  <FilePlus className="w-3.5 h-3.5" />
+                  <span>Create Here</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

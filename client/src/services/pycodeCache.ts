@@ -139,7 +139,23 @@ class PyCodeCache {
   getWorkspace(email?: string | null): CachedWorkspace | null {
     if (!email) return null;
     const key = this.getStorageKey('workspace', email);
-    return this.readStorage<CachedWorkspace>(key);
+    const cached = this.readStorage<CachedWorkspace>(key);
+    if (cached && Array.isArray(cached.files)) {
+      const isMock = cached.files.some(
+        (f) =>
+          f.name?.includes('BinarySearch') ||
+          f.name?.includes('Plotly') ||
+          f.name?.includes('linkedList') ||
+          f.name?.includes('Armstrong') ||
+          f.filename?.includes('BinarySearch') ||
+          f.filename?.includes('Plotly')
+      );
+      if (isMock) {
+        this.clearUserCache(email);
+        return null;
+      }
+    }
+    return cached;
   }
 
   setWorkspace(
@@ -152,6 +168,15 @@ class PyCodeCache {
     }
   ): void {
     if (!email || !workspace) return;
+    if (Array.isArray(workspace.files)) {
+      const isMock = workspace.files.some(
+        (f) =>
+          f.name?.includes('BinarySearch') ||
+          f.name?.includes('Plotly') ||
+          f.name?.includes('Armstrong')
+      );
+      if (isMock) return;
+    }
     const key = this.getStorageKey('workspace', email);
     const payload: CachedWorkspace = {
       total_files: workspace.total_files || 0,
@@ -199,9 +224,15 @@ class PyCodeCache {
     // Detect and purge legacy poisoned mock cache (auto-hydrated 16 starter files or generated bio)
     if (workspace && Array.isArray(workspace.files)) {
       const isMockWorkspace = workspace.files.some(
-        (f) => f.filename === 'BinarySearch.py' || f.name === 'BinarySearch.py' || f.name === 'Plotly.py'
+        (f) =>
+          f.name?.includes('BinarySearch') ||
+          f.name?.includes('Plotly') ||
+          f.name?.includes('linkedList') ||
+          f.name?.includes('Armstrong') ||
+          f.filename?.includes('BinarySearch') ||
+          f.filename?.includes('Plotly')
       );
-      if (isMockWorkspace && workspace.total_files === 16) {
+      if (isMockWorkspace) {
         this.clearUserCache(email);
         return null;
       }
@@ -299,7 +330,7 @@ class PyCodeCache {
     const clean = email.toLowerCase().trim();
     // 1. Purge matching keys from memCache
     for (const key of Array.from(this.memCache.keys())) {
-      if (key.includes(clean)) {
+      if (key.includes(clean) || key.includes('workspace')) {
         this.memCache.delete(key);
       }
     }
@@ -308,7 +339,11 @@ class PyCodeCache {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && (key.startsWith('rishabhlabs_pycode_') || key.startsWith('rishabhlabs_workspace_')) && key.includes(clean)) {
+        if (
+          key &&
+          (key.startsWith('rishabhlabs_pycode_') || key.startsWith('rishabhlabs_workspace_')) &&
+          (key.includes(clean) || key.includes('workspace'))
+        ) {
           keysToRemove.push(key);
         }
       }

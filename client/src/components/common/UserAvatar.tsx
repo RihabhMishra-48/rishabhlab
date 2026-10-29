@@ -74,6 +74,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
       <img
         src={effectiveSrc}
         alt={displayName}
+        referrerPolicy="no-referrer"
         onError={() => setImageError(true)}
         style={customStyle}
         className={`${currentSizeClass} ${roundedClassName} object-cover border border-neutral-200 dark:border-neutral-700 shrink-0 ${className}`}

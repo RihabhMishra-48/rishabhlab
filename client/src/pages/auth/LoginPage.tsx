@@ -34,15 +34,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ defaultPortal }) => {
 
   useEffect(() => {
     if (user) {
-      if (user.role === 'super_admin' || user.role === 'admin') {
-        if (portal === 'mentor') navigate('/mentor/sessions', { replace: true });
-        else if (portal === 'college') navigate('/college', { replace: true });
-        else navigate('/admin', { replace: true });
-      } else if (user.role === 'mentor') {
+      if (portal === 'admin') {
+        // Only route to admin if the user specifically chose the admin portal and has permissions
+        if (user.role === 'super_admin' || user.role === 'admin' || user.email?.toLowerCase() === 'mishrarishabh2006@gmail.com') {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate(user.isOnboarded ? '/dashboard' : '/onboarding', { replace: true });
+        }
+      } else if (portal === 'mentor') {
         navigate('/mentor/sessions', { replace: true });
-      } else if (user.role === 'college_admin') {
+      } else if (portal === 'college') {
         navigate('/college', { replace: true });
       } else {
+        // Standard everyday student/user login: always route to daily user dashboard
         navigate(user.isOnboarded ? '/dashboard' : '/onboarding', { replace: true });
       }
     }

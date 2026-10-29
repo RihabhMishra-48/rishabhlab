@@ -32,13 +32,11 @@ export const OnboardingPage: React.FC = () => {
     if (!loading) {
       if (!user) {
         navigate('/login', { replace: true });
-      } else if (user.role === 'super_admin' || user.role === 'admin') {
-        navigate('/admin', { replace: true });
       } else if (user.role === 'mentor') {
         navigate('/mentor/sessions', { replace: true });
       } else if (user.role === 'college_admin') {
         navigate('/college', { replace: true });
-      } else if (user.isOnboarded) {
+      } else if (user.isOnboarded || user.role === 'super_admin' || user.role === 'admin') {
         navigate('/dashboard', { replace: true });
       }
     }

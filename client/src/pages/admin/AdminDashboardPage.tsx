@@ -32,7 +32,8 @@ import {
   AlertCircle,
   UserCog,
   GraduationCap,
-  UserCheck
+  UserCheck,
+  RefreshCw
 } from 'lucide-react';
 
 type AdminTab = 'users' | 'mentors' | 'colleges' | 'questions' | 'roadmaps' | 'tasks' | 'pricing' | 'overview';
@@ -107,7 +108,7 @@ export const AdminDashboardPage: React.FC = () => {
   };
 
   const fetchAllData = async () => {
-    const isSuperAdmin = user?.role === 'super_admin' || user?.role === 'admin';
+    const isSuperAdmin = user?.role === 'super_admin' || user?.role === 'admin' || user?.email?.toLowerCase() === 'mishrarishabh2006@gmail.com';
     if (!user || !isSuperAdmin) {
       setLoading(false);
       return;
@@ -273,10 +274,8 @@ export const AdminDashboardPage: React.FC = () => {
       ];
       const finalColleges = (Array.isArray(collegesData) && collegesData.length > 0) ? collegesData : defaultColleges;
 
-      // Filter users: exclude student records completely. Only show platform roles (super_admin, admin, mentor, college_admin)
-      finalUsers = finalUsers.filter((u: any) => u.role === 'admin' || u.role === 'super_admin' || u.role === 'mentor' || u.role === 'college_admin');
-
-      // Guarantee current admin user is present
+      // Keep all live database user records (students, mentors, college admins, and admins)
+      // Guarantee current admin user is present if not already in the list
       if (user && !finalUsers.some((u: any) => u.email?.toLowerCase() === user.email?.toLowerCase())) {
         finalUsers.unshift({
           _id: user.id || 'admin-root',
@@ -393,6 +392,29 @@ export const AdminDashboardPage: React.FC = () => {
     fetchAllData();
   }, [user]);
 
+  // Real-time Supabase database listener for profiles & user changes
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+    try {
+      const channel = supabase
+        .channel('admin-profiles-realtime')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'profiles' },
+          () => {
+            fetchAllData();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } catch (subErr) {
+      console.warn('Real-time subscription notice:', subErr);
+    }
+  }, []);
+
   // Close any open modal on Escape key press
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -417,11 +439,21 @@ export const AdminDashboardPage: React.FC = () => {
 
       // Persist directly to Supabase profiles
       if (isSupabaseConfigured && supabase) {
-        await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+        if (userId) {
+          const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+          if (error) {
+            const foundUser = users.find((u) => u._id === userId || u.id === userId);
+            if (foundUser?.email) {
+              await supabase.from('profiles').update({ role: newRole }).eq('email', foundUser.email);
+            }
+          }
+        }
       }
 
       // Sync with Express backend if active
-      await api.adminUpdateUserRole(userId, newRole).catch(() => null);
+      if (userId) {
+        await api.adminUpdateUserRole(userId, newRole).catch(() => null);
+      }
 
       setUsers((prev) => prev.map((u) => ((u._id === userId || u.id === userId) ? { ...u, role: newRole } : u)));
       if (newRole === 'mentor') {
@@ -458,10 +490,17 @@ export const AdminDashboardPage: React.FC = () => {
     if (!window.confirm(`Are you sure you want to delete user ${email}? This cannot be undone.`)) return;
     try {
       if (isSupabaseConfigured && supabase) {
-        await supabase.from('profiles').delete().eq('id', userId);
+        if (userId) {
+          await supabase.from('profiles').delete().eq('id', userId);
+        }
+        if (email) {
+          await supabase.from('profiles').delete().eq('email', email);
+        }
       }
-      await api.adminDeleteUser(userId).catch(() => null);
-      setUsers((prev) => prev.filter((u) => u._id !== userId && u.id !== userId));
+      if (userId) {
+        await api.adminDeleteUser(userId).catch(() => null);
+      }
+      setUsers((prev) => prev.filter((u) => u._id !== userId && u.id !== userId && u.email !== email));
       showNotification(`User ${email} deleted.`);
     } catch (err: any) {
       showNotification(err.message || 'Failed to delete user');
@@ -659,9 +698,10 @@ export const AdminDashboardPage: React.FC = () => {
           : editingProblem.constraints,
       };
 
-      if (editingProblem._id) {
-        const updated = await api.adminUpdateProblem(editingProblem._id, payload);
-        setProblems((prev) => prev.map((p) => (p._id === editingProblem._id ? updated : p)));
+      const targetProbId = editingProblem._id || editingProblem.id;
+      if (targetProbId) {
+        const updated = await api.adminUpdateProblem(targetProbId, payload);
+        setProblems((prev) => prev.map((p) => ((p._id === targetProbId || p.id === targetProbId) ? updated : p)));
         showNotification(`Problem "${updated.title}" updated successfully!`);
       } else {
         const created = await api.adminCreateProblem(payload);
@@ -678,7 +718,7 @@ export const AdminDashboardPage: React.FC = () => {
     if (!window.confirm(`Are you sure you want to delete problem "${title}"?`)) return;
     try {
       await api.adminDeleteProblem(id);
-      setProblems((prev) => prev.filter((p) => p._id !== id));
+      setProblems((prev) => prev.filter((p) => p._id !== id && p.id !== id));
       showNotification(`Problem "${title}" deleted.`);
     } catch (err: any) {
       showNotification('Error deleting problem: ' + err.message);
@@ -726,9 +766,10 @@ export const AdminDashboardPage: React.FC = () => {
     if (!editingRoadmap.title) return;
 
     try {
-      if (editingRoadmap._id) {
-        const updated = await api.adminUpdateRoadmap(editingRoadmap._id, editingRoadmap);
-        setRoadmaps((prev) => prev.map((r) => (r._id === editingRoadmap._id ? updated : r)));
+      const targetRmId = editingRoadmap._id || editingRoadmap.id;
+      if (targetRmId) {
+        const updated = await api.adminUpdateRoadmap(targetRmId, editingRoadmap);
+        setRoadmaps((prev) => prev.map((r) => ((r._id === targetRmId || r.id === targetRmId) ? updated : r)));
         showNotification(`Roadmap "${updated.title}" updated successfully!`);
       } else {
         const created = await api.adminCreateRoadmap(editingRoadmap);
@@ -779,7 +820,7 @@ export const AdminDashboardPage: React.FC = () => {
     if (!window.confirm(`Are you sure you want to delete roadmap "${title}"?`)) return;
     try {
       await api.adminDeleteRoadmap(id);
-      setRoadmaps((prev) => prev.filter((r) => r._id !== id));
+      setRoadmaps((prev) => prev.filter((r) => r._id !== id && r.id !== id));
       showNotification(`Roadmap "${title}" deleted.`);
     } catch (err: any) {
       showNotification('Error deleting roadmap: ' + err.message);
@@ -851,9 +892,10 @@ export const AdminDashboardPage: React.FC = () => {
     if (!editingMission.trackTitle) return;
 
     try {
-      if (editingMission._id) {
-        const updated = await api.adminUpdateMission(editingMission._id, editingMission);
-        setMissions((prev) => prev.map((m) => (m._id === editingMission._id ? updated : m)));
+      const targetMissionId = editingMission._id || editingMission.id;
+      if (targetMissionId) {
+        const updated = await api.adminUpdateMission(targetMissionId, editingMission);
+        setMissions((prev) => prev.map((m) => ((m._id === targetMissionId || m.id === targetMissionId) ? updated : m)));
         showNotification(`Daily Mission for "${updated.trackTitle}" updated!`);
       } else {
         const created = await api.adminCreateMission(editingMission);
@@ -896,7 +938,7 @@ export const AdminDashboardPage: React.FC = () => {
     if (!window.confirm(`Are you sure you want to remove daily mission for "${track}"?`)) return;
     try {
       await api.adminDeleteMission(id);
-      setMissions((prev) => prev.filter((m) => m._id !== id));
+      setMissions((prev) => prev.filter((m) => m._id !== id && m.id !== id));
       showNotification(`Daily mission for "${track}" removed.`);
     } catch (err: any) {
       showNotification('Error deleting daily mission: ' + err.message);
@@ -1135,57 +1177,70 @@ export const AdminDashboardPage: React.FC = () => {
       {/* ==================================================================== */}
       {activeTab === 'users' && (
         <div className="space-y-4">
-          {/* Quick Metrics Bar for Staff & Roles */}
+          {/* Quick Metrics Bar for Database Users & Roles */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
-              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Total Staff & Admins</span>
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Total Registered Users</span>
               <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">{users.length}</p>
             </div>
             <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
-              <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Super Admins</span>
+              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Active Students</span>
+              <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">
+                {users.filter(u => !u.role || u.role === 'student').length}
+              </p>
+            </div>
+            <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
+              <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Mentors & Campus</span>
+              <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">
+                {users.filter(u => u.role === 'mentor' || u.role === 'college_admin').length}
+              </p>
+            </div>
+            <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
+              <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Platform Admins</span>
               <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">
                 {users.filter(u => u.role === 'super_admin' || u.role === 'admin').length}
               </p>
             </div>
-            <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
-              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Verified Mentors</span>
-              <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">
-                {users.filter(u => u.role === 'mentor').length}
-              </p>
-            </div>
-            <div className="p-4 rounded-xl bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800">
-              <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">College Admins</span>
-              <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5">
-                {users.filter(u => u.role === 'college_admin').length}
-              </p>
-            </div>
           </div>
 
-          {/* Search & Filter Controls */}
+          {/* Search & Filter Controls with Real-Time Database Sync Button */}
           <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-neutral-400" />
-              <input
-                type="text"
-                placeholder="Search team members by name, email, or department..."
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
-              />
+            <div className="flex items-center gap-2 flex-1 max-w-md">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-2.5 w-4 h-4 text-neutral-400" />
+                <input
+                  type="text"
+                  placeholder="Search live users by name, email, or college..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-white dark:bg-[#212121] border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden"
+                />
+              </div>
+
+              <button
+                onClick={fetchAllData}
+                disabled={loading}
+                title="Refresh live user data directly from database"
+                className="px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#212121] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-500' : ''}`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
             </div>
 
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
               {[
-                { id: 'all', label: 'All Roles' },
-                { id: 'super_admin', label: 'Super Admins' },
-                { id: 'admin', label: 'Admins' },
+                { id: 'all', label: 'All Users' },
+                { id: 'student', label: 'Students' },
                 { id: 'mentor', label: 'Mentors' },
                 { id: 'college_admin', label: 'College Admins' },
+                { id: 'admin', label: 'Admins' },
+                { id: 'super_admin', label: 'Super Admins' },
               ].map((rf) => (
                 <button
                   key={rf.id}
                   onClick={() => setUserRoleFilter(rf.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     userRoleFilter === rf.id
                       ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-2xs'
                       : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
@@ -1213,7 +1268,8 @@ export const AdminDashboardPage: React.FC = () => {
                 <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
                   {users
                     .filter((u) => {
-                      if (userRoleFilter !== 'all' && u.role !== userRoleFilter) return false;
+                      const effRole = u.role || 'student';
+                      if (userRoleFilter !== 'all' && effRole !== userRoleFilter) return false;
                       if (userSearch.trim()) {
                         const q = userSearch.toLowerCase();
                         const n = (u.name || '').toLowerCase();
@@ -1224,11 +1280,12 @@ export const AdminDashboardPage: React.FC = () => {
                       return true;
                     })
                     .map((u) => {
-                      const isProtected = u.email === user?.email;
-                      const isUpdating = updatingUserId === u._id;
+                      const uId = u._id || u.id;
+                      const isProtected = u.email === user?.email || u.email?.toLowerCase() === 'mishrarishabh2006@gmail.com';
+                      const isUpdating = updatingUserId === uId;
 
                       return (
-                        <tr key={u._id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition-colors">
+                        <tr key={uId || u.email} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition-colors">
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-3">
                               <UserAvatar
@@ -1266,29 +1323,32 @@ export const AdminDashboardPage: React.FC = () => {
                               className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
                                 u.role === 'super_admin'
                                   ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                                  : u.role === 'admin'
+                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                                   : u.role === 'mentor'
                                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                                   : u.role === 'college_admin'
                                   ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                                  : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700'
+                                  : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                               }`}
                             >
-                              {u.role || 'admin'}
+                              {u.role || 'student'}
                             </span>
                           </td>
 
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-2">
                               <select
-                                value={u.role || 'admin'}
-                                onChange={(e) => handleUpdateUserRole(u._id, e.target.value)}
+                                value={u.role || 'student'}
+                                onChange={(e) => handleUpdateUserRole(uId, e.target.value)}
                                 disabled={isUpdating}
                                 className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-[#242424] border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-hidden disabled:opacity-50 cursor-pointer"
                               >
-                                <option value="super_admin">Super Admin (Full Authority)</option>
-                                <option value="admin">Admin (Staff & Infrastructure)</option>
+                                <option value="student">Student (Standard Learner)</option>
                                 <option value="mentor">Mentor (1:1 Office Hours & Reviews)</option>
                                 <option value="college_admin">College Admin (Campus Portal)</option>
+                                <option value="admin">Admin (Staff & Infrastructure)</option>
+                                <option value="super_admin">Super Admin (Full Authority)</option>
                               </select>
                               {isUpdating && (
                                 <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0" />
@@ -1299,7 +1359,7 @@ export const AdminDashboardPage: React.FC = () => {
                           <td className="px-4 py-3.5 text-right">
                             {!isProtected ? (
                               <button
-                                onClick={() => handleDeleteUser(u._id, u.email)}
+                                onClick={() => handleDeleteUser(uId, u.email)}
                                 className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
                                 title="Delete User Account"
                               >
@@ -1362,7 +1422,7 @@ export const AdminDashboardPage: React.FC = () => {
               )
               .map((mentor) => (
                 <div
-                  key={mentor._id || mentor.name}
+                  key={mentor._id || mentor.id || mentor.name}
                   className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col justify-between space-y-4"
                 >
                   <div className="space-y-3">
@@ -1686,7 +1746,7 @@ export const AdminDashboardPage: React.FC = () => {
                           <span>Edit</span>
                         </button>
                         <button
-                          onClick={() => handleDeleteProblem(prob._id, prob.title)}
+                          onClick={() => handleDeleteProblem(prob._id || prob.id, prob.title)}
                           className="px-2.5 py-1.5 rounded-lg border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold"
                           title="Delete problem"
                         >
@@ -1736,7 +1796,7 @@ export const AdminDashboardPage: React.FC = () => {
                       <span>Edit Track & Nodes</span>
                     </button>
                     <button
-                      onClick={() => handleDeleteRoadmap(rm._id, rm.title)}
+                      onClick={() => handleDeleteRoadmap(rm._id || rm.id, rm.title)}
                       className="p-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
                       title="Delete roadmap"
                     >
@@ -1824,7 +1884,7 @@ export const AdminDashboardPage: React.FC = () => {
                       <span>Edit Mission & Tasks</span>
                     </button>
                     <button
-                      onClick={() => handleDeleteMission(mission._id, mission.trackTitle)}
+                      onClick={() => handleDeleteMission(mission._id || mission.id, mission.trackTitle)}
                       className="p-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
                       title="Delete mission"
                     >
@@ -1979,28 +2039,28 @@ export const AdminDashboardPage: React.FC = () => {
             <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Total Users</span>
               <p className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-white font-mono">
-                {adminData?.metrics?.totalUsers || 2480}
+                {users.length || adminData?.metrics?.totalUsers || 0}
               </p>
             </div>
 
             <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Verified Mentors</span>
               <p className="text-2xl sm:text-3xl font-extrabold text-purple-500 font-mono">
-                {mentors.length || 3}
+                {mentors.length}
               </p>
             </div>
 
             <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Coding Problems</span>
               <p className="text-2xl sm:text-3xl font-extrabold text-blue-500 font-mono">
-                {problems.length || 20}
+                {problems.length}
               </p>
             </div>
 
             <div className="p-5 rounded-3xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Active Roadmaps</span>
               <p className="text-2xl sm:text-3xl font-extrabold text-emerald-500 font-mono">
-                {roadmaps.length || 1}
+                {roadmaps.length}
               </p>
             </div>
           </div>
@@ -2165,7 +2225,7 @@ export const AdminDashboardPage: React.FC = () => {
           >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
               <h3 className="font-extrabold text-base text-neutral-900 dark:text-white">
-                {editingMentor._id ? 'Edit Mentor Profile' : 'Add New Mentor'}
+                {(editingMentor._id || editingMentor.id) ? 'Edit Mentor Profile' : 'Add New Mentor'}
               </h3>
               <button
                 onClick={() => setMentorModalOpen(false)}
@@ -2377,7 +2437,7 @@ export const AdminDashboardPage: React.FC = () => {
           >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
               <h3 className="font-extrabold text-base text-neutral-900 dark:text-white">
-                {editingProblem._id ? 'Edit Coding Problem' : 'Create New Coding Problem'}
+                {(editingProblem._id || editingProblem.id) ? 'Edit Coding Problem' : 'Create New Coding Problem'}
               </h3>
               <button
                 onClick={() => setProblemModalOpen(false)}
@@ -2561,7 +2621,7 @@ export const AdminDashboardPage: React.FC = () => {
           >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
               <h3 className="font-extrabold text-base text-neutral-900 dark:text-white">
-                {editingRoadmap._id ? 'Edit Roadmap & Execution Nodes' : 'Create New Roadmap Track'}
+                {(editingRoadmap._id || editingRoadmap.id) ? 'Edit Roadmap & Execution Nodes' : 'Create New Roadmap Track'}
               </h3>
               <button
                 onClick={() => setRoadmapModalOpen(false)}
@@ -2791,7 +2851,7 @@ export const AdminDashboardPage: React.FC = () => {
           >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
               <h3 className="font-extrabold text-base text-neutral-900 dark:text-white">
-                {editingMission._id ? 'Edit Daily Mission & Tasks' : 'Create Daily Mission Track'}
+                {(editingMission._id || editingMission.id) ? 'Edit Daily Mission & Tasks' : 'Create Daily Mission Track'}
               </h3>
               <button
                 onClick={() => setTaskModalOpen(false)}
