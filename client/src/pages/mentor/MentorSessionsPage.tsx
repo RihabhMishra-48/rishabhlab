@@ -44,21 +44,36 @@ export const MentorSessionsPage: React.FC = () => {
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const fetchSessions = async () => {
+  const fetchSessions = async (showSpinner = false) => {
     try {
-      setLoading(true);
+      if (showSpinner) setLoading(true);
       const data = await api.mentorGetSessions();
       setSessions(Array.isArray(data) ? data : []);
     } catch (err: any) {
       console.error('Failed to load mentor sessions:', err);
-      showNotification('Failed to load consultation inquiries.');
+      if (showSpinner) {
+        showNotification('Failed to load consultation inquiries.');
+      }
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSessions();
+    fetchSessions(true);
+
+    const onFocus = () => fetchSessions(false);
+    window.addEventListener('focus', onFocus);
+
+    // Silent background poll to guarantee fresh inquiries across devices
+    const pollInterval = setInterval(() => {
+      fetchSessions(false);
+    }, 15000);
+
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      clearInterval(pollInterval);
+    };
   }, []);
 
   // Real-time listener for live updates across browser windows
@@ -68,7 +83,7 @@ export const MentorSessionsPage: React.FC = () => {
       const channel = supabase
         .channel('mentor-sessions-realtime')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'mentorship_requests' }, () => {
-          fetchSessions();
+          fetchSessions(false);
         })
         .subscribe();
       return () => {

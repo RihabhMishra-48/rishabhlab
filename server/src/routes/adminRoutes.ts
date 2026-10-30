@@ -1640,6 +1640,32 @@ router.put('/users/:id/role', async (req, res) => {
           await supabase.from('profiles').update({ role }).eq('id', sbProfile.id);
           updatedName = sbProfile.full_name || '';
           updatedEmail = sbProfile.email;
+
+          // If role changed to mentor, ensure mentor row exists in Supabase
+          if (role === 'mentor') {
+            const cleanName = sbProfile.full_name || updatedEmail.split('@')[0];
+            const { data: existingM } = await supabase
+              .from('mentors')
+              .select('id')
+              .or(`name.eq."${cleanName}",id.eq."${sbProfile.id}"`)
+              .maybeSingle();
+
+            if (!existingM) {
+              await supabase.from('mentors').insert({
+                name: cleanName,
+                title: 'Technical Specialist & Mentor',
+                company: 'RishabhLabs',
+                avatar: '/avatars/default.webp',
+                topics: ['Roadmap', 'Architecture', 'Placement Prep'],
+                experience_years: 4,
+                rating: 5.0,
+                bio: `Specialist mentor at RishabhLabs.`,
+                hourly_rate_inr: 0,
+                available_days: ['Monday', 'Wednesday', 'Friday', 'Saturday'],
+                domain: 'Full-Stack Development',
+              });
+            }
+          }
         }
       } catch (sbErr) {
         console.warn('[Admin API] Supabase role update error:', sbErr);

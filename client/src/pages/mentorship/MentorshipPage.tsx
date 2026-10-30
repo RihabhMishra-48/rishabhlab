@@ -94,6 +94,7 @@ export const MentorshipPage: React.FC = () => {
   const [bookingMessage, setBookingMessage] = useState(getDefaultMessage);
   const [preferredSlot, setPreferredSlot] = useState('Tomorrow, 6:00 PM IST');
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookedSessions, setBookedSessions] = useState<any[]>(() => {
     try {
@@ -209,22 +210,20 @@ export const MentorshipPage: React.FC = () => {
     e.preventDefault();
     if (!selectedMentor) return;
     setIsSubmitting(true);
+    setBookingError(null);
     try {
       const mentorIdToPass = selectedMentor._id || (selectedMentor as any).id;
       let confirmedId = 'session-' + Date.now();
 
-      try {
-        const resp = await api.requestMentorship({
-          mentorId: mentorIdToPass,
-          topic: selectedTopic,
-          message: bookingMessage,
-          preferredSlot,
-        });
-        if (resp?.request?.id || resp?.request?._id) {
-          confirmedId = resp.request.id || resp.request._id;
-        }
-      } catch (err) {
-        console.warn('API mentorship booking warning:', err);
+      const resp = await api.requestMentorship({
+        mentorId: mentorIdToPass,
+        topic: selectedTopic,
+        message: bookingMessage,
+        preferredSlot,
+      });
+
+      if (resp?.request?.id || resp?.request?._id) {
+        confirmedId = resp.request.id || resp.request._id;
       }
 
       const newSession = {
@@ -254,8 +253,9 @@ export const MentorshipPage: React.FC = () => {
         setBookingModalOpen(false);
         setBookingSuccess(false);
       }, 1500);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Mentorship booking error:', err);
+      setBookingError(err.message || 'Failed to book session. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -769,6 +769,12 @@ export const MentorshipPage: React.FC = () => {
                     placeholder="Describe your current blocker or goals..."
                   />
                 </div>
+
+                {bookingError && (
+                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium">
+                    {bookingError}
+                  </div>
+                )}
 
                 <button
                   type="submit"
