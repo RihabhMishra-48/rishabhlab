@@ -71,6 +71,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone || '',
         college: user.college || '',
         degree: user.degree || '',
         year: user.year || '',
@@ -168,7 +169,7 @@ router.get('/public/:username', async (req, res) => {
 router.patch('/', requireAuth, async (req: AuthRequest, res) => {
   try {
     const user = req.user!;
-    const { name, bio, college, degree, year, githubUsername, avatar, targetGoal } = req.body;
+    const { name, bio, college, degree, year, githubUsername, avatar, targetGoal, phone } = req.body;
 
     const resolvedAvatar = avatar !== undefined ? (avatar || user.avatar || '') : user.avatar;
 
@@ -180,8 +181,9 @@ router.patch('/', requireAuth, async (req: AuthRequest, res) => {
     if (githubUsername !== undefined) user.githubUsername = githubUsername;
     if (resolvedAvatar !== undefined) user.avatar = resolvedAvatar;
     if (targetGoal !== undefined) (user as any).targetGoal = targetGoal;
+    if (phone !== undefined) user.phone = phone;
 
-    // 1. Sync directly to Supabase profiles
+    // 1. Sync directly to Supabase profiles & auth metadata
     if (supabase && (user._id || user.email)) {
       try {
         const sbUpdate: any = {};
@@ -201,6 +203,12 @@ router.patch('/', requireAuth, async (req: AuthRequest, res) => {
             await supabase.from('profiles').update(sbUpdate).eq('id', user._id.toString());
           }
         }
+
+        if (phone !== undefined && user._id) {
+          await supabase.auth.admin.updateUserById(user._id.toString(), {
+            user_metadata: { phone }
+          }).catch(() => {});
+        }
       } catch (sbErr) {
         console.warn('Supabase profile update warning:', sbErr);
       }
@@ -218,6 +226,7 @@ router.patch('/', requireAuth, async (req: AuthRequest, res) => {
             college: user.college,
             degree: user.degree,
             year: user.year,
+            phone: user.phone,
             githubUsername: user.githubUsername,
             avatar: user.avatar,
             targetGoal: (user as any).targetGoal,

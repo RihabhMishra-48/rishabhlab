@@ -27,6 +27,7 @@ import {
   Building,
   Target,
   ArrowRight,
+  Phone,
 } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
@@ -45,11 +46,12 @@ export const ProfilePage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     username: '',
+    phone: '',
     bio: '',
     college: '',
     degree: '',
-    year: '3rd Year',
-    targetGoal: 'Web Development',
+    year: '',
+    targetGoal: '',
     avatar: '',
   });
 
@@ -66,6 +68,7 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     if (user) {
       const cachedAvatar = user.email ? localStorage.getItem(`rishabhlabs_avatar_${user.email.toLowerCase()}`) : null;
+      const cachedPhone = localStorage.getItem('rishabhlabs_user_phone') || '';
       const cleanAvatar =
         user.avatar && !user.avatar.includes('rishabh.webp') && !user.avatar.includes('unsplash.com')
           ? user.avatar
@@ -73,6 +76,7 @@ export const ProfilePage: React.FC = () => {
       setFormData({
         name: user.name || '',
         username: user.githubUsername || '',
+        phone: user.phone || cachedPhone || '',
         bio: user.bio || '',
         college: user.college || '',
         degree: user.degree || '',
@@ -142,9 +146,14 @@ export const ProfilePage: React.FC = () => {
         localStorage.setItem(`rishabhlabs_avatar_${user.email.toLowerCase()}`, effectiveAvatar);
       }
 
+      if (formData.phone) {
+        localStorage.setItem('rishabhlabs_user_phone', formData.phone);
+      }
+
       // 1. Update backend MongoDB / REST API
       await api.updateProfile({
         name: formData.name,
+        phone: formData.phone,
         bio: formData.bio,
         college: formData.college,
         degree: formData.degree,
@@ -242,6 +251,12 @@ export const ProfilePage: React.FC = () => {
               {user?.githubUsername && (
                 <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
                   @{user.githubUsername}
+                </span>
+              )}
+              {(user?.phone || localStorage.getItem('rishabhlabs_user_phone')) && (
+                <span className="text-xs inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                  <Phone className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <span>{user?.phone || localStorage.getItem('rishabhlabs_user_phone')}</span>
                 </span>
               )}
             </div>
@@ -345,8 +360,8 @@ export const ProfilePage: React.FC = () => {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all ${activeTab === tab
-                ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-2xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2a2a2a]'
+              ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-2xs'
+              : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2a2a2a]'
               }`}
           >
             {tab}
@@ -666,22 +681,19 @@ export const ProfilePage: React.FC = () => {
             {milestones.map((a: any, i: number) => (
               <div
                 key={i}
-                className={`p-5 rounded-2xl border space-y-2 shadow-2xs ${
-                  a.unlocked
+                className={`p-5 rounded-2xl border space-y-2 shadow-2xs ${a.unlocked
                     ? 'bg-white dark:bg-[#212121] border-neutral-200/80 dark:border-neutral-800'
                     : 'bg-neutral-50/50 dark:bg-neutral-900/30 border-dashed border-neutral-200 dark:border-neutral-800/80 opacity-70'
-                }`}
+                  }`}
               >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${
-                  a.unlocked ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100' : 'bg-neutral-200/50 dark:bg-neutral-800/40 text-neutral-400'
-                }`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${a.unlocked ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100' : 'bg-neutral-200/50 dark:bg-neutral-800/40 text-neutral-400'
+                  }`}>
                   {a.badge || '🏆'}
                 </div>
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold text-neutral-900 dark:text-white">{a.title}</h3>
-                  <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                    a.unlocked ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400'
-                  }`}>
+                  <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${a.unlocked ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400'
+                    }`}>
                     {a.unlocked ? 'Unlocked' : 'Goal'}
                   </span>
                 </div>
@@ -772,7 +784,7 @@ export const ProfilePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Full Name & Username */}
+              {/* Full Name & Phone Number */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500">
@@ -789,20 +801,38 @@ export const ProfilePage: React.FC = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500">
-                    Username / GitHub Handle
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-neutral-400" />
+                      <span>Mobile / WhatsApp</span>
+                    </label>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">For Mentorship</span>
+                  </div>
                   <input
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().trim() })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white font-mono"
-                    placeholder="e.g. shravan"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white"
+                    placeholder="+91 98765 43210"
                   />
-                  <p className="text-[10px] text-neutral-400 font-mono">
-                    URL: {window.location.origin}/u/{formData.username || 'username'}
-                  </p>
                 </div>
+              </div>
+
+              {/* Username / GitHub Handle */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500">
+                  Username / GitHub Handle
+                </label>
+                <input
+                  type="text"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().trim() })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-2 focus:ring-neutral-950 dark:focus:ring-white font-mono"
+                  placeholder="e.g. shravan"
+                />
+                <p className="text-[10px] text-neutral-400 font-mono">
+                  URL: {window.location.origin}/u/{formData.username || 'username'}
+                </p>
               </div>
 
               {/* Bio */}

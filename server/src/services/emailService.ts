@@ -199,6 +199,7 @@ export interface MentorBookingEmailParams {
   mentorName: string;
   studentName: string;
   studentEmail: string;
+  studentPhone?: string;
   studentCollege?: string;
   topic: string;
   preferredSlot: string;
@@ -213,6 +214,7 @@ export async function sendMentorBookingNotificationEmail(params: MentorBookingEm
     mentorName,
     studentName,
     studentEmail,
+    studentPhone,
     studentCollege,
     topic,
     preferredSlot,
@@ -315,6 +317,18 @@ export async function sendMentorBookingNotificationEmail(params: MentorBookingEm
                           <a href="mailto:${studentEmail}" style="color: #2563eb; text-decoration: none;">${studentEmail}</a>
                         </td>
                       </tr>
+                      ${studentPhone ? `
+                      <tr>
+                        <td style="padding: 6px 0; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">
+                          Mobile / WhatsApp
+                        </td>
+                        <td style="padding: 6px 0; font-size: 13px; font-weight: 700; color: #059669;">
+                          <a href="tel:${studentPhone}" style="color: #059669; text-decoration: none;">${studentPhone}</a>
+                          <span style="font-size: 11px; font-weight: 500; color: #64748b; margin-left: 8px;">
+                            (<a href="https://wa.me/${studentPhone.replace(/[^0-9]/g, '')}" target="_blank" style="color: #10b981; text-decoration: underline;">WhatsApp</a>)
+                          </span>
+                        </td>
+                      </tr>` : ''}
                       ${studentCollege ? `
                       <tr>
                         <td style="padding: 6px 0; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">

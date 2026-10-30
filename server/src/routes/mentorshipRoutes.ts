@@ -115,7 +115,21 @@ router.get('/', async (req, res) => {
 router.post('/request', requireAuth, async (req: AuthRequest, res) => {
   try {
     const user = req.user!;
-    const { mentorId, topic, contextType, message, preferredSlot } = req.body;
+    const { mentorId, topic, contextType, message, preferredSlot, studentPhone } = req.body;
+
+    const effectivePhone = (studentPhone || user.phone || '').trim();
+
+    // Instantly save phone to database for future bookings if provided
+    if (effectivePhone && effectivePhone !== user.phone) {
+      user.phone = effectivePhone;
+      if (mongoose.connection.readyState === 1 && user._id) {
+        User.findByIdAndUpdate(user._id, { phone: effectivePhone }).catch(() => {});
+      }
+      if (supabase && (user._id || (user as any).id)) {
+        const uid = (user._id || (user as any).id)?.toString();
+        supabase.auth.admin.updateUserById(uid, { user_metadata: { phone: effectivePhone } }).catch(() => {});
+      }
+    }
 
     let targetDate = new Date();
     if (preferredSlot && typeof preferredSlot === 'string') {
@@ -232,12 +246,15 @@ router.post('/request', requireAuth, async (req: AuthRequest, res) => {
         }
 
         // 3. Insert into Supabase mentorship_requests with strictly existing columns
+        const contactSuffix = effectivePhone ? `\n\n[Contact Mobile/WhatsApp]: ${effectivePhone}` : '';
+        const studentNotePayload = `${newRequest.message}${contactSuffix}`;
+
         const { data: inserted, error: insErr } = await supabase.from('mentorship_requests').insert({
           mentor_id: validMentorId,
           student_id: validStudentId,
           topic: newRequest.topic,
           requested_date: targetDate.toISOString(),
-          student_note: newRequest.message,
+          student_note: studentNotePayload,
           status: 'pending',
           meeting_link: '',
         }).select().single();
@@ -285,6 +302,7 @@ router.post('/request', requireAuth, async (req: AuthRequest, res) => {
             contextType: newRequest.contextType,
             message: newRequest.message,
             preferredSlot: newRequest.preferredSlot,
+            studentPhone: effectivePhone,
             status: 'pending',
             meetingLink: '',
             notesFromMentor: '',
@@ -345,6 +363,7 @@ router.post('/request', requireAuth, async (req: AuthRequest, res) => {
         mentorName: targetMentorName || 'Technical Mentor',
         studentName: user.name || user.email.split('@')[0] || 'Learner',
         studentEmail: user.email,
+        studentPhone: effectivePhone,
         studentCollege: (user as any).college || '',
         topic: newRequest.topic,
         preferredSlot: newRequest.preferredSlot,
@@ -550,8 +569,17 @@ router.get('/mentor/sessions', requireAuth, async (req: AuthRequest, res) => {
             const rawNote = req.student_note || '';
             let studentMessage = rawNote;
             let mentorPrepNote = '';
-            if (rawNote.includes('\n\n[Mentor Notes]: ')) {
-              const parts = rawNote.split('\n\n[Mentor Notes]: ');
+            let extractedPhone = '';
+
+            if (studentMessage.includes('\n\n[Contact Mobile/WhatsApp]: ')) {
+              const parts = studentMessage.split('\n\n[Contact Mobile/WhatsApp]: ');
+              studentMessage = parts[0];
+              const phonePart = parts.slice(1).join('\n\n[Contact Mobile/WhatsApp]: ');
+              extractedPhone = phonePart.split('\n')[0].trim();
+            }
+
+            if (studentMessage.includes('\n\n[Mentor Notes]: ')) {
+              const parts = studentMessage.split('\n\n[Mentor Notes]: ');
               studentMessage = parts[0];
               mentorPrepNote = parts.slice(1).join('\n\n[Mentor Notes]: ');
             }
@@ -581,6 +609,7 @@ router.get('/mentor/sessions', requireAuth, async (req: AuthRequest, res) => {
               studentId: req.student_id,
               studentName: student?.full_name || student?.email?.split('@')[0] || 'Verified Learner',
               studentEmail: student?.email || '',
+              studentPhone: extractedPhone || '',
               studentAvatar: sanitizeAvatar(student?.avatar_url) || '',
               studentCollege: student?.college_name || '',
               studentTrack: student?.target_goal || student?.field_of_interest || '',
@@ -608,7 +637,7 @@ router.get('/mentor/sessions', requireAuth, async (req: AuthRequest, res) => {
           }
         }
         const mRequests = await MentorshipRequest.find(mQuery)
-          .populate('studentId', 'name email avatar college fieldOfInterest targetGoal')
+          .populate('studentId', 'name email avatar college fieldOfInterest targetGoal phone')
           .populate('mentorId', 'name title company avatar')
           .sort({ createdAt: -1 });
 
@@ -631,6 +660,7 @@ router.get('/mentor/sessions', requireAuth, async (req: AuthRequest, res) => {
             studentId: r.studentId?._id?.toString(),
             studentName: r.studentId?.name || 'Verified Learner',
             studentEmail: r.studentId?.email || '',
+            studentPhone: r.studentPhone || (r.studentId as any)?.phone || '',
             studentAvatar: sanitizeAvatar(r.studentId?.avatar) || '',
             studentCollege: r.studentId?.college || '',
             studentTrack: r.studentId?.targetGoal || r.studentId?.fieldOfInterest || '',

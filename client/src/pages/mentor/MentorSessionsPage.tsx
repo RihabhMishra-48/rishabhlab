@@ -26,7 +26,8 @@ import {
   Settings,
   Mail,
   Send,
-  X
+  X,
+  Phone
 } from 'lucide-react';
 
 export const MentorSessionsPage: React.FC = () => {
@@ -547,11 +548,32 @@ export const MentorSessionsPage: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      {session.studentEmail && (
-                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">
-                          {session.studentEmail}
-                        </p>
-                      )}
+                      <div className="flex items-center gap-3 text-[11px] text-neutral-500 dark:text-neutral-400 flex-wrap mt-0.5">
+                        {session.studentEmail && (
+                          <span className="truncate">{session.studentEmail}</span>
+                        )}
+                        {session.studentPhone && (
+                          <div className="flex items-center gap-2">
+                            <span>•</span>
+                            <a
+                              href={`tel:${session.studentPhone.replace(/\s+/g, '')}`}
+                              className="inline-flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
+                            >
+                              <Phone className="w-3 h-3" />
+                              <span>{session.studentPhone}</span>
+                            </a>
+                            <a
+                              href={`https://wa.me/${session.studentPhone.replace(/[^0-9]/g, '')}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-colors"
+                              title="Chat on WhatsApp"
+                            >
+                              WhatsApp
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

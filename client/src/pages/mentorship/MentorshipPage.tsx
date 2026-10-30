@@ -25,7 +25,8 @@ import {
   Video,
   Mail,
   Send,
-  ExternalLink
+  ExternalLink,
+  Phone
 } from 'lucide-react';
 
 const getDomainTheme = (domain?: string) => {
@@ -95,6 +96,9 @@ export const MentorshipPage: React.FC = () => {
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [bookingMessage, setBookingMessage] = useState(getDefaultMessage);
   const [preferredSlot, setPreferredSlot] = useState('Tomorrow, 6:00 PM IST');
+  const [studentPhone, setStudentPhone] = useState<string>(() => {
+    return user?.phone || localStorage.getItem('rishabhlabs_user_phone') || '';
+  });
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -214,6 +218,15 @@ export const MentorshipPage: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [bookingModalOpen]);
 
+  useEffect(() => {
+    if (user?.phone) {
+      setStudentPhone(user.phone);
+    } else {
+      const cached = localStorage.getItem('rishabhlabs_user_phone');
+      if (cached) setStudentPhone(cached);
+    }
+  }, [user]);
+
   const fetchMyBookings = async () => {
     try {
       const data = await api.getMyMentorshipRequests();
@@ -249,11 +262,18 @@ export const MentorshipPage: React.FC = () => {
       const mentorIdToPass = selectedMentor._id || (selectedMentor as any).id;
       let confirmedId = 'session-' + Date.now();
 
+      const cleanedPhone = (studentPhone || '').trim();
+      if (cleanedPhone) {
+        localStorage.setItem('rishabhlabs_user_phone', cleanedPhone);
+        api.updateProfile({ phone: cleanedPhone }).catch(() => {});
+      }
+
       const resp = await api.requestMentorship({
         mentorId: mentorIdToPass,
         topic: selectedTopic,
         message: bookingMessage,
         preferredSlot,
+        studentPhone: cleanedPhone,
       });
 
       if (resp?.request?.id || resp?.request?._id) {
@@ -812,6 +832,35 @@ export const MentorshipPage: React.FC = () => {
                     className="w-full p-3 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-0 resize-none"
                     placeholder="Describe your current blocker or goals..."
                   />
+                </div>
+
+                {/* Mobile / WhatsApp Contact Number */}
+                <div className="space-y-1.5 p-3 rounded-2xl bg-neutral-50/80 dark:bg-neutral-900/80 border border-neutral-200/80 dark:border-neutral-800">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>Mobile / WhatsApp Number</span>
+                    </label>
+                    {studentPhone ? (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-medium">
+                        Auto-saved to profile
+                      </span>
+                    ) : (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-medium">
+                        For 1:1 coordination
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="tel"
+                    value={studentPhone}
+                    onChange={(e) => setStudentPhone(e.target.value)}
+                    placeholder="+91 98765 43210 (so mentor can call or WhatsApp you)"
+                    className="w-full px-3 py-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-xs text-neutral-900 dark:text-white outline-none focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-white"
+                  />
+                  <p className="text-[10px] text-neutral-400">
+                    Instantly saved to your profile and shared with {selectedMentor?.name || 'mentor'} for updates & WhatsApp coordination.
+                  </p>
                 </div>
 
                 {bookingError && (

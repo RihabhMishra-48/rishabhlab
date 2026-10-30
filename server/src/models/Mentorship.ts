@@ -45,6 +45,7 @@ export interface IMentorshipRequest extends Document {
   message: string;
   preferredSlot: string;
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
+  studentPhone?: string;
   notesFromMentor?: string;
   meetingLink?: string;
 }
@@ -66,6 +67,7 @@ const MentorshipRequestSchema = new Schema<IMentorshipRequest>(
       enum: ['pending', 'accepted', 'completed', 'cancelled'],
       default: 'pending',
     },
+    studentPhone: { type: String, default: '' },
     notesFromMentor: { type: String },
     meetingLink: { type: String },
   },
