@@ -386,6 +386,14 @@ router.put('/mentors/:id', async (req, res) => {
         } else if (sbErr) {
           console.warn('Supabase update mentor error:', sbErr);
         }
+
+        // Keep profile avatar in sync if mentor corresponds to a registered user
+        if (data.avatar !== undefined && (data.name || updatedSb?.name)) {
+          const mentorName = data.name || updatedSb?.name;
+          try {
+            await supabase.from('profiles').update({ avatar_url: data.avatar }).ilike('full_name', `%${mentorName}%`);
+          } catch (_) {}
+        }
       } catch (sbErr) {
         console.warn('Supabase update mentor exception:', sbErr);
       }
@@ -400,6 +408,13 @@ router.put('/mentors/:id', async (req, res) => {
         } else {
           const mUpdated = await Mentor.findOneAndUpdate({ $or: [{ name: id }, { name: data.name }] }, { ...data, topics: topicsArr, availability: availArr }, { new: true });
           if (mUpdated && !updated) updated = mUpdated;
+        }
+
+        if (data.avatar !== undefined && (data.name || updated?.name)) {
+          await User.updateMany(
+            { name: new RegExp(data.name || updated?.name, 'i') },
+            { $set: { avatar: data.avatar } }
+          );
         }
       } catch (e) {
         console.warn('Mongo update mentor error:', e);

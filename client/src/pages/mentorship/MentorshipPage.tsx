@@ -119,7 +119,7 @@ export const MentorshipPage: React.FC = () => {
       if (Array.isArray(data) && data.length > 0) {
         let filtered = data.map((m: any) => ({
           ...m,
-          avatar: m.avatar || '/avatars/default.webp',
+          avatar: m.avatar || m.avatar_url || '',
         }));
         if (selectedDomain && selectedDomain !== 'All') {
           const lower = selectedDomain.toLowerCase();
@@ -192,7 +192,7 @@ export const MentorshipPage: React.FC = () => {
           id: r.id || r._id,
           mentorName: r.mentorId?.name || 'Senior Mentor',
           mentorRole: r.mentorId?.title ? `${r.mentorId.title} at ${r.mentorId.company || 'RishabhLabs'}` : 'Verified Mentor',
-          mentorAvatar: r.mentorId?.avatar || '/avatars/default.webp',
+          mentorAvatar: r.mentorId?.avatar || r.mentorId?.avatar_url || '',
           topic: r.topic,
           slot: r.preferredSlot,
           meetLink: r.meetingLink || '',

@@ -4,6 +4,7 @@ import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../services/supabase';
 import { UserAvatar } from '../../components/common/UserAvatar';
+import { AvatarPicker } from '../../components/common/AvatarPicker';
 import {
   Video,
   Calendar,
@@ -40,6 +41,7 @@ export const MentorSessionsPage: React.FC = () => {
     title: '',
     company: '',
     domain: 'Full-Stack Development',
+    avatar: '',
     bio: '',
     topics: 'Roadmap, Architecture, Placement Prep',
     availability: 'Today, 7:00 PM IST, Tomorrow, 6:00 PM IST',
@@ -71,6 +73,7 @@ export const MentorSessionsPage: React.FC = () => {
           title: data.title || 'Technical Specialist & Mentor',
           company: data.company || user?.college || 'RishabhLabs',
           domain: data.domain || 'Full-Stack Development',
+          avatar: data.avatar || user?.avatar || '',
           bio: data.bio || '',
           topics: Array.isArray(data.topics) ? data.topics.join(', ') : (data.topics || 'Roadmap, Architecture'),
           availability: Array.isArray(data.availability) ? data.availability.join(', ') : (data.availability || 'Today, 7:00 PM IST'),
@@ -91,6 +94,7 @@ export const MentorSessionsPage: React.FC = () => {
         title: profileForm.title,
         company: profileForm.company,
         domain: profileForm.domain,
+        avatar: profileForm.avatar,
         bio: profileForm.bio,
         hourlyRate: profileForm.hourlyRate,
         topics: profileForm.topics.split(',').map((t) => t.trim()).filter(Boolean),
@@ -672,6 +676,15 @@ export const MentorSessionsPage: React.FC = () => {
             </div>
 
             <form onSubmit={handleSaveProfile} className="space-y-4">
+              {/* Profile Picture Selection */}
+              <AvatarPicker
+                value={profileForm.avatar}
+                onChange={(val) => setProfileForm({ ...profileForm, avatar: val })}
+                name={mentorProfile?.name || user?.name}
+                email={user?.email}
+                label="Mentor Profile Picture"
+              />
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">

@@ -4,6 +4,7 @@ import { api, hasAuthToken } from '../../services/api';
 import { supabase, isSupabaseConfigured } from '../../services/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { UserAvatar } from '../../components/common/UserAvatar';
+import { AvatarPicker } from '../../components/common/AvatarPicker';
 import { CustomDropdown, DropdownOption } from '../../components/common/CustomDropdown';
 import { PricingPlan } from '../../types';
 
@@ -442,6 +443,7 @@ export const AdminDashboardPage: React.FC = () => {
     if (mentor) {
       setEditingMentor({
         ...mentor,
+        avatar: mentor.avatar || mentor.avatar_url || '',
         topics: Array.isArray(mentor.topics) ? mentor.topics.join(', ') : mentor.topics,
         availability: Array.isArray(mentor.availability) ? mentor.availability.join(', ') : mentor.availability,
       });
@@ -1355,7 +1357,7 @@ export const AdminDashboardPage: React.FC = () => {
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <UserAvatar
-                            src={mentor.avatar}
+                            src={mentor.avatar || mentor.avatar_url}
                             name={mentor.name}
                             size="lg"
                             roundedClassName="rounded-full"
@@ -2159,6 +2161,14 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
 
             <form onSubmit={handleSaveMentor} className="space-y-4">
+              {/* Picture Selection */}
+              <AvatarPicker
+                value={editingMentor.avatar || ''}
+                onChange={(val) => setEditingMentor({ ...editingMentor, avatar: val })}
+                name={editingMentor.name}
+                label="Mentor Profile Picture"
+              />
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 block mb-1">
@@ -2218,19 +2228,6 @@ export const AdminDashboardPage: React.FC = () => {
                     ]}
                     className="w-full"
                     size="sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 block mb-1">
-                    Avatar Image URL
-                  </label>
-                  <input
-                    type="text"
-                    value={editingMentor.avatar || ''}
-                    onChange={(e) => setEditingMentor({ ...editingMentor, avatar: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs"
-                    placeholder="e.g. https://example.com/photo.jpg"
                   />
                 </div>
 
