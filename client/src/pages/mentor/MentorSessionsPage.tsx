@@ -20,7 +20,10 @@ import {
   History,
   FileText,
   UserCheck,
-  Trash2
+  Trash2,
+  Edit2,
+  Settings,
+  X
 } from 'lucide-react';
 
 export const MentorSessionsPage: React.FC = () => {
@@ -28,6 +31,21 @@ export const MentorSessionsPage: React.FC = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
+
+  // Mentor profile & office hours self-editing state
+  const [mentorProfile, setMentorProfile] = useState<any>(null);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    title: '',
+    company: '',
+    domain: 'Full-Stack Development',
+    bio: '',
+    topics: 'Roadmap, Architecture, Placement Prep',
+    availability: 'Today, 7:00 PM IST, Tomorrow, 6:00 PM IST',
+    hourlyRate: 'Free for Students',
+    isAvailableToday: true,
+  });
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -42,6 +60,53 @@ export const MentorSessionsPage: React.FC = () => {
   const showNotification = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
+  };
+
+  const fetchMentorProfile = async () => {
+    try {
+      const data = await api.mentorGetProfile();
+      if (data) {
+        setMentorProfile(data);
+        setProfileForm({
+          title: data.title || 'Technical Specialist & Mentor',
+          company: data.company || user?.college || 'RishabhLabs',
+          domain: data.domain || 'Full-Stack Development',
+          bio: data.bio || '',
+          topics: Array.isArray(data.topics) ? data.topics.join(', ') : (data.topics || 'Roadmap, Architecture'),
+          availability: Array.isArray(data.availability) ? data.availability.join(', ') : (data.availability || 'Today, 7:00 PM IST'),
+          hourlyRate: data.hourlyRate || 'Free for Students',
+          isAvailableToday: data.isAvailableToday !== undefined ? Boolean(data.isAvailableToday) : true,
+        });
+      }
+    } catch (e) {
+      console.warn('Could not load mentor profile details:', e);
+    }
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsSavingProfile(true);
+      const res = await api.mentorUpdateProfile({
+        title: profileForm.title,
+        company: profileForm.company,
+        domain: profileForm.domain,
+        bio: profileForm.bio,
+        hourlyRate: profileForm.hourlyRate,
+        topics: profileForm.topics.split(',').map((t) => t.trim()).filter(Boolean),
+        availability: profileForm.availability.split(',').map((a) => a.trim()).filter(Boolean),
+        isAvailableToday: profileForm.isAvailableToday,
+      });
+      if (res?.mentor) {
+        setMentorProfile(res.mentor);
+      }
+      setProfileModalOpen(false);
+      showNotification('Mentor profile & office hours updated successfully!');
+    } catch (err: any) {
+      showNotification(err.message || 'Failed to update profile');
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const fetchSessions = async (showSpinner = false) => {
@@ -61,8 +126,12 @@ export const MentorSessionsPage: React.FC = () => {
 
   useEffect(() => {
     fetchSessions(true);
+    fetchMentorProfile();
 
-    const onFocus = () => fetchSessions(false);
+    const onFocus = () => {
+      fetchSessions(false);
+      fetchMentorProfile();
+    };
     window.addEventListener('focus', onFocus);
 
     // Silent background poll to guarantee fresh inquiries across devices
@@ -189,29 +258,52 @@ export const MentorSessionsPage: React.FC = () => {
       )}
 
       {/* Mentor Profile Overview Card */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-transparent border border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center font-bold text-base shadow-xs">
-            {user?.name ? user.name.substring(0, 2).toUpperCase() : 'ML'}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-transparent border border-emerald-500/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <UserAvatar
+            src={mentorProfile?.avatar || user?.avatar}
+            name={mentorProfile?.name || user?.name || 'Mentor'}
+            size="lg"
+          />
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
               <h2 className="font-bold text-sm text-neutral-900 dark:text-white">
-                {user?.name || 'Lead Mentor'}
+                {mentorProfile?.name || user?.name || 'Lead Mentor'}
               </h2>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
                 Core Mentor Network
               </span>
+              {mentorProfile?.domain && (
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  {mentorProfile.domain}
+                </span>
+              )}
             </div>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-              Available for Architecture Guidance, Code Reviews & Placement Prep
+            <p className="text-xs text-neutral-600 dark:text-neutral-300 font-medium">
+              {mentorProfile?.title || 'Technical Specialist & Mentor'} · <span className="text-neutral-400">{mentorProfile?.company || user?.college || 'RishabhLabs'}</span>
             </p>
+            {mentorProfile?.bio && (
+              <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1 max-w-xl">
+                {mentorProfile.bio}
+              </p>
+            )}
           </div>
         </div>
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <span className="px-3 py-1 rounded-xl text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-            Accepting Inquiries
+        <div className="flex items-center gap-2.5 self-start md:self-auto shrink-0 flex-wrap">
+          <span className={`px-3 py-1 rounded-xl text-xs font-semibold border ${
+            mentorProfile?.isAvailableToday !== false
+              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+              : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+          }`}>
+            {mentorProfile?.isAvailableToday !== false ? 'Accepting Inquiries' : 'Inquiries Paused'}
           </span>
+          <button
+            onClick={() => setProfileModalOpen(true)}
+            className="px-3.5 py-1.5 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold text-xs hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors flex items-center gap-1.5"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+            <span>Edit Profile & Slots</span>
+          </button>
         </div>
       </div>
 
@@ -549,6 +641,165 @@ export const MentorSessionsPage: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Mentor Profile & Office Hours Edit Modal */}
+      {profileModalOpen && (
+        <div
+          onClick={() => setProfileModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-[#1E1B1C] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl cursor-default"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
+              <div>
+                <h3 className="font-extrabold text-base text-neutral-900 dark:text-white">
+                  Update Mentor Profile & Office Hours
+                </h3>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Changes reflect immediately on the student-facing Mentorship portal.
+                </p>
+              </div>
+              <button
+                onClick={() => setProfileModalOpen(false)}
+                className="p-1 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                    Professional Title *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={profileForm.title}
+                    onChange={(e) => setProfileForm({ ...profileForm, title: e.target.value })}
+                    placeholder="e.g. Senior Full-Stack Architect"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-hidden"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                    Organization / College
+                  </label>
+                  <input
+                    type="text"
+                    value={profileForm.company}
+                    onChange={(e) => setProfileForm({ ...profileForm, company: e.target.value })}
+                    placeholder="e.g. GLA University / RishabhLabs"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                    Domain Specialization *
+                  </label>
+                  <select
+                    value={profileForm.domain}
+                    onChange={(e) => setProfileForm({ ...profileForm, domain: e.target.value })}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-hidden"
+                  >
+                    <option value="Full-Stack Development">Full-Stack Development</option>
+                    <option value="AI & Machine Learning">AI & Machine Learning</option>
+                    <option value="Cybersecurity">Cybersecurity</option>
+                    <option value="Cloud & Systems">Cloud & Systems</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                    Consultation Fee Display
+                  </label>
+                  <input
+                    type="text"
+                    value={profileForm.hourlyRate}
+                    onChange={(e) => setProfileForm({ ...profileForm, hourlyRate: e.target.value })}
+                    placeholder="e.g. Free for Students"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                  Focus Topics & Skills (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.topics}
+                  onChange={(e) => setProfileForm({ ...profileForm, topics: e.target.value })}
+                  placeholder="Roadmap, Architecture, System Design, Placement Prep"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-hidden"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                  Available Slots for Bookings (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.availability}
+                  onChange={(e) => setProfileForm({ ...profileForm, availability: e.target.value })}
+                  placeholder="Today, 7:00 PM IST, Tomorrow, 6:00 PM IST, Saturday, 11:00 AM IST"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-hidden"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                  Bio / Philosophy
+                </label>
+                <textarea
+                  rows={3}
+                  value={profileForm.bio}
+                  onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                  placeholder="Share a brief overview of your background, experience, and what students can expect..."
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-hidden resize-none"
+                />
+              </div>
+
+              <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-neutral-900 dark:text-white">Accepting Student Inquiries</p>
+                  <p className="text-[11px] text-neutral-500">Allow students to book 1:1 consultation sessions on the platform.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={profileForm.isAvailableToday}
+                  onChange={(e) => setProfileForm({ ...profileForm, isAvailableToday: e.target.checked })}
+                  className="w-4 h-4 rounded text-emerald-600 focus:ring-0 cursor-pointer"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-neutral-200 dark:border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setProfileModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  className="px-5 py-2 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-bold hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors disabled:opacity-50"
+                >
+                  {isSavingProfile ? 'Saving Changes...' : 'Save Profile Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

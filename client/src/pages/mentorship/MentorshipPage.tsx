@@ -123,20 +123,17 @@ export const MentorshipPage: React.FC = () => {
         }));
         if (selectedDomain && selectedDomain !== 'All') {
           const lower = selectedDomain.toLowerCase();
-          const domainFiltered = filtered.filter((m: any) => {
+          filtered = filtered.filter((m: any) => {
             const d = (m.domain || '').toLowerCase();
             if (lower.includes('ai') || lower.includes('ml')) return d.includes('ai') || d.includes('machine');
             if (lower.includes('web') || lower.includes('full') || lower.includes('stack')) return d.includes('web') || d.includes('full-stack');
             if (lower.includes('cyber') || lower.includes('sec')) return d.includes('cyber') || d.includes('sec');
             return d.includes(lower);
           });
-          if (domainFiltered.length > 0) filtered = domainFiltered;
         }
-        if (filtered.length > 0) {
-          setMentors(filtered);
-          setSelectedMentor(filtered[0]);
-          return;
-        }
+        setMentors(filtered);
+        setSelectedMentor(filtered[0] || null);
+        return;
       }
     } catch (err) {
       console.warn('API getMentors fallback to curated mentor list:', err);
@@ -149,6 +146,13 @@ export const MentorshipPage: React.FC = () => {
 
   useEffect(() => {
     fetchMentors();
+
+    const onFocus = () => {
+      api.invalidateCache(/mentor/);
+      fetchMentors();
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, [selectedDomain]);
 
   // Real-time Supabase listener for live mentor catalog updates from Admin
@@ -434,9 +438,6 @@ export const MentorshipPage: React.FC = () => {
               <Calendar className="w-4 h-4 text-emerald-500" />
               <span>Your Scheduled Consultations ({bookedSessions.length})</span>
             </h3>
-            <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
-              Live Database Synced
-            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -464,13 +465,12 @@ export const MentorshipPage: React.FC = () => {
                     </div>
                   </div>
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${
-                      s.status === 'confirmed'
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                        : s.status === 'completed'
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${s.status === 'confirmed'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                      : s.status === 'completed'
                         ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
                         : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                    }`}
+                      }`}
                   >
                     {s.status || 'Pending'}
                   </span>

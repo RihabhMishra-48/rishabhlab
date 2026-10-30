@@ -119,8 +119,55 @@ router.get('/mentors', async (req, res) => {
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (!sbErr && sbMentors && sbMentors.length > 0) {
-          mentors = sbMentors.map((m: any) => ({
+        let currentMentors = (!sbErr && sbMentors) ? [...sbMentors] : [];
+
+        // Auto-sync: Find any verified user with role = 'mentor' in profiles who is missing from mentors table
+        const { data: mentorProfiles } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'mentor');
+
+        if (mentorProfiles && mentorProfiles.length > 0) {
+          for (const mp of mentorProfiles) {
+            const cleanName = (mp.full_name || mp.email?.split('@')[0] || 'Mentor').trim();
+            const cleanEmail = (mp.email || '').toLowerCase().trim();
+            const emailPrefix = cleanEmail.split('@')[0].replace(/[._-]/g, '');
+
+            const alreadyExists = currentMentors.some((m: any) => {
+              const mName = (m.name || '').toLowerCase().trim();
+              const mNoSpace = mName.replace(/\s+/g, '');
+              return (
+                mName === cleanName.toLowerCase() ||
+                mName.includes(cleanName.toLowerCase()) ||
+                cleanName.toLowerCase().includes(mName.split(' ')[0]) ||
+                (emailPrefix && mNoSpace.includes(emailPrefix))
+              );
+            });
+
+            if (!alreadyExists) {
+              const { data: newMentor, error: insErr } = await supabase.from('mentors').insert({
+                name: cleanName,
+                title: mp.target_goal || mp.field_of_interest || 'Technical Specialist & Mentor',
+                company: mp.college_name || 'RishabhLabs',
+                avatar: mp.avatar_url || '/avatars/default.webp',
+                topics: ['Roadmap', 'Architecture', 'Placement Prep'],
+                experience_years: 4,
+                rating: 5.0,
+                bio: `Specialist mentor at RishabhLabs.`,
+                hourly_rate_inr: 0,
+                available_days: ['Monday', 'Wednesday', 'Friday', 'Saturday'],
+                domain: mp.field_of_interest || mp.target_goal || 'Full-Stack Development',
+              }).select().single();
+
+              if (newMentor && !insErr) {
+                currentMentors.unshift(newMentor);
+              }
+            }
+          }
+        }
+
+        if (currentMentors.length > 0) {
+          mentors = currentMentors.map((m: any) => ({
             _id: m.id,
             id: m.id,
             name: m.name,
@@ -1630,40 +1677,72 @@ router.put('/users/:id/role', async (req, res) => {
     // 1. Update in Supabase profiles using backend service role
     if (isSupabaseConfigured() && supabase) {
       try {
-        const { data: sbProfile } = await supabase
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        const query = supabase
           .from('profiles')
-          .select('id, full_name, email')
-          .or(`id.eq.${id},email.eq.${id}`)
-          .maybeSingle();
+          .select('id, full_name, email, avatar_url, college_name, target_goal, field_of_interest');
+
+        const { data: sbProfile } = isUUID
+          ? await query.eq('id', id).maybeSingle()
+          : await query.eq('email', id.toLowerCase()).maybeSingle();
 
         if (sbProfile) {
           await supabase.from('profiles').update({ role }).eq('id', sbProfile.id);
           updatedName = sbProfile.full_name || '';
           updatedEmail = sbProfile.email;
 
-          // If role changed to mentor, ensure mentor row exists in Supabase
-          if (role === 'mentor') {
-            const cleanName = sbProfile.full_name || updatedEmail.split('@')[0];
-            const { data: existingM } = await supabase
-              .from('mentors')
-              .select('id')
-              .or(`name.eq."${cleanName}",id.eq."${sbProfile.id}"`)
-              .maybeSingle();
+          const cleanName = (sbProfile.full_name || updatedEmail.split('@')[0] || 'Mentor').trim();
+          const cleanEmail = (updatedEmail || '').toLowerCase().trim();
+          const emailPrefix = cleanEmail.split('@')[0].replace(/[._-]/g, '');
 
-            if (!existingM) {
+          // If role changed to mentor, ensure mentor row exists in Supabase mentors table
+          if (role === 'mentor') {
+            const { data: allMentors } = await supabase.from('mentors').select('*');
+            const matchedMentor = (allMentors || []).find((m: any) => {
+              const mName = (m.name || '').toLowerCase().trim();
+              const mNoSpace = mName.replace(/\s+/g, '');
+              return (
+                mName === cleanName.toLowerCase() ||
+                mName.includes(cleanName.toLowerCase()) ||
+                cleanName.toLowerCase().includes(mName.split(' ')[0]) ||
+                (emailPrefix && mNoSpace.includes(emailPrefix))
+              );
+            });
+
+            if (!matchedMentor) {
               await supabase.from('mentors').insert({
                 name: cleanName,
-                title: 'Technical Specialist & Mentor',
-                company: 'RishabhLabs',
-                avatar: '/avatars/default.webp',
+                title: sbProfile.target_goal || sbProfile.field_of_interest || 'Technical Specialist & Mentor',
+                company: sbProfile.college_name || 'RishabhLabs',
+                avatar: sanitizeAvatar(sbProfile.avatar_url) || '/avatars/default.webp',
                 topics: ['Roadmap', 'Architecture', 'Placement Prep'],
                 experience_years: 4,
                 rating: 5.0,
-                bio: `Specialist mentor at RishabhLabs.`,
+                bio: `Specialist mentor at RishabhLabs. Available for 1:1 code reviews, architecture guidance, and placement prep.`,
                 hourly_rate_inr: 0,
                 available_days: ['Monday', 'Wednesday', 'Friday', 'Saturday'],
-                domain: 'Full-Stack Development',
+                domain: sbProfile.field_of_interest || sbProfile.target_goal || 'Full-Stack Development',
               });
+            } else {
+              // Ensure company & avatar are updated
+              await supabase.from('mentors').update({
+                company: sbProfile.college_name || matchedMentor.company || 'RishabhLabs',
+                avatar: sanitizeAvatar(sbProfile.avatar_url) || matchedMentor.avatar,
+              }).eq('id', matchedMentor.id);
+            }
+          } else {
+            // Role changed away from mentor: remove from mentors catalog so students cannot book former mentors
+            const { data: allMentors } = await supabase.from('mentors').select('id, name');
+            const matchedMentor = (allMentors || []).find((m: any) => {
+              const mName = (m.name || '').toLowerCase().trim();
+              const mNoSpace = mName.replace(/\s+/g, '');
+              return (
+                mName === cleanName.toLowerCase() ||
+                (emailPrefix && mNoSpace.includes(emailPrefix))
+              );
+            });
+            if (matchedMentor) {
+              await supabase.from('mentors').delete().eq('id', matchedMentor.id);
             }
           }
         }
@@ -1688,7 +1767,6 @@ router.put('/users/:id/role', async (req, res) => {
           if (!updatedName) updatedName = user.name;
           if (!updatedEmail) updatedEmail = user.email;
 
-          // If role changed to mentor, ensure mentor record exists
           if (role === 'mentor') {
             const existingMentor = await Mentor.findOne({
               $or: [{ userId: user._id }, { name: user.name }],
@@ -1710,6 +1788,10 @@ router.put('/users/:id/role', async (req, res) => {
                 domain: user.fieldOfInterest || 'Full-Stack Development',
               });
             }
+          } else {
+            await Mentor.deleteMany({
+              $or: [{ userId: user._id }, { name: user.name }],
+            });
           }
         }
       } catch (mongoErr) {
@@ -1775,6 +1857,22 @@ router.post('/users', async (req, res) => {
           degree: degree || '',
           is_onboarded: role === 'super_admin' || role === 'admin',
         });
+
+        if (role === 'mentor') {
+          await supabase.from('mentors').insert({
+            name,
+            title: 'Technical Specialist & Mentor',
+            company: college || 'RishabhLabs',
+            avatar: '/avatars/default.webp',
+            topics: ['Roadmap', 'Architecture', 'Placement Prep'],
+            experience_years: 4,
+            rating: 5.0,
+            bio: `Specialist mentor at RishabhLabs. Available for 1:1 code reviews, architecture guidance, and placement prep.`,
+            hourly_rate_inr: 0,
+            available_days: ['Monday', 'Wednesday', 'Friday', 'Saturday'],
+            domain: 'Full-Stack Development',
+          });
+        }
       } catch (sbErr: any) {
         console.warn('[Admin API] Supabase user creation notice:', sbErr.message);
       }
@@ -1796,6 +1894,24 @@ router.post('/users', async (req, res) => {
             isOnboarded: role === 'super_admin' || role === 'admin',
           });
           createdId = user._id.toString();
+
+          if (role === 'mentor') {
+            await Mentor.create({
+              userId: user._id,
+              name: user.name,
+              title: 'Technical Specialist & Mentor',
+              company: college || 'RishabhLabs',
+              avatar: '',
+              rating: 5.0,
+              reviewsCount: 1,
+              bio: `Specialist mentor at RishabhLabs.`,
+              hourlyRate: 'Free for Pro',
+              topics: ['Architecture', 'System Design', 'Roadmap'],
+              availability: ['Today, 7:00 PM IST', 'Tomorrow, 6:00 PM IST'],
+              isAvailableToday: true,
+              domain: 'Full-Stack Development',
+            });
+          }
         }
       } catch (mongoErr) {
         console.warn('[Admin API] Mongo user creation error:', mongoErr);

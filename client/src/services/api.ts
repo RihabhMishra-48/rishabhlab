@@ -547,8 +547,17 @@ export const api = {
     return res;
   },
 
-  // Mentor Workspace Sessions
+  // Mentor Workspace Sessions & Profile
   mentorGetSessions: () => request<any[]>('/mentorship/mentor/sessions'),
+  mentorGetProfile: () => request<any>('/mentorship/mentor/profile'),
+  mentorUpdateProfile: async (data: any) => {
+    const res = await request<any>('/mentorship/mentor/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    invalidateCache(/mentor/);
+    return res;
+  },
   mentorUpdateSession: async (id: string, data: { status?: string; meetingLink?: string; notesFromMentor?: string; preferredSlot?: string }) => {
     const res = await request<any>(`/mentorship/sessions/${id}`, {
       method: 'PUT',

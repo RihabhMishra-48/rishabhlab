@@ -382,10 +382,12 @@ export const AdminDashboardPage: React.FC = () => {
       }
 
       setUsers((prev) => prev.map((u) => ((u._id === userId || u.id === userId) ? { ...u, role: newRole } : u)));
-      if (newRole === 'mentor') {
-        const freshMentors = await api.adminGetMentors().catch(() => []);
-        if (freshMentors.length > 0) setMentors(freshMentors);
-      }
+      
+      // Always sync mentors list
+      api.invalidateCache(/mentor/);
+      const freshMentors = await api.adminGetMentors().catch(() => []);
+      if (Array.isArray(freshMentors)) setMentors(freshMentors);
+
       showNotification(`Role updated to ${newRole}`);
     } catch (err: any) {
       showNotification(err.message || 'Failed to update user role');

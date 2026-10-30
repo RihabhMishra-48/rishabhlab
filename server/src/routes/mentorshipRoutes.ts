@@ -755,4 +755,278 @@ router.delete('/sessions/:id', requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
+// ============================================================================
+// 7. GET / UPDATE MENTOR'S OWN PROFILE DETAILS (from Mentor Dashboard)
+// ============================================================================
+router.get('/mentor/profile', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const user = req.user!;
+    const isSuperAdmin = (user.role as string) === 'super_admin' || (user.role as string) === 'admin';
+
+    if (!isSuperAdmin && user.role !== 'mentor') {
+      return res.status(403).json({ message: 'Access denied: Mentor privileges required' });
+    }
+
+    let mentorProfile: any = null;
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data: allMentors } = await supabase.from('mentors').select('*');
+        const cleanUserName = (user.name || '').toLowerCase().trim();
+        const cleanUserEmail = (user.email || '').toLowerCase().trim();
+        const emailPrefix = cleanUserEmail.split('@')[0].replace(/[._-]/g, '');
+
+        let matched = (allMentors || []).find((m: any) => {
+          const cleanMentorName = (m.name || '').toLowerCase().trim();
+          const mentorNameNoSpace = cleanMentorName.replace(/\s+/g, '');
+          if (cleanMentorName === cleanUserName) return true;
+          if (cleanMentorName.includes(cleanUserName) || cleanUserName.includes(cleanMentorName)) return true;
+          if (cleanMentorName.split(' ')[0] && cleanUserName.includes(cleanMentorName.split(' ')[0])) return true;
+          if (emailPrefix && (mentorNameNoSpace.includes(emailPrefix) || emailPrefix.includes(mentorNameNoSpace))) return true;
+          return false;
+        });
+
+        if (!matched && user.role === 'mentor') {
+          // Auto-provision mentor row
+          const { data: created } = await supabase.from('mentors').insert({
+            name: user.name || cleanUserEmail.split('@')[0] || 'Technical Mentor',
+            title: (user as any).targetGoal || (user as any).fieldOfInterest || 'Technical Specialist & Mentor',
+            company: (user as any).college || 'RishabhLabs',
+            avatar: user.avatar || '/avatars/default.webp',
+            topics: ['Roadmap', 'Code Review', 'System Design'],
+            experience_years: 4,
+            rating: 5.0,
+            bio: (user as any).bio || 'Experienced engineering mentor at RishabhLabs.',
+            hourly_rate_inr: 0,
+            available_days: ['Monday', 'Wednesday', 'Friday', 'Saturday'],
+            domain: (user as any).fieldOfInterest || 'Full-Stack Development',
+          }).select().single();
+          matched = created;
+        }
+
+        if (matched) {
+          mentorProfile = {
+            id: matched.id,
+            _id: matched.id,
+            name: matched.name,
+            title: matched.title || 'Technical Specialist',
+            company: matched.company || 'RishabhLabs',
+            domain: matched.domain || 'Full-Stack Development',
+            avatar: sanitizeAvatar(matched.avatar) || '/avatars/default.webp',
+            rating: Number(matched.rating) || 5.0,
+            bio: matched.bio || '',
+            hourlyRate: matched.hourly_rate || (matched.hourly_rate_inr ? `₹${matched.hourly_rate_inr}` : 'Free for Students'),
+            topics: Array.isArray(matched.topics) ? matched.topics : ['Roadmap', 'System Design'],
+            availability: Array.isArray(matched.availability)
+              ? matched.availability
+              : (Array.isArray(matched.available_days) && matched.available_days.length > 0
+                ? matched.available_days.map((d: string) => `${d}, 7:00 PM IST`)
+                : ['Today, 7:00 PM IST', 'Tomorrow, 6:00 PM IST']),
+            isAvailableToday: matched.is_available_today !== undefined ? Boolean(matched.is_available_today) : true,
+          };
+        }
+      } catch (sbErr) {
+        console.warn('Supabase get mentor profile notice:', sbErr);
+      }
+    }
+
+    if (!mentorProfile && mongoose.connection.readyState === 1) {
+      try {
+        const mM = await Mentor.findOne({
+          $or: [{ userId: user._id }, { name: new RegExp(user.name || '', 'i') }],
+        });
+        if (mM) {
+          mentorProfile = {
+            id: mM._id.toString(),
+            _id: mM._id.toString(),
+            name: mM.name,
+            title: mM.title,
+            company: mM.company,
+            domain: mM.domain || 'General',
+            avatar: mM.avatar || '/avatars/default.webp',
+            rating: mM.rating,
+            bio: mM.bio,
+            hourlyRate: mM.hourlyRate,
+            topics: mM.topics,
+            availability: mM.availability,
+            isAvailableToday: mM.isAvailableToday,
+          };
+        }
+      } catch (mErr) {
+        console.warn('Mongo get mentor profile notice:', mErr);
+      }
+    }
+
+    res.json(mentorProfile || {
+      name: user.name || 'Mentor',
+      title: 'Technical Specialist & Mentor',
+      company: (user as any).college || 'RishabhLabs',
+      domain: 'Full-Stack Development',
+      avatar: user.avatar || '/avatars/default.webp',
+      rating: 5.0,
+      bio: 'Experienced engineering mentor at RishabhLabs.',
+      hourlyRate: 'Free for Students',
+      topics: ['Roadmap', 'System Design'],
+      availability: ['Today, 7:00 PM IST', 'Tomorrow, 6:00 PM IST'],
+      isAvailableToday: true,
+    });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.put('/mentor/profile', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const user = req.user!;
+    const isSuperAdmin = (user.role as string) === 'super_admin' || (user.role as string) === 'admin';
+
+    if (!isSuperAdmin && user.role !== 'mentor') {
+      return res.status(403).json({ message: 'Access denied: Mentor privileges required' });
+    }
+
+    const {
+      title,
+      company,
+      domain,
+      avatar,
+      bio,
+      hourlyRate,
+      topics,
+      availability,
+      isAvailableToday,
+    } = req.body;
+
+    const topicsArr = Array.isArray(topics)
+      ? topics
+      : (topics ? String(topics).split(',').map((t: string) => t.trim()).filter(Boolean) : undefined);
+
+    const availArr = Array.isArray(availability)
+      ? availability
+      : (availability ? String(availability).split(',').map((t: string) => t.trim()).filter(Boolean) : undefined);
+
+    let updatedMentor: any = null;
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data: allMentors } = await supabase.from('mentors').select('*');
+        const cleanUserName = (user.name || '').toLowerCase().trim();
+        const cleanUserEmail = (user.email || '').toLowerCase().trim();
+        const emailPrefix = cleanUserEmail.split('@')[0].replace(/[._-]/g, '');
+
+        let matched = (allMentors || []).find((m: any) => {
+          const cleanMentorName = (m.name || '').toLowerCase().trim();
+          const mentorNameNoSpace = cleanMentorName.replace(/\s+/g, '');
+          if (cleanMentorName === cleanUserName) return true;
+          if (cleanMentorName.includes(cleanUserName) || cleanUserName.includes(cleanMentorName)) return true;
+          if (cleanMentorName.split(' ')[0] && cleanUserName.includes(cleanMentorName.split(' ')[0])) return true;
+          if (emailPrefix && (mentorNameNoSpace.includes(emailPrefix) || emailPrefix.includes(mentorNameNoSpace))) return true;
+          return false;
+        });
+
+        const updatePayload: any = {};
+        if (title !== undefined) updatePayload.title = title;
+        if (company !== undefined) updatePayload.company = company;
+        if (domain !== undefined) updatePayload.domain = domain;
+        if (avatar !== undefined) updatePayload.avatar = avatar;
+        if (bio !== undefined) updatePayload.bio = bio;
+        if (hourlyRate !== undefined) updatePayload.hourly_rate = hourlyRate;
+        if (topicsArr !== undefined) updatePayload.topics = topicsArr;
+        if (availArr !== undefined) {
+          updatePayload.availability = availArr;
+          updatePayload.available_days = availArr.map((a: string) => a.split(',')[0].trim());
+        }
+        if (isAvailableToday !== undefined) updatePayload.is_available_today = Boolean(isAvailableToday);
+
+        if (matched) {
+          const { data: upd } = await supabase.from('mentors').update(updatePayload).eq('id', matched.id).select().single();
+          if (upd) matched = upd;
+        } else {
+          const { data: ins } = await supabase.from('mentors').insert({
+            name: user.name || cleanUserEmail.split('@')[0] || 'Technical Mentor',
+            ...updatePayload,
+          }).select().single();
+          if (ins) matched = ins;
+        }
+
+        if (matched) {
+          updatedMentor = {
+            id: matched.id,
+            _id: matched.id,
+            name: matched.name,
+            title: matched.title,
+            company: matched.company,
+            domain: matched.domain,
+            avatar: matched.avatar,
+            bio: matched.bio,
+            topics: matched.topics,
+            availability: matched.availability || matched.available_days,
+            hourlyRate: matched.hourly_rate || (matched.hourly_rate_inr ? `₹${matched.hourly_rate_inr}` : 'Free for Students'),
+            isAvailableToday: matched.is_available_today !== undefined ? Boolean(matched.is_available_today) : true,
+          };
+        }
+
+        // Also sync profile fields
+        if (user.email) {
+          const profUpdates: any = {};
+          if (domain) profUpdates.field_of_interest = domain;
+          if (company) profUpdates.college_name = company;
+          if (avatar) profUpdates.avatar_url = avatar;
+          if (Object.keys(profUpdates).length > 0) {
+            await supabase.from('profiles').update(profUpdates).eq('email', user.email.toLowerCase());
+          }
+        }
+      } catch (sbErr) {
+        console.warn('Supabase update mentor profile error:', sbErr);
+      }
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const mUpdates: any = {};
+        if (title !== undefined) mUpdates.title = title;
+        if (company !== undefined) mUpdates.company = company;
+        if (domain !== undefined) mUpdates.domain = domain;
+        if (avatar !== undefined) mUpdates.avatar = avatar;
+        if (bio !== undefined) mUpdates.bio = bio;
+        if (hourlyRate !== undefined) mUpdates.hourlyRate = hourlyRate;
+        if (topicsArr !== undefined) mUpdates.topics = topicsArr;
+        if (availArr !== undefined) mUpdates.availability = availArr;
+        if (isAvailableToday !== undefined) mUpdates.isAvailableToday = Boolean(isAvailableToday);
+
+        const mMentor = await Mentor.findOneAndUpdate(
+          { $or: [{ userId: user._id }, { name: new RegExp(user.name || '', 'i') }] },
+          mUpdates,
+          { new: true, upsert: true }
+        );
+        if (mMentor && !updatedMentor) {
+          updatedMentor = {
+            id: mMentor._id.toString(),
+            _id: mMentor._id.toString(),
+            name: mMentor.name,
+            title: mMentor.title,
+            company: mMentor.company,
+            domain: mMentor.domain,
+            avatar: mMentor.avatar,
+            bio: mMentor.bio,
+            topics: mMentor.topics,
+            availability: mMentor.availability,
+            hourlyRate: mMentor.hourlyRate,
+            isAvailableToday: mMentor.isAvailableToday,
+          };
+        }
+      } catch (mErr) {
+        console.warn('Mongo update mentor profile error:', mErr);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Mentor profile updated successfully!',
+      mentor: updatedMentor,
+    });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 export default router;
