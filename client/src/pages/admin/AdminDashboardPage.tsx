@@ -907,10 +907,6 @@ export const AdminDashboardPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 mb-2">
-            <ShieldAlert className="w-3.5 h-3.5" />
-            <span>Platform Super Admin</span>
-          </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
             Admin Control Center
           </h1>
@@ -983,8 +979,8 @@ export const AdminDashboardPage: React.FC = () => {
         <button
           onClick={() => setActiveTab('users')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'users'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
+            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
             }`}
         >
           <UserCog className="w-4 h-4" />
@@ -997,8 +993,8 @@ export const AdminDashboardPage: React.FC = () => {
         <button
           onClick={() => setActiveTab('mentors')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'mentors'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
+            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
             }`}
         >
           <Users className="w-4 h-4" />
@@ -1011,8 +1007,8 @@ export const AdminDashboardPage: React.FC = () => {
         <button
           onClick={() => setActiveTab('colleges')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'colleges'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
+            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
             }`}
         >
           <GraduationCap className="w-4 h-4" />
@@ -1025,8 +1021,8 @@ export const AdminDashboardPage: React.FC = () => {
         <button
           onClick={() => setActiveTab('questions')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'questions'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
+            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
             }`}
         >
           <Code2 className="w-4 h-4" />
@@ -1039,8 +1035,8 @@ export const AdminDashboardPage: React.FC = () => {
         <button
           onClick={() => setActiveTab('roadmaps')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'roadmaps'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
+            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
             }`}
         >
           <Compass className="w-4 h-4" />
@@ -1053,8 +1049,8 @@ export const AdminDashboardPage: React.FC = () => {
         <button
           onClick={() => setActiveTab('tasks')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'tasks'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
+            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
             }`}
         >
           <CheckCircle2 className="w-4 h-4" />
@@ -1067,8 +1063,8 @@ export const AdminDashboardPage: React.FC = () => {
         <button
           onClick={() => setActiveTab('pricing')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'pricing'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
+            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
             }`}
         >
           <CreditCard className="w-4 h-4" />
@@ -1081,8 +1077,8 @@ export const AdminDashboardPage: React.FC = () => {
         <button
           onClick={() => setActiveTab('overview')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'overview'
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
-              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
+            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
             }`}
         >
           <Layers className="w-4 h-4" />
@@ -1159,8 +1155,8 @@ export const AdminDashboardPage: React.FC = () => {
                   key={rf.id}
                   onClick={() => setUserRoleFilter(rf.id)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${userRoleFilter === rf.id
-                      ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-2xs'
-                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-2xs'
+                    : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                     }`}
                 >
                   {rf.label}
@@ -1238,14 +1234,14 @@ export const AdminDashboardPage: React.FC = () => {
                           <td className="px-4 py-3.5">
                             <span
                               className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${u.role === 'super_admin'
-                                  ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
-                                  : u.role === 'admin'
-                                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                                    : u.role === 'mentor'
-                                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                      : u.role === 'college_admin'
-                                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                                : u.role === 'admin'
+                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                  : u.role === 'mentor'
+                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                    : u.role === 'college_admin'
+                                      ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                                      : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                                 }`}
                             >
                               {u.role || 'student'}
@@ -1747,10 +1743,10 @@ export const AdminDashboardPage: React.FC = () => {
                             Step {node.stepNumber || idx + 1}
                           </span>
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${node.status === 'completed'
-                              ? 'bg-emerald-500/10 text-emerald-500'
-                              : node.status === 'in_progress'
-                                ? 'bg-blue-500/10 text-blue-500'
-                                : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400'
+                            ? 'bg-emerald-500/10 text-emerald-500'
+                            : node.status === 'in_progress'
+                              ? 'bg-blue-500/10 text-blue-500'
+                              : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400'
                             }`}>
                             {node.status}
                           </span>
