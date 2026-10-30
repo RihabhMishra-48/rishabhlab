@@ -5,6 +5,11 @@ import { Mentor, MentorshipRequest } from '../models/Mentorship';
 import { User } from '../models/User';
 import { getCleanMentors } from '../seed/seedData';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
+import {
+  sendMentorBookingNotificationEmail,
+  sendStudentBookingAcceptedEmail,
+  sendMentorshipCommunicationEmail,
+} from '../services/emailService';
 
 const sanitizeAvatar = (url?: string | null) => {
   if (!url) return null;
@@ -292,6 +297,65 @@ router.post('/request', requireAuth, async (req: AuthRequest, res) => {
       } catch (mErr) {
         console.warn('Mongo request create warning:', mErr);
       }
+    }
+
+    // Automated Email Communication: Deliver professional booking notice to the mentor
+    try {
+      let resolvedMentorEmail = '';
+
+      if (isSupabaseConfigured() && supabase) {
+        const { data: mentorProfiles } = await supabase
+          .from('profiles')
+          .select('email, full_name, role')
+          .or('role.eq.mentor,role.eq.super_admin,role.eq.admin');
+
+        if (mentorProfiles && mentorProfiles.length > 0) {
+          const cleanTarget = (targetMentorName || '').toLowerCase().trim();
+          const pMatch = mentorProfiles.find((p: any) => {
+            const pName = (p.full_name || '').toLowerCase().trim();
+            return pName === cleanTarget || pName.includes(cleanTarget) || cleanTarget.includes(pName.split(' ')[0]);
+          });
+          if (pMatch?.email) {
+            resolvedMentorEmail = pMatch.email;
+          }
+        }
+      }
+
+      if (!resolvedMentorEmail && mongoose.connection.readyState === 1) {
+        const u = await User.findOne({
+          $or: [
+            { name: new RegExp(targetMentorName || String(mentorId), 'i'), role: 'mentor' },
+            { name: new RegExp(targetMentorName || String(mentorId), 'i') },
+          ]
+        });
+        if (u?.email) resolvedMentorEmail = u.email;
+      }
+
+      if (!resolvedMentorEmail) {
+        resolvedMentorEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER || 'rishabhlabs@vrindopnishad.in';
+      }
+
+      const bookingCode = newRequest.id && !newRequest.id.startsWith('req-')
+        ? `BK-${newRequest.id.slice(0, 6).toUpperCase()}`
+        : `BK-${newRequestId.slice(-6).toUpperCase()}`;
+
+      // Dispatch asynchronously without blocking API response
+      sendMentorBookingNotificationEmail({
+        mentorEmail: resolvedMentorEmail,
+        mentorName: targetMentorName || 'Technical Mentor',
+        studentName: user.name || user.email.split('@')[0] || 'Learner',
+        studentEmail: user.email,
+        studentCollege: (user as any).college || '',
+        topic: newRequest.topic,
+        preferredSlot: newRequest.preferredSlot,
+        requirements: newRequest.message,
+        bookingCode,
+        sessionId: newRequest.id,
+      }).catch((emailErr) => {
+        console.warn('Mentor booking notification email delivery notice:', emailErr.message);
+      });
+    } catch (e) {
+      console.warn('Error resolving mentor email for notification:', e);
     }
 
     res.status(201).json({
@@ -664,6 +728,8 @@ router.put('/sessions/:id', requireAuth, async (req: AuthRequest, res) => {
             meetingLink: updatedSb.meeting_link,
             notesFromMentor: note,
             createdAt: updatedSb.created_at,
+            studentId: updatedSb.student_id,
+            mentorId: updatedSb.mentor_id,
           };
         } else if (sbErr) {
           console.warn('Supabase update session warning:', sbErr);
@@ -699,6 +765,8 @@ router.put('/sessions/:id', requireAuth, async (req: AuthRequest, res) => {
               meetingLink: mUpdated.meetingLink,
               notesFromMentor: mUpdated.notesFromMentor,
               createdAt: (mUpdated as any).createdAt || (mUpdated as any).created_at || new Date().toISOString(),
+              studentId: mUpdated.studentId?.toString(),
+              mentorId: mUpdated.mentorId?.toString(),
             };
           }
         }
@@ -707,7 +775,207 @@ router.put('/sessions/:id', requireAuth, async (req: AuthRequest, res) => {
       }
     }
 
+    // Automated Email Communication: When mentor accepts/confirms session or adds video meeting link, notify student
+    try {
+      let studentEmail = '';
+      let studentName = '';
+      let mentorName = user.name || 'Your Mentor';
+      let mentorTitle = '';
+
+      if (isSupabaseConfigured() && supabase) {
+        if (updatedSession.studentId) {
+          const { data: stProf } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', updatedSession.studentId)
+            .maybeSingle();
+          if (stProf) {
+            studentEmail = stProf.email;
+            studentName = stProf.full_name || stProf.email.split('@')[0];
+          }
+        }
+
+        if (updatedSession.mentorId) {
+          const { data: mRow } = await supabase
+            .from('mentors')
+            .select('name, title')
+            .eq('id', updatedSession.mentorId)
+            .maybeSingle();
+          if (mRow) {
+            mentorName = mRow.name || mentorName;
+            mentorTitle = mRow.title || '';
+          }
+        }
+      }
+
+      if (!studentEmail && mongoose.connection.readyState === 1 && mongoose.Types.ObjectId.isValid(id)) {
+        const mReq = await MentorshipRequest.findById(id).populate('studentId').populate('mentorId');
+        if (mReq) {
+          if ((mReq.studentId as any)?.email) {
+            studentEmail = (mReq.studentId as any).email;
+            studentName = (mReq.studentId as any).name || studentName;
+          }
+          if ((mReq.mentorId as any)?.name) {
+            mentorName = (mReq.mentorId as any).name;
+            mentorTitle = (mReq.mentorId as any).title || mentorTitle;
+          }
+        }
+      }
+
+      // If status is confirmed/accepted or a new meeting link has been provided
+      const isConfirmedState = status === 'confirmed' || status === 'accepted' || updatedSession.status === 'confirmed';
+      if (studentEmail && (isConfirmedState || meetingLink)) {
+        sendStudentBookingAcceptedEmail({
+          studentEmail,
+          studentName: studentName || 'Learner',
+          mentorName,
+          mentorTitle,
+          topic: updatedSession.topic || '1:1 Technical Mentorship',
+          confirmedSlot: updatedSession.preferredSlot || 'Scheduled Time',
+          meetingLink: updatedSession.meetingLink || meetingLink,
+          mentorNotes: updatedSession.notesFromMentor,
+          bookingCode: updatedSession.bookingCode || `BK-${id.slice(0, 6).toUpperCase()}`,
+          sessionId: id,
+        }).catch((emailErr) => {
+          console.warn('Student booking confirmation email delivery notice:', emailErr.message);
+        });
+      }
+    } catch (e) {
+      console.warn('Error resolving student email for acceptance notification:', e);
+    }
+
     res.json(updatedSession);
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ============================================================================
+// 6. IN-PLATFORM COMMUNICATION: REPLIES & MESSAGES BETWEEN MENTOR & STUDENT
+// ============================================================================
+router.post('/sessions/:id/message', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { message, subject: customSubject } = req.body;
+    const user = req.user!;
+
+    if (!message || !message.trim()) {
+      return res.status(400).json({ message: 'Message content cannot be empty' });
+    }
+
+    let studentEmail = '';
+    let studentName = '';
+    let mentorEmail = '';
+    let mentorName = '';
+    let topic = '1:1 Technical Consultation';
+    let slot = '';
+    const bookingCode = `BK-${id.slice(0, 6).toUpperCase()}`;
+
+    // 1. Fetch from Supabase
+    if (isSupabaseConfigured() && supabase) {
+      const { data: sbReq } = await supabase
+        .from('mentorship_requests')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (sbReq) {
+        topic = sbReq.topic || topic;
+        slot = sbReq.requested_date
+          ? new Date(sbReq.requested_date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+          : (sbReq.preferred_slot || '');
+
+        if (sbReq.student_id) {
+          const { data: sp } = await supabase.from('profiles').select('email, full_name').eq('id', sbReq.student_id).maybeSingle();
+          if (sp) {
+            studentEmail = sp.email;
+            studentName = sp.full_name || sp.email.split('@')[0];
+          }
+        }
+
+        if (sbReq.mentor_id) {
+          const { data: mp } = await supabase.from('mentors').select('name, id').eq('id', sbReq.mentor_id).maybeSingle();
+          if (mp) {
+            mentorName = mp.name;
+            const { data: mentorUser } = await supabase.from('profiles').select('email').ilike('full_name', `%${mp.name}%`).maybeSingle();
+            if (mentorUser?.email) mentorEmail = mentorUser.email;
+          }
+        }
+
+        // Append message to student_note for permanent record
+        const isMentorSender = user.role === 'mentor' || (user.role as string) === 'super_admin' || (user.role as string) === 'admin';
+        const senderTag = isMentorSender ? `[Mentor ${user.name || 'Mentor'}]:` : `[Student ${user.name || 'Student'}]:`;
+        const updatedNote = sbReq.student_note
+          ? `${sbReq.student_note}\n\n${senderTag} ${message.trim()}`
+          : `${senderTag} ${message.trim()}`;
+
+        await supabase.from('mentorship_requests').update({ student_note: updatedNote }).eq('id', id);
+      }
+    }
+
+    // 2. Fetch from MongoDB
+    if (mongoose.connection.readyState === 1) {
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        const mReq = await MentorshipRequest.findById(id).populate('studentId').populate('mentorId');
+        if (mReq) {
+          if (!studentEmail && (mReq.studentId as any)?.email) {
+            studentEmail = (mReq.studentId as any).email;
+            studentName = (mReq.studentId as any).name || studentName;
+          }
+          if (!mentorName && (mReq.mentorId as any)?.name) {
+            mentorName = (mReq.mentorId as any).name;
+          }
+          topic = mReq.topic || topic;
+          slot = mReq.preferredSlot || slot;
+
+          const isMentorSender = user.role === 'mentor' || (user.role as string) === 'super_admin' || (user.role as string) === 'admin';
+          const senderTag = isMentorSender ? `[Mentor ${user.name || 'Mentor'}]:` : `[Student ${user.name || 'Student'}]:`;
+          const currNotes = mReq.notesFromMentor || '';
+          await MentorshipRequest.findByIdAndUpdate(id, {
+            notesFromMentor: currNotes ? `${currNotes}\n\n${senderTag} ${message.trim()}` : `${senderTag} ${message.trim()}`
+          });
+        }
+      }
+    }
+
+    // Determine sender and recipient
+    const isSenderMentor = user.role === 'mentor' || (user.role as string) === 'super_admin' || (user.role as string) === 'admin';
+    let targetRecipientEmail = '';
+    let targetRecipientName = '';
+    let senderRole: 'mentor' | 'student' = 'student';
+
+    if (isSenderMentor) {
+      // Mentor replying to student
+      targetRecipientEmail = studentEmail;
+      targetRecipientName = studentName || 'Learner';
+      senderRole = 'mentor';
+    } else {
+      // Student sending inquiry to mentor
+      targetRecipientEmail = mentorEmail || process.env.ADMIN_EMAIL || process.env.SMTP_USER || 'rishabhlabs@vrindopnishad.in';
+      targetRecipientName = mentorName || 'Mentor';
+      senderRole = 'student';
+    }
+
+    if (!targetRecipientEmail) {
+      targetRecipientEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER || 'rishabhlabs@vrindopnishad.in';
+    }
+
+    const emailSent = await sendMentorshipCommunicationEmail({
+      toEmail: targetRecipientEmail,
+      recipientName: targetRecipientName,
+      senderName: user.name || (isSenderMentor ? 'Your Mentor' : 'Learner'),
+      senderRole,
+      bookingCode,
+      topic,
+      slot,
+      message: message.trim(),
+    });
+
+    res.json({
+      success: true,
+      delivered: emailSent,
+      message: `Message transmitted and delivered via email to ${targetRecipientName} (${targetRecipientEmail}).`,
+    });
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }

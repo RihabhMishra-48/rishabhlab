@@ -23,6 +23,8 @@ import {
   Calendar,
   Shield,
   Video,
+  Mail,
+  Send,
   ExternalLink
 } from 'lucide-react';
 
@@ -103,6 +105,34 @@ export const MentorshipPage: React.FC = () => {
       return [];
     }
   });
+
+  // Student Direct Message to Mentor Modal state
+  const [studentMessageModalSession, setStudentMessageModalSession] = useState<any | null>(null);
+  const [studentMessageText, setStudentMessageText] = useState('');
+  const [isSendingStudentMessage, setIsSendingStudentMessage] = useState(false);
+  const [studentMessageNotice, setStudentMessageNotice] = useState<string | null>(null);
+
+  const handleSendStudentMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!studentMessageModalSession || !studentMessageText.trim()) return;
+    try {
+      setIsSendingStudentMessage(true);
+      const sid = studentMessageModalSession.id || studentMessageModalSession._id;
+      const res = await api.sendMentorshipMessage(sid, studentMessageText.trim());
+      setStudentMessageNotice(res.message || 'Message delivered to your mentor via email!');
+      setTimeout(() => {
+        setStudentMessageNotice(null);
+        setStudentMessageModalSession(null);
+        setStudentMessageText('');
+      }, 1500);
+      fetchMyBookings();
+    } catch (err: any) {
+      setStudentMessageNotice(err.message || 'Failed to send message.');
+      setTimeout(() => setStudentMessageNotice(null), 3500);
+    } finally {
+      setIsSendingStudentMessage(false);
+    }
+  };
 
   const commonTopics = [
     { id: 'Career Direction', label: 'Career Direction', icon: Compass, desc: 'Align your goals with hiring markets' },
@@ -486,18 +516,32 @@ export const MentorshipPage: React.FC = () => {
                   </span>
                 </div>
 
-                {s.meetLink && (
-                  <a
-                    href={s.meetLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold hover:bg-emerald-100 transition-colors"
+                <div className="flex items-center gap-2 pt-1">
+                  {s.meetLink && (
+                    <a
+                      href={s.meetLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold hover:bg-emerald-100 transition-colors"
+                    >
+                      <Video className="w-3.5 h-3.5" />
+                      <span>Join Video Call</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                  <button
+                    onClick={() => {
+                      setStudentMessageModalSession(s);
+                      setStudentMessageText('');
+                      setStudentMessageNotice(null);
+                    }}
+                    className={`py-1.5 px-3 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex items-center justify-center gap-1.5 ${s.meetLink ? '' : 'w-full'}`}
+                    title="Send email message to your mentor"
                   >
-                    <Video className="w-3.5 h-3.5" />
-                    <span>Join Video Call</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
+                    <Mail className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Message Mentor</span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -785,6 +829,122 @@ export const MentorshipPage: React.FC = () => {
                 </button>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Student to Mentor Direct Message Modal */}
+      {studentMessageModalSession && (
+        <div
+          onClick={() => setStudentMessageModalSession(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-[#1E1B1C] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl cursor-default"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-neutral-900 dark:text-white">
+                    Send Message to Mentor
+                  </h3>
+                  <p className="text-[11px] text-neutral-500">
+                    Delivered automatically to {studentMessageModalSession.mentorName}'s inbox.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setStudentMessageModalSession(null)}
+                className="p-1 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Mentor & Session Context Pill */}
+            <div className="p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+              <UserAvatar
+                src={studentMessageModalSession.mentorAvatar}
+                name={studentMessageModalSession.mentorName}
+                size="sm"
+              />
+              <div className="min-w-0 flex-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-neutral-900 dark:text-white truncate">
+                    {studentMessageModalSession.mentorName}
+                  </span>
+                  <span className="text-[10px] font-mono text-neutral-400">
+                    {studentMessageModalSession.id ? `BK-${studentMessageModalSession.id.slice(0, 6).toUpperCase()}` : 'BK-ONLINE'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-neutral-500 truncate">
+                  Topic: {studentMessageModalSession.topic} • {studentMessageModalSession.slot}
+                </p>
+              </div>
+            </div>
+
+            {studentMessageNotice && (
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
+                {studentMessageNotice}
+              </div>
+            )}
+
+            <form onSubmit={handleSendStudentMessage} className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                  Your Message or Question:
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={studentMessageText}
+                  onChange={(e) => setStudentMessageText(e.target.value)}
+                  placeholder="e.g. Hi mentor, here is my GitHub repository link and the exact issue I am facing with the database migration..."
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-hidden resize-none"
+                />
+              </div>
+
+              {/* Quick Template Chips */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] text-neutral-400 font-medium">Quick inserts:</span>
+                {[
+                  'Here is my GitHub repository link:',
+                  'I have a quick question about our agenda today.',
+                  'Can we focus on placement coding questions?',
+                ].map((txt) => (
+                  <button
+                    key={txt}
+                    type="button"
+                    onClick={() => setStudentMessageText((prev) => prev ? `${prev} ${txt}` : txt)}
+                    className="text-[10px] px-2 py-0.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                  >
+                    {txt.slice(0, 32)}...
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-neutral-200 dark:border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setStudentMessageModalSession(null)}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSendingStudentMessage || !studentMessageText.trim()}
+                  className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{isSendingStudentMessage ? 'Sending Email...' : 'Send Message'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

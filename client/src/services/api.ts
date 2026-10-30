@@ -573,5 +573,13 @@ export const api = {
     invalidateCache(/mentorship/);
     return res;
   },
+  sendMentorshipMessage: async (sessionId: string, message: string, subject?: string) => {
+    const res = await request<{ success: boolean; delivered: boolean; message: string }>(`/mentorship/sessions/${sessionId}/message`, {
+      method: 'POST',
+      body: JSON.stringify({ message, subject }),
+    });
+    invalidateCache(/mentorship/);
+    return res;
+  },
 };
 

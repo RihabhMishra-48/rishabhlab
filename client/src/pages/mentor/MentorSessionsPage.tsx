@@ -24,6 +24,8 @@ import {
   Trash2,
   Edit2,
   Settings,
+  Mail,
+  Send,
   X
 } from 'lucide-react';
 
@@ -58,6 +60,11 @@ export const MentorSessionsPage: React.FC = () => {
   const [meetingLinkInput, setMeetingLinkInput] = useState('');
   const [notesInput, setNotesInput] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
+
+  // Direct Communication Modal state
+  const [messageModalSession, setMessageModalSession] = useState<any | null>(null);
+  const [communicationMessage, setCommunicationMessage] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -223,6 +230,24 @@ export const MentorSessionsPage: React.FC = () => {
     setEditingSessionId(session._id || session.id);
     setMeetingLinkInput(session.meetingLink || 'https://meet.google.com/rsh-mentor-call');
     setNotesInput(session.notesFromMentor || '');
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageModalSession || !communicationMessage.trim()) return;
+    try {
+      setIsSendingMessage(true);
+      const sid = messageModalSession._id || messageModalSession.id;
+      const res = await api.sendMentorshipMessage(sid, communicationMessage.trim());
+      showNotification(res.message || 'Direct email message delivered to student!');
+      setMessageModalSession(null);
+      setCommunicationMessage('');
+      fetchSessions(false);
+    } catch (err: any) {
+      showNotification(err.message || 'Failed to send message to student.');
+    } finally {
+      setIsSendingMessage(false);
+    }
   };
 
   const filteredSessions = sessions.filter((s) => {
@@ -622,6 +647,17 @@ export const MentorSessionsPage: React.FC = () => {
 
                     <div className="flex items-center gap-2 shrink-0">
                       <button
+                        onClick={() => {
+                          setMessageModalSession(session);
+                          setCommunicationMessage('');
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-colors flex items-center gap-1.5"
+                        title="Send direct email reply to student"
+                      >
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>Message Student</span>
+                      </button>
+                      <button
                         onClick={() => startEditing(session)}
                         className="px-3 py-1.5 rounded-lg text-xs font-medium border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex items-center gap-1"
                       >
@@ -809,6 +845,117 @@ export const MentorSessionsPage: React.FC = () => {
                   className="px-5 py-2 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-bold hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors disabled:opacity-50"
                 >
                   {isSavingProfile ? 'Saving Changes...' : 'Save Profile Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Mentor Direct Communication Modal */}
+      {messageModalSession && (
+        <div
+          onClick={() => setMessageModalSession(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-[#1E1B1C] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl cursor-default"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-neutral-900 dark:text-white">
+                    Send Email Message to Student
+                  </h3>
+                  <p className="text-[11px] text-neutral-500">
+                    Delivered automatically via platform email to the student's inbox.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setMessageModalSession(null)}
+                className="p-1 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Student & Session Context Pill */}
+            <div className="p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+              <UserAvatar
+                src={messageModalSession.studentAvatar}
+                name={messageModalSession.studentName}
+                email={messageModalSession.studentEmail}
+                size="sm"
+              />
+              <div className="min-w-0 flex-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-neutral-900 dark:text-white truncate">
+                    {messageModalSession.studentName || 'Learner'}
+                  </span>
+                  <span className="text-[10px] font-mono text-neutral-400">
+                    {messageModalSession.bookingCode || 'BK-ONLINE'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-neutral-500 truncate">
+                  {messageModalSession.studentEmail || 'Registered Student'} • {messageModalSession.topic}
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSendMessage} className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                  Your Message / Guidance:
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={communicationMessage}
+                  onChange={(e) => setCommunicationMessage(e.target.value)}
+                  placeholder="e.g. Hi there! Looking forward to our call tomorrow. Please make sure to clone the repo locally and have your API endpoints list ready..."
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-hidden resize-none"
+                />
+              </div>
+
+              {/* Quick Template Chips */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] text-neutral-400 font-medium">Quick inserts:</span>
+                {[
+                  'Please have your GitHub repo and error logs ready.',
+                  'Can we move the call 30 minutes earlier?',
+                  'Looking forward to our roadmap session today!',
+                ].map((txt) => (
+                  <button
+                    key={txt}
+                    type="button"
+                    onClick={() => setCommunicationMessage((prev) => prev ? `${prev} ${txt}` : txt)}
+                    className="text-[10px] px-2 py-0.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                  >
+                    {txt.slice(0, 32)}...
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-neutral-200 dark:border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setMessageModalSession(null)}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSendingMessage || !communicationMessage.trim()}
+                  className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{isSendingMessage ? 'Sending Email...' : 'Send Email Message'}</span>
                 </button>
               </div>
             </form>
