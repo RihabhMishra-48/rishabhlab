@@ -462,6 +462,19 @@ export const api = {
     return res;
   },
 
+  // Admin Hackathons Aggregator & Supabase Pipeline
+  adminGetHackathons: () => request<any>('/admin/hackathons'),
+  adminSyncHackathons: async () => {
+    const res = await request<any>('/admin/hackathons/sync', { method: 'POST' });
+    invalidateCache(/hackathon/);
+    return res;
+  },
+  adminDeleteHackathon: async (id: string) => {
+    const res = await request<any>(`/admin/hackathons/${id}`, { method: 'DELETE' });
+    invalidateCache(/hackathon/);
+    return res;
+  },
+
   // Admin Colleges CRUD
   adminGetColleges: () => request<any[]>('/admin/colleges'),
   adminCreateCollege: async (data: any) => {

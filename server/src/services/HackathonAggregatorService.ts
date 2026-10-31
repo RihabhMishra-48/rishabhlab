@@ -5,6 +5,7 @@ import { LumaScraper } from '../scrapers/LumaScraper';
 import { HackathonValidationService } from './HackathonValidationService';
 import { Hackathon } from '../models/Hackathon';
 import { logger } from '../config/logger';
+import { supabase, isSupabaseConfigured } from '../config/supabase';
 
 export interface IPipelineReport {
   timestamp: string;
@@ -33,23 +34,26 @@ export class HackathonAggregatorService {
   }
 
   /**
-   * Executes the full multi-platform aggregation pipeline with defensive error isolation and upserts into MongoDB.
+   * Executes the full multi-platform aggregation pipeline.
+   * Scrapes live hackathons from Devpost, Unstop, Luma, validates them,
+   * purges/swaps stale public hackathons in Supabase, and stores fresh records directly in Supabase.
    */
   public async runAggregationPipeline(): Promise<IPipelineReport> {
     const startTime = Date.now();
-    logger.info('🚀 [Aggregator Pipeline] Commencing multi-platform scrape & sync...');
+    logger.info('🚀 [Aggregator Pipeline] Commencing admin-directed live scrape & sync to Supabase...');
 
     let totalScraped = 0;
     let totalUpserted = 0;
     let totalFailedValidation = 0;
     const platformReports: IPipelineReport['platformReports'] = [];
+    const allValidatedItems: any[] = [];
 
     // Run all scrapers concurrently with isolated error boundaries
     const scraperTasks = this.scrapers.map(async (scraper) => {
       const platformName = scraper.platform;
       try {
         const rawItems = await scraper.scrape();
-        let upsertedCount = 0;
+        let validForPlatform = 0;
         let validationFailures = 0;
 
         for (const item of rawItems) {
@@ -58,38 +62,15 @@ export class HackathonAggregatorService {
             validationFailures++;
             continue;
           }
-
-          try {
-            await Hackathon.findOneAndUpdate(
-              {
-                sourcePlatform: validated.sourcePlatform,
-                sourceId: validated.sourceId,
-              },
-              {
-                $set: {
-                  ...validated,
-                  scrapedAt: new Date(),
-                },
-              },
-              {
-                upsert: true,
-                new: true,
-                setDefaultsOnInsert: true,
-              }
-            );
-            upsertedCount++;
-          } catch (dbErr: any) {
-            logger.error(
-              `[Aggregator] DB upsert failed for ${validated.sourcePlatform}#${validated.sourceId}: ${dbErr.message}`
-            );
-          }
+          allValidatedItems.push(validated);
+          validForPlatform++;
         }
 
         return {
           platform: platformName,
           success: true,
           scraped: rawItems.length,
-          upserted: upsertedCount,
+          upserted: validForPlatform,
           failedValidation: validationFailures,
         };
       } catch (scraperErr: any) {
@@ -114,7 +95,6 @@ export class HackathonAggregatorService {
       if (res.status === 'fulfilled') {
         const val = res.value;
         totalScraped += val.scraped;
-        totalUpserted += val.upserted;
         totalFailedValidation += val.failedValidation;
         platformReports.push({
           platform: val.platform,
@@ -128,9 +108,80 @@ export class HackathonAggregatorService {
       }
     }
 
+    // SWAP: Store freshly scraped hackathons directly into Supabase database
+    if (isSupabaseConfigured() && supabase && allValidatedItems.length > 0) {
+      try {
+        const supabaseRows = allValidatedItems.map((item) => ({
+          user_id: null, // Public aggregated listing
+          hackathon_name: item.title,
+          selected_track: item.category,
+          problem_statement: item.summary || item.description || '',
+          target_event_date: item.applicationDeadline ? new Date(item.applicationDeadline).toISOString() : null,
+          phases: Array.isArray(item.timeline) ? item.timeline : [],
+          team_members: Array.isArray(item.tags) ? item.tags : [],
+          ai_outputs: {
+            id: item.id,
+            sourcePlatform: item.sourcePlatform,
+            sourceId: item.sourceId,
+            registrationUrl: item.registrationUrl,
+            prizes: item.prizes,
+            bannerUrl: item.bannerUrl || '',
+            location: item.location || 'Online / Virtual',
+            organization: item.organization || '',
+            eligibility: item.eligibility || 'Open to all builders and students globally.',
+            tags: item.tags || [],
+            status: item.status || 'open',
+            description: item.description || '',
+            scrapedAt: new Date().toISOString(),
+          },
+        }));
+
+        // 1. Purge stale public hackathons (only where user_id IS NULL, preserving all student personalized plans)
+        const { error: delErr } = await supabase.from('hackathons').delete().is('user_id', null);
+        if (delErr) {
+          logger.warn(`[Aggregator] Stale hackathons purge notice: ${delErr.message}`);
+        } else {
+          logger.info('[Aggregator] Stale public hackathons purged successfully from Supabase.');
+        }
+
+        // 2. Batch insert fresh scraped records in chunks of 50
+        const BATCH_SIZE = 50;
+        let insertedCount = 0;
+        for (let i = 0; i < supabaseRows.length; i += BATCH_SIZE) {
+          const chunk = supabaseRows.slice(i, i + BATCH_SIZE);
+          const { data: inserted, error: insErr } = await supabase.from('hackathons').insert(chunk).select('id');
+          if (!insErr && inserted) {
+            insertedCount += inserted.length;
+          } else if (insErr) {
+            logger.error(`[Aggregator] Supabase batch insert error: ${insErr.message}`);
+          }
+        }
+
+        totalUpserted = insertedCount;
+        logger.info(`✨ [Aggregator] Successfully stored ${insertedCount} live hackathons directly into Supabase database.`);
+      } catch (sbErr: any) {
+        logger.error(`[Aggregator] Supabase sync exception: ${sbErr.message}`);
+      }
+    }
+
+    // Also update MongoDB asynchronously for fallback/compatibility (non-blocking)
+    if (allValidatedItems.length > 0) {
+      (async () => {
+        try {
+          for (const item of allValidatedItems) {
+            await Hackathon.findOneAndUpdate(
+              { sourcePlatform: item.sourcePlatform, sourceId: item.sourceId },
+              { $set: { ...item, scrapedAt: new Date() } },
+              { upsert: true, new: true, setDefaultsOnInsert: true }
+            ).catch(() => null);
+          }
+        } catch (_) {}
+      })();
+    }
+
     const durationMs = Date.now() - startTime;
     logger.info(
-      `🏁 [Aggregator Pipeline] Completed in ${durationMs}ms. Scraped: ${totalScraped}, Upserted: ${totalUpserted}, Discarded: ${totalFailedValidation}`
+      `🏁 [Aggregator Pipeline] Completed in ${durationMs}ms. Scraped: ${totalScraped}, Stored in Supabase: ${totalUpserted}, Discarded: ${totalFailedValidation}`
     );
 
     return {
@@ -143,6 +194,8 @@ export class HackathonAggregatorService {
     };
   }
 }
+
+export const hackathonAggregatorService = new HackathonAggregatorService();
 
 export const aggregatorService = new HackathonAggregatorService();
 

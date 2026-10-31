@@ -10,6 +10,8 @@ import { Project } from '../models/Project';
 import { Mentor } from '../models/Mentorship';
 import { Roadmap } from '../models/Roadmap';
 import { DailyMission } from '../models/DailyMission';
+import { Hackathon } from '../models/Hackathon';
+import { hackathonAggregatorService } from '../services/HackathonAggregatorService';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
 
 const sanitizeAvatar = (url?: string | null) => {
@@ -2139,6 +2141,162 @@ router.delete('/users/:id', async (req, res) => {
     res.json({ success: true, message: `User deleted.` });
   } catch (err: any) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+// ============================================================================
+// 9. ADMIN HACKATHONS AGGREGATOR & SUPABASE PIPELINE
+// ============================================================================
+
+// GET /api/admin/hackathons
+router.get('/hackathons', async (req, res) => {
+  try {
+    let hackathons: any[] = [];
+    let total = 0;
+    let activeCount = 0;
+    let lastScrapedAt: string | null = null;
+    const platformMap: Record<string, number> = { Devpost: 0, Unstop: 0, Luma: 0 };
+    const now = new Date();
+
+    // 1. Primary: Load live public hackathons stored directly in Supabase
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data: sbData, error: sbErr } = await supabase
+          .from('hackathons')
+          .select('*')
+          .is('user_id', null)
+          .order('target_event_date', { ascending: true, nullsFirst: false });
+
+        if (!sbErr && sbData && sbData.length > 0) {
+          total = sbData.length;
+          hackathons = sbData.map((h: any) => {
+            const meta = h.ai_outputs || {};
+            const p = meta.sourcePlatform || 'Devpost';
+            platformMap[p] = (platformMap[p] || 0) + 1;
+            const deadline = h.target_event_date ? new Date(h.target_event_date) : null;
+            const isClosed = meta.status === 'closed' || Boolean(deadline && deadline.getTime() < now.getTime());
+            if (!isClosed) activeCount++;
+            if (meta.scrapedAt && (!lastScrapedAt || meta.scrapedAt > lastScrapedAt)) {
+              lastScrapedAt = meta.scrapedAt;
+            }
+
+            return {
+              _id: h.id,
+              id: meta.id || h.id,
+              title: h.hackathon_name,
+              category: h.selected_track || 'Open Innovation',
+              summary: h.problem_statement || '',
+              description: meta.description || h.problem_statement || '',
+              registrationUrl: meta.registrationUrl || '',
+              sourcePlatform: meta.sourcePlatform || 'Devpost',
+              sourceId: meta.sourceId || '',
+              prizes: meta.prizes || { total: 'TBD', breakdown: [] },
+              timeline: Array.isArray(h.phases) ? h.phases : [],
+              tags: Array.isArray(h.team_members) ? h.team_members : (meta.tags || []),
+              applicationDeadline: deadline ? deadline.toISOString() : null,
+              location: meta.location || 'Online / Virtual',
+              bannerUrl: meta.bannerUrl || '',
+              organization: meta.organization || '',
+              eligibility: meta.eligibility || 'Open to all builders and students globally.',
+              status: isClosed ? 'closed' : meta.status || 'open',
+              isClosed,
+              scrapedAt: meta.scrapedAt || h.created_at,
+            };
+          });
+        }
+      } catch (sbErr) {
+        console.warn('[Admin Hackathons] Supabase fetch notice:', sbErr);
+      }
+    }
+
+    // 2. Fallback to MongoDB if Supabase returned 0 items
+    if (hackathons.length === 0 && mongoose.connection.readyState === 1) {
+      try {
+        const mongoList = await Hackathon.find({ title: { $exists: true, $ne: '' } })
+          .sort({ applicationDeadline: 1 })
+          .lean();
+        if (mongoList && mongoList.length > 0) {
+          total = mongoList.length;
+          hackathons = mongoList.map((h: any) => {
+            const deadline = h.applicationDeadline ? new Date(h.applicationDeadline) : null;
+            const isClosed = h.status === 'closed' || Boolean(deadline && deadline.getTime() < now.getTime());
+            if (!isClosed) activeCount++;
+            platformMap[h.sourcePlatform] = (platformMap[h.sourcePlatform] || 0) + 1;
+            return {
+              ...h,
+              _id: h._id ? h._id.toString() : h.id,
+              isClosed,
+              status: isClosed ? 'closed' : h.status || 'open',
+            };
+          });
+        }
+      } catch (_) {}
+    }
+
+    res.json({
+      success: true,
+      total,
+      activeCount,
+      closedCount: total - activeCount,
+      lastScrapedAt,
+      platforms: Object.entries(platformMap).map(([platform, count]) => ({ platform, count })),
+      hackathons,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/admin/hackathons/sync (Swaps old public records and saves fresh scraped hackathons directly into Supabase)
+router.post('/hackathons/sync', async (req, res) => {
+  try {
+    const report = await hackathonAggregatorService.runAggregationPipeline();
+    res.json({
+      success: true,
+      message: `Live scraping complete! Stale records swapped and ${report.totalUpserted} live hackathons stored directly in Supabase.`,
+      report,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: 'Scraping and sync pipeline failed: ' + err.message });
+  }
+});
+
+// DELETE /api/admin/hackathons/:id
+router.delete('/hackathons/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    let deleted = false;
+
+    // 1. Delete from Supabase
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUUID) {
+          await supabase.from('hackathons').delete().eq('id', id).is('user_id', null);
+          deleted = true;
+        } else {
+          const { data: allH } = await supabase.from('hackathons').select('id, ai_outputs').is('user_id', null);
+          const matched = (allH || []).find((h: any) => h.id === id || h.ai_outputs?.id === id || h.ai_outputs?.sourceId === id);
+          if (matched) {
+            await supabase.from('hackathons').delete().eq('id', matched.id);
+            deleted = true;
+          }
+        }
+      } catch (sbErr) {
+        console.warn('[Admin Hackathons] Supabase delete notice:', sbErr);
+      }
+    }
+
+    // 2. Also delete from MongoDB if connected
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await Hackathon.deleteOne({ $or: [{ id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }] });
+      } catch (_) {}
+    }
+
+    res.json({ success: true, message: 'Hackathon listing removed from database.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

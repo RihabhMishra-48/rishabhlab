@@ -43,10 +43,12 @@ import {
   GraduationCap,
   UserCheck,
   RefreshCw,
-  Building2
+  Building2,
+  Trophy,
+  Globe
 } from 'lucide-react';
 
-type AdminTab = 'users' | 'mentors' | 'colleges' | 'questions' | 'roadmaps' | 'tasks' | 'pricing' | 'overview';
+type AdminTab = 'users' | 'mentors' | 'hackathons' | 'colleges' | 'questions' | 'roadmaps' | 'tasks' | 'pricing' | 'overview';
 
 export const AdminDashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -58,6 +60,12 @@ export const AdminDashboardPage: React.FC = () => {
   const [adminData, setAdminData] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [mentors, setMentors] = useState<any[]>([]);
+  const [adminHackathons, setAdminHackathons] = useState<any[]>([]);
+  const [hackathonStats, setHackathonStats] = useState<any>(null);
+  const [isSyncingHackathons, setIsSyncingHackathons] = useState(false);
+  const [hackathonPlatformFilter, setHackathonPlatformFilter] = useState('All');
+  const [hackathonCategoryFilter, setHackathonCategoryFilter] = useState('All');
+  const [hackathonSearch, setHackathonSearch] = useState('');
   const [colleges, setColleges] = useState<any[]>([]);
   const [collegeModalOpen, setCollegeModalOpen] = useState(false);
   const [newCollege, setNewCollege] = useState({
@@ -126,7 +134,7 @@ export const AdminDashboardPage: React.FC = () => {
 
     try {
       setLoading(true);
-      const [overviewData, mentorsData, problemsData, roadmapsData, missionsData, pricingData, usersData, collegesData] = await Promise.all([
+      const [overviewData, mentorsData, problemsData, roadmapsData, missionsData, pricingData, usersData, collegesData, hackathonsData] = await Promise.all([
         api.getAdminOverview().catch(() => null),
         api.adminGetMentors().catch(() => []),
         api.adminGetProblems().catch(() => []),
@@ -135,7 +143,13 @@ export const AdminDashboardPage: React.FC = () => {
         api.getPricingPlans().catch(() => []),
         api.adminGetUsers().catch(() => []),
         api.adminGetColleges().catch(() => []),
+        api.adminGetHackathons().catch(() => ({ hackathons: [], platforms: [] })),
       ]);
+
+      if (hackathonsData && Array.isArray(hackathonsData.hackathons)) {
+        setAdminHackathons(hackathonsData.hackathons);
+        setHackathonStats(hackathonsData);
+      }
 
       let finalUsers = Array.isArray(usersData) && usersData.length > 0 ? usersData : [];
       let finalMentors = (Array.isArray(mentorsData) && mentorsData.length > 0 ? mentorsData : []).map((m: any) => ({
@@ -331,6 +345,7 @@ export const AdminDashboardPage: React.FC = () => {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'mentors' }, () => fetchAllData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'colleges' }, () => fetchAllData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'mentorship_requests' }, () => fetchAllData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'hackathons' }, () => fetchAllData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'pricing_plans' }, () => fetchAllData())
         .subscribe();
 
@@ -531,6 +546,45 @@ export const AdminDashboardPage: React.FC = () => {
       showNotification('Error removing mentor: ' + (err.message || 'Server error'));
     }
   };
+
+  // --------------------------------------------------------------------------
+  // HACKATHON AGGREGATOR & SUPABASE PIPELINE HANDLERS
+  // --------------------------------------------------------------------------
+  const handleSyncHackathons = async () => {
+    try {
+      setIsSyncingHackathons(true);
+      showNotification('Multi-platform scrape & sync initiated directly to Supabase...');
+      const res = await api.adminSyncHackathons();
+      const fresh = await api.adminGetHackathons().catch(() => null);
+      if (fresh && fresh.hackathons) {
+        setAdminHackathons(fresh.hackathons);
+        setHackathonStats(fresh);
+      }
+      showNotification(res.message || 'Live hackathons successfully swapped and stored into Supabase database!');
+    } catch (err: any) {
+      showNotification('Error syncing hackathons: ' + (err.message || 'Scrape failed'));
+    } finally {
+      setIsSyncingHackathons(false);
+    }
+  };
+
+  const handleDeleteHackathon = async (id: string, title: string) => {
+    if (!window.confirm(`Are you sure you want to remove hackathon "${title}"?`)) return;
+    try {
+      await api.adminDeleteHackathon(id);
+      setAdminHackathons((prev) => prev.filter((h) => h._id !== id && h.id !== id));
+      showNotification(`Hackathon "${title}" removed.`);
+    } catch (err: any) {
+      showNotification('Error deleting hackathon: ' + err.message);
+    }
+  };
+
+  // Auto-sync hackathons if admin switches to hackathons tab and database is empty
+  useEffect(() => {
+    if (activeTab === 'hackathons' && !loading && adminHackathons.length === 0 && !isSyncingHackathons) {
+      handleSyncHackathons();
+    }
+  }, [activeTab]);
 
   const handleCreateCollege = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -949,6 +1003,16 @@ export const AdminDashboardPage: React.FC = () => {
               <span>Add Mentor</span>
             </button>
           )}
+          {activeTab === 'hackathons' && (
+            <button
+              onClick={handleSyncHackathons}
+              disabled={isSyncingHackathons}
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncingHackathons ? 'animate-spin' : ''}`} />
+              <span>{isSyncingHackathons ? 'Scraping & Syncing...' : 'Scrape & Sync to Supabase'}</span>
+            </button>
+          )}
           {activeTab === 'colleges' && (
             <button
               onClick={() => setCollegeModalOpen(true)}
@@ -1015,6 +1079,20 @@ export const AdminDashboardPage: React.FC = () => {
           <span>Mentors</span>
           <span className="px-1.5 py-0.5 rounded-md text-[10px] bg-neutral-800/20 dark:bg-neutral-200/20">
             {mentors.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('hackathons')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap ${activeTab === 'hackathons'
+            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+            : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
+            }`}
+        >
+          <Trophy className="w-4 h-4" />
+          <span>Hackathons</span>
+          <span className="px-1.5 py-0.5 rounded-md text-[10px] bg-neutral-800/20 dark:bg-neutral-200/20">
+            {adminHackathons.length}
           </span>
         </button>
 
@@ -1450,6 +1528,234 @@ export const AdminDashboardPage: React.FC = () => {
                     </div>
                   </div>
                 ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* TAB: HACKATHONS AGGREGATOR & SUPABASE PIPELINE                       */}
+      {/* ==================================================================== */}
+      {activeTab === 'hackathons' && (
+        <div className="space-y-6">
+          {/* Header & Live Status */}
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#1a1a1a] border border-neutral-200/90 dark:border-neutral-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold font-mono uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
+                  <Sparkles className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  Supabase Live Database Pipeline
+                </span>
+                <span className="flex items-center gap-1 text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                  Direct Cloud Feed
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
+                Live Hackathons Aggregator
+              </h2>
+              <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 max-w-2xl leading-relaxed">
+                Scrapes verified global hackathons from Devpost, Unstop, and Luma. Fresh records are stored directly into the Supabase PostgreSQL database, ensuring fast, zero-delay load times for students.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleSyncHackathons}
+                disabled={isSyncingHackathons}
+                className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${isSyncingHackathons ? 'animate-spin' : ''}`} />
+                <span>{isSyncingHackathons ? 'Scraping Live Feed...' : 'Scrape & Sync to Supabase'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-neutral-200/90 dark:border-neutral-800 shadow-xs space-y-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Total in Supabase</span>
+              <p className="text-2xl font-black text-neutral-900 dark:text-white">{adminHackathons.length}</p>
+              <span className="text-[10px] text-neutral-500">Live aggregated records</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-neutral-200/90 dark:border-neutral-800 shadow-xs space-y-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Active & Open</span>
+              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                {adminHackathons.filter(h => !h.isClosed).length}
+              </p>
+              <span className="text-[10px] text-neutral-500">Accepting submissions</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-neutral-200/90 dark:border-neutral-800 shadow-xs space-y-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Platforms</span>
+              <div className="flex items-center gap-1.5 text-xs font-bold pt-1">
+                <span className="text-blue-500">Devpost ({adminHackathons.filter(h => h.sourcePlatform?.toLowerCase() === 'devpost').length})</span>
+                <span className="text-neutral-400">•</span>
+                <span className="text-amber-500">Unstop ({adminHackathons.filter(h => h.sourcePlatform?.toLowerCase() === 'unstop').length})</span>
+                <span className="text-neutral-400">•</span>
+                <span className="text-purple-500">Luma ({adminHackathons.filter(h => h.sourcePlatform?.toLowerCase() === 'luma').length})</span>
+              </div>
+              <span className="text-[10px] text-neutral-500">Multi-source ingestion</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#1a1a1a] border border-neutral-200/90 dark:border-neutral-800 shadow-xs space-y-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Last Synced</span>
+              <p className="text-sm font-bold text-neutral-900 dark:text-white truncate pt-1">
+                {hackathonStats?.lastScrapedAt ? new Date(hackathonStats.lastScrapedAt).toLocaleTimeString() : 'Ready'}
+              </p>
+              <span className="text-[10px] text-neutral-500">
+                {hackathonStats?.lastScrapedAt ? new Date(hackathonStats.lastScrapedAt).toLocaleDateString() : 'Click sync above'}
+              </span>
+            </div>
+          </div>
+
+          {/* Search & Platform Filter Pills */}
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-neutral-400" />
+              <input
+                type="text"
+                placeholder="Search hackathons by name, tags, or host..."
+                value={hackathonSearch}
+                onChange={(e) => setHackathonSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+              {['All', 'Devpost', 'Unstop', 'Luma'].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setHackathonPlatformFilter(p)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
+                    hackathonPlatformFilter === p
+                      ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-transparent shadow-xs'
+                      : 'bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-800 hover:text-neutral-900 dark:hover:text-white'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* List of Hackathons */}
+          {adminHackathons.length === 0 ? (
+            <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#1a1a1a] border border-neutral-200/90 dark:border-neutral-800 space-y-4">
+              <Trophy className="w-12 h-12 text-neutral-400 mx-auto" />
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+                  No hackathons in Supabase yet
+                </h3>
+                <p className="text-xs text-neutral-500 max-w-md mx-auto">
+                  Click the button below to scrape live events from Devpost, Unstop, and Luma and store them directly into the Supabase database.
+                </p>
+              </div>
+              <button
+                onClick={handleSyncHackathons}
+                disabled={isSyncingHackathons}
+                className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-2 shadow-sm transition-colors cursor-pointer"
+              >
+                <RefreshCw className={`w-4 h-4 ${isSyncingHackathons ? 'animate-spin' : ''}`} />
+                <span>{isSyncingHackathons ? 'Scraping Live Feed...' : 'Scrape & Populate Supabase'}</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {adminHackathons
+                .filter((h) => {
+                  if (hackathonPlatformFilter !== 'All' && h.sourcePlatform?.toLowerCase() !== hackathonPlatformFilter.toLowerCase()) {
+                    return false;
+                  }
+                  if (hackathonSearch.trim()) {
+                    const q = hackathonSearch.toLowerCase().trim();
+                    const titleMatch = (h.title || '').toLowerCase().includes(q);
+                    const orgMatch = (h.organization || '').toLowerCase().includes(q);
+                    const catMatch = (h.category || '').toLowerCase().includes(q);
+                    return titleMatch || orgMatch || catMatch;
+                  }
+                  return true;
+                })
+                .map((hackathon) => {
+                  const deadlineStr = hackathon.applicationDeadline
+                    ? new Date(hackathon.applicationDeadline).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })
+                    : 'Open Window';
+
+                  return (
+                    <div
+                      key={hackathon._id || hackathon.id}
+                      className="p-5 rounded-2xl bg-white dark:bg-[#212121] border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex flex-col justify-between space-y-4"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <span
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
+                              hackathon.sourcePlatform?.toLowerCase() === 'unstop'
+                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                                : hackathon.sourcePlatform?.toLowerCase() === 'luma'
+                                ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                                : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                            }`}
+                          >
+                            {hackathon.sourcePlatform || 'Devpost'}
+                          </span>
+
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                            {hackathon.category || 'Open Innovation'}
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="font-bold text-sm text-neutral-900 dark:text-white line-clamp-2 leading-snug">
+                            {hackathon.title}
+                          </h4>
+                          <p className="text-[11px] text-neutral-500 mt-1 line-clamp-1">
+                            {hackathon.organization || 'Ecosystem Host'} • {hackathon.location || 'Online'}
+                          </p>
+                        </div>
+
+                        <p className="text-xs text-neutral-600 dark:text-neutral-300 line-clamp-2 leading-relaxed">
+                          {hackathon.summary || hackathon.description}
+                        </p>
+
+                        <div className="flex items-center justify-between text-xs pt-1 border-t border-neutral-100 dark:border-neutral-800 text-neutral-500">
+                          <span className="font-medium">
+                            Prizes: <strong className="text-emerald-600 dark:text-emerald-400">{typeof hackathon.prizes === 'object' ? hackathon.prizes?.total || 'TBD' : hackathon.prizes || 'TBD'}</strong>
+                          </span>
+                          <span className="text-[11px]">
+                            {deadlineStr}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                        {hackathon.registrationUrl && (
+                          <a
+                            href={hackathon.registrationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                          >
+                            <span>Open Event</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                        <button
+                          onClick={() => handleDeleteHackathon(hackathon._id || hackathon.id, hackathon.title)}
+                          className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold flex items-center justify-center cursor-pointer"
+                          title="Remove from database"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           )}
         </div>

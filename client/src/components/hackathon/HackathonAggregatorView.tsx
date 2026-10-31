@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { AggregatedHackathon } from '../../types';
 import { api } from '../../services/api';
+import { supabase, isSupabaseConfigured } from '../../services/supabase';
 import { HackathonDetailModal } from './HackathonDetailModal';
 import { ConnectMentorModal } from './ConnectMentorModal';
 import {
@@ -70,6 +71,23 @@ export const HackathonAggregatorView: React.FC = () => {
   useEffect(() => {
     loadHackathons();
   }, [selectedCategory, selectedPlatform]);
+
+  // Real-time Supabase listener: auto-update student view when admin syncs/scrapes fresh hackathons
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+    try {
+      const channel = supabase
+        .channel('student-hackathons-live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'hackathons' }, () => {
+          api.invalidateCache(/hackathon/);
+          loadHackathons();
+        })
+        .subscribe();
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } catch (_) {}
+  }, []);
 
   // Client-side search filtering
   const filteredHackathons = useMemo(() => {

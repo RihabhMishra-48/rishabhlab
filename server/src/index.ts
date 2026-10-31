@@ -145,14 +145,9 @@ const startServer = async () => {
         });
 
         const count = await Hackathon.countDocuments({ title: { $exists: true, $ne: '' } });
-        if (count < 25) {
-          logger.info(`🌱 [Startup] Database has ${count} records. Ingesting full verified live hackathons pipeline in background...`);
-          schedulerService.executeJob().catch((e) => logger.warn('[Startup] Initial scrape notice:', e.message));
-        } else {
-          logger.info(`✨ [Startup] Loaded ${count} verified aggregated hackathons from MongoDB cache.`);
-        }
+        logger.info(`✨ [Startup] System ready. Live hackathons are synchronized directly in Supabase database (${count} cached in MongoDB).`);
       } catch (e: any) {
-        logger.warn('[Startup] MongoDB check notice:', e.message);
+        logger.warn('[Startup] Database check notice:', e.message);
       }
     })();
   });
