@@ -18,8 +18,8 @@ export class DevpostScraper extends BaseScraper {
 
       const totalCount = firstPageResponse?.meta?.total_count || 0;
       const perPage = firstPageResponse?.meta?.per_page || 9;
-      const totalPages = totalCount > 0 ? Math.min(25, Math.ceil(totalCount / perPage)) : 7;
-      logger.info(`[${this.platform}] Devpost reports ${totalCount} live hackathons. Ingesting across ${totalPages} pages...`);
+      const totalPages = totalCount > 0 ? Math.ceil(totalCount / perPage) : 1;
+      logger.info(`[${this.platform}] Devpost reports ${totalCount} live hackathons. Ingesting across all ${totalPages} pages without restrictions...`);
 
       const pages: any[] = [];
       if (firstPageResponse?.hackathons) {

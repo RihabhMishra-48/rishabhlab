@@ -12,26 +12,44 @@ export class UnstopScraper extends BaseScraper {
     const results: IHackathonNormalized[] = [];
 
     try {
-      // Ingest live hackathons across top 10 search result pages (50 items/page = 500 opportunities scanned)
-      let consecutiveZeroPages = 0;
-      for (let p = 1; p <= 10; p++) {
-        try {
-          const url = `https://unstop.com/api/public/opportunity/search-result?opportunity=hackathons&per_page=50&page=${p}`;
-          const response = await this.fetchJson<any>(url);
+      const opportunityEndpoints = [
+        { opportunity: 'hackathons', filterKeywords: false },
+        { opportunity: 'hiring-challenges', filterKeywords: false },
+        { opportunity: 'competitions', filterKeywords: true },
+      ];
 
-          const items = response?.data?.data;
-          let unexpiredOnPage = 0;
+      const techKeywords = [
+        'hack', 'code', 'coding', 'developer', 'software', 'tech', 'ai', 'ml',
+        'web', 'app', 'cloud', 'data', 'cyber', 'robot', 'algo', 'engineer',
+        'build', 'program', 'stack', 'fullstack', 'frontend', 'backend'
+      ];
 
-          if (Array.isArray(items) && items.length > 0) {
+      const seenIds = new Set<string>();
+
+      for (const target of opportunityEndpoints) {
+        logger.info(`[${this.platform}] Scanning all open ${target.opportunity} dynamically without page restrictions...`);
+        let page = 1;
+        let lastPage = 1;
+
+        while (page <= lastPage) {
+          try {
+            const url = `https://unstop.com/api/public/opportunity/search-result?opportunity=${target.opportunity}&per_page=50&page=${page}&oppstatus=open`;
+            const response = await this.fetchJson<any>(url);
+
+            if (response?.data?.last_page && response.data.last_page > lastPage) {
+              lastPage = response.data.last_page;
+            }
+
+            const items = response?.data?.data;
+            if (!Array.isArray(items) || items.length === 0) {
+              break;
+            }
+
             for (const item of items) {
-              if (!item.title) continue;
+              if (!item.title || !item.id) continue;
+              const sourceId = String(item.id);
+              if (seenIds.has(sourceId)) continue;
 
-              // Real, working official URL
-              const registrationUrl =
-                item.seo_url ||
-                (item.public_url ? `https://unstop.com/${item.public_url}` : `https://unstop.com/hackathons`);
-
-              // Strip HTML tags for clean card summary
               const rawDetails = item.details || '';
               const cleanSummary = rawDetails
                 ? rawDetails.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300)
@@ -50,6 +68,13 @@ export class UnstopScraper extends BaseScraper {
                 });
               }
 
+              // For competitions, strictly ensure tech / software / coding relevance
+              if (target.filterKeywords) {
+                const combinedText = `${item.title} ${cleanSummary} ${tags.join(' ')}`.toLowerCase();
+                const hasTechKeyword = techKeywords.some((k) => combinedText.includes(k));
+                if (!hasTechKeyword) continue;
+              }
+
               const category = this.classifyCategory(
                 `${item.title} ${cleanSummary} ${tags.join(' ')}`,
                 item.title,
@@ -62,7 +87,12 @@ export class UnstopScraper extends BaseScraper {
                 continue; // Strictly discard closed hackathons
               }
 
-              unexpiredOnPage++;
+              seenIds.add(sourceId);
+
+              // Real, working official URL
+              const registrationUrl =
+                item.seo_url ||
+                (item.public_url ? `https://unstop.com/${item.public_url}` : `https://unstop.com/hackathons`);
 
               const location = item.address_with_country_logo?.city
                 ? `${item.address_with_country_logo.city}, India`
@@ -77,10 +107,10 @@ export class UnstopScraper extends BaseScraper {
                 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80';
 
               const normalized: IHackathonNormalized = {
-                id: this.generateId(this.platform, String(item.id || item.short_id || registrationUrl)),
+                id: this.generateId(this.platform, sourceId),
                 title: item.title.trim(),
                 sourcePlatform: this.platform,
-                sourceId: String(item.id),
+                sourceId,
                 category,
                 registrationUrl,
                 summary: cleanSummary,
@@ -113,19 +143,12 @@ export class UnstopScraper extends BaseScraper {
 
               results.push(normalized);
             }
-          }
 
-          if (unexpiredOnPage === 0 && p > 5) {
-            consecutiveZeroPages++;
-            if (consecutiveZeroPages >= 2) {
-              logger.info(`[${this.platform}] Reached end of unexpired listings at page ${p}. Stopping further page scans.`);
-              break;
-            }
-          } else {
-            consecutiveZeroPages = 0;
+            page++;
+          } catch (pageErr: any) {
+            logger.warn(`[${this.platform}] ${target.opportunity} page ${page} fetch notice: ${pageErr.message}`);
+            page++;
           }
-        } catch (pageErr: any) {
-          logger.warn(`[${this.platform}] Page ${p} fetch notice: ${pageErr.message}`);
         }
       }
     } catch (err: any) {
