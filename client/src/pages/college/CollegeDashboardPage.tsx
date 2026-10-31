@@ -44,23 +44,29 @@ export const CollegeDashboardPage: React.FC = () => {
   // Real-time listener for college and profiles changes
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
-    try {
-      const channel = supabase
-        .channel('college-dashboard-live')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'colleges' }, () => {
-          fetchCollege();
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
-          fetchCollege();
-        })
-        .subscribe();
+    let channel: any = null;
+    const timer = setTimeout(() => {
+      try {
+        channel = supabase
+          .channel('college-dashboard-live')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'colleges' }, () => {
+            fetchCollege();
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+            fetchCollege();
+          })
+          .subscribe();
+      } catch (e) {
+        console.warn('Realtime subscription notice:', e);
+      }
+    }, 150);
 
-      return () => {
+    return () => {
+      clearTimeout(timer);
+      if (channel) {
         supabase.removeChannel(channel);
-      };
-    } catch (e) {
-      console.warn('Realtime subscription notice:', e);
-    }
+      }
+    };
   }, [requestedIdentifier]);
 
   const college = data?.college;

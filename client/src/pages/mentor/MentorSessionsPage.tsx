@@ -160,19 +160,26 @@ export const MentorSessionsPage: React.FC = () => {
   // Real-time listener for live updates across browser windows
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
-    try {
-      const channel = supabase
-        .channel('mentor-sessions-realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'mentorship_requests' }, () => {
-          fetchSessions(false);
-        })
-        .subscribe();
-      return () => {
+    let channel: any = null;
+    const timer = setTimeout(() => {
+      try {
+        channel = supabase
+          .channel('mentor-sessions-realtime')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'mentorship_requests' }, () => {
+            fetchSessions(false);
+          })
+          .subscribe();
+      } catch (e) {
+        console.warn('Realtime sessions subscription notice:', e);
+      }
+    }, 150);
+
+    return () => {
+      clearTimeout(timer);
+      if (channel) {
         supabase.removeChannel(channel);
-      };
-    } catch (e) {
-      console.warn('Realtime sessions subscription notice:', e);
-    }
+      }
+    };
   }, []);
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {

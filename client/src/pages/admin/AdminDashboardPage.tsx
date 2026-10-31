@@ -338,23 +338,29 @@ export const AdminDashboardPage: React.FC = () => {
   // Real-time Supabase database listener for live database sync across tabs
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
-    try {
-      const channel = supabase
-        .channel('admin-db-realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchAllData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'mentors' }, () => fetchAllData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'colleges' }, () => fetchAllData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'mentorship_requests' }, () => fetchAllData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'hackathons' }, () => fetchAllData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'pricing_plans' }, () => fetchAllData())
-        .subscribe();
+    let channel: any = null;
+    const timer = setTimeout(() => {
+      try {
+        channel = supabase
+          .channel('admin-db-realtime')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchAllData())
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'mentors' }, () => fetchAllData())
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'colleges' }, () => fetchAllData())
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'mentorship_requests' }, () => fetchAllData())
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'hackathons' }, () => fetchAllData())
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'pricing_plans' }, () => fetchAllData())
+          .subscribe();
+      } catch (subErr) {
+        console.warn('Real-time subscription notice:', subErr);
+      }
+    }, 150);
 
-      return () => {
+    return () => {
+      clearTimeout(timer);
+      if (channel) {
         supabase.removeChannel(channel);
-      };
-    } catch (subErr) {
-      console.warn('Real-time subscription notice:', subErr);
-    }
+      }
+    };
   }, []);
 
   // Close any open modal on Escape key press

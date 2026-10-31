@@ -75,18 +75,25 @@ export const HackathonAggregatorView: React.FC = () => {
   // Real-time Supabase listener: auto-update student view when admin syncs/scrapes fresh hackathons
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
-    try {
-      const channel = supabase
-        .channel('student-hackathons-live')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'hackathons' }, () => {
-          api.invalidateCache(/hackathon/);
-          loadHackathons();
-        })
-        .subscribe();
-      return () => {
+    let channel: any = null;
+    const timer = setTimeout(() => {
+      try {
+        channel = supabase
+          .channel('student-hackathons-live')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'hackathons' }, () => {
+            api.invalidateCache(/hackathon/);
+            loadHackathons();
+          })
+          .subscribe();
+      } catch (_) {}
+    }, 150);
+
+    return () => {
+      clearTimeout(timer);
+      if (channel) {
         supabase.removeChannel(channel);
-      };
-    } catch (_) {}
+      }
+    };
   }, []);
 
   // Client-side search filtering

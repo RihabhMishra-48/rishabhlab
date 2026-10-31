@@ -192,20 +192,27 @@ export const MentorshipPage: React.FC = () => {
   // Real-time Supabase listener for live mentor catalog updates from Admin
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
-    try {
-      const channel = supabase
-        .channel('mentors-catalog-live')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'mentors' }, () => {
-          api.invalidateCache(/mentor/);
-          fetchMentors();
-        })
-        .subscribe();
-      return () => {
+    let channel: any = null;
+    const timer = setTimeout(() => {
+      try {
+        channel = supabase
+          .channel('mentors-catalog-live')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'mentors' }, () => {
+            api.invalidateCache(/mentor/);
+            fetchMentors();
+          })
+          .subscribe();
+      } catch (e) {
+        console.warn('Realtime mentors subscription notice:', e);
+      }
+    }, 150);
+
+    return () => {
+      clearTimeout(timer);
+      if (channel) {
         supabase.removeChannel(channel);
-      };
-    } catch (e) {
-      console.warn('Realtime mentors subscription notice:', e);
-    }
+      }
+    };
   }, [selectedDomain]);
 
   useEffect(() => {
