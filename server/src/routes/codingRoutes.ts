@@ -236,19 +236,37 @@ router.post('/submit', requireAuth, async (req: AuthRequest, res) => {
       // Non-blocking submission logging
     }
 
-    // If accepted, reward user in StudentProfile
-    if (result.status === 'Accepted' && user._id) {
-      try {
-        await StudentProfile.findOneAndUpdate(
-          { userId: user._id },
-          {
-            $inc: {
-              totalPoints: problem.difficulty === 'Hard' ? 100 : problem.difficulty === 'Medium' ? 50 : 25,
-              skillsCompleted: 1,
-            },
+    // If accepted, reward user in Supabase profiles & StudentProfile
+    if (result.status === 'Accepted' && (user.id || user._id)) {
+      const incPoints = problem.difficulty === 'Hard' ? 100 : problem.difficulty === 'Medium' ? 50 : 25;
+      
+      // Update Supabase profile
+      if (supabase) {
+        try {
+          const targetId = user.id || user._id;
+          const { data: prof } = await supabase.from('profiles').select('total_points, skills_completed').eq('id', targetId).maybeSingle();
+          if (prof) {
+            await supabase.from('profiles').update({
+              total_points: (prof.total_points || 0) + incPoints,
+              skills_completed: (prof.skills_completed || 0) + 1,
+            }).eq('id', targetId);
           }
-        );
-      } catch { }
+        } catch {}
+      }
+
+      if (user._id && mongoose.connection.readyState === 1) {
+        try {
+          await StudentProfile.findOneAndUpdate(
+            { userId: user._id },
+            {
+              $inc: {
+                totalPoints: incPoints,
+                skillsCompleted: 1,
+              },
+            }
+          );
+        } catch {}
+      }
     }
 
     res.json({

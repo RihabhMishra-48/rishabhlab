@@ -1,14 +1,15 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { Onboarding } from '../models/StudentProfile';
 import { Roadmap } from '../models/Roadmap';
 import { DailyMission } from '../models/DailyMission';
 import { StudentProfile } from '../models/StudentProfile';
+import { Mentor } from '../models/Mentorship';
 import { aiService } from '../services/aiService';
+import { supabase, isSupabaseConfigured } from '../config/supabase';
 
 const router = Router();
-
-import { Mentor } from '../models/Mentorship';
 
 // Submit student or mentor onboarding data
 router.post('/complete', requireAuth, async (req: AuthRequest, res) => {
@@ -39,21 +40,28 @@ router.post('/complete', requireAuth, async (req: AuthRequest, res) => {
     const chosenRole = role === 'mentor' ? 'mentor' : 'student';
     const verificationStatus = chosenRole === 'mentor' ? 'pending' : 'approved';
 
-    const onboardingRecord = await Onboarding.create({
-      userId: user._id,
-      goal: selectedGoal,
-      currentLevel: currentLevel || (chosenRole === 'mentor' ? 'Advanced' : 'Complete Beginner'),
-      availableTime: availableTime || '2 hours/day',
-      desiredOutcome: desiredOutcome || (chosenRole === 'mentor' ? 'Guide students & review code' : 'Build projects'),
-      targetDate: targetDate || '90 days',
-      existingSkills: existingSkills || [],
-      preferredLearningStyle: preferredLearningStyle || 'Hands-on Building',
-      status: 'completed',
-    });
+    const isMongoReady = mongoose.connection.readyState === 1;
+    let onboardingRecord: any = { status: 'completed', goal: selectedGoal };
+    let roadmap: any = { _id: `rm-${Date.now()}` };
+    let mission: any = { _id: `mission-${Date.now()}` };
 
-    // Clear any previous roadmaps/missions for this user so the new track takes effect immediately
-    await Roadmap.deleteMany({ userId: user._id });
-    await DailyMission.deleteMany({ userId: user._id });
+    if (isMongoReady && user._id) {
+      try {
+        onboardingRecord = await Onboarding.create({
+          userId: user._id,
+          goal: selectedGoal,
+          currentLevel: currentLevel || (chosenRole === 'mentor' ? 'Advanced' : 'Complete Beginner'),
+          availableTime: availableTime || '2 hours/day',
+          desiredOutcome: desiredOutcome || (chosenRole === 'mentor' ? 'Guide students & review code' : 'Build projects'),
+          targetDate: targetDate || '90 days',
+          existingSkills: existingSkills || [],
+          preferredLearningStyle: preferredLearningStyle || 'Hands-on Building',
+          status: 'completed',
+        });
+        await Roadmap.deleteMany({ userId: user._id });
+        await DailyMission.deleteMany({ userId: user._id });
+      } catch (e) {}
+    }
 
     // Generate tailored Roadmap via AIService
     const generatedRoadmapData = await aiService.generateRoadmap({
@@ -65,23 +73,44 @@ router.post('/complete', requireAuth, async (req: AuthRequest, res) => {
       existingSkills: existingSkills || [],
     });
 
-    const roadmap = await Roadmap.create({
-      ...generatedRoadmapData,
-      userId: user._id,
-    });
+    if (isMongoReady && user._id) {
+      try {
+        roadmap = await Roadmap.create({
+          ...generatedRoadmapData,
+          userId: user._id,
+        });
+      } catch (e) {}
+    } else {
+      roadmap = { ...generatedRoadmapData, _id: `rm-${Date.now()}` };
+    }
 
     // Generate initial Daily Mission
     const missionData = await aiService.generateDailyMission(1, selectedGoal);
-    const mission = await DailyMission.create({
-      userId: user._id,
-      dayNumber: 1,
-      trackTitle: selectedGoal,
-      dateString: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
-      quote: missionData.quote,
-      tasks: missionData.tasks,
-      completedTasksCount: 0,
-      isAllCompleted: false,
-    });
+    if (isMongoReady && user._id) {
+      try {
+        mission = await DailyMission.create({
+          userId: user._id,
+          dayNumber: 1,
+          trackTitle: selectedGoal,
+          dateString: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+          quote: missionData.quote,
+          tasks: missionData.tasks,
+          completedTasksCount: 0,
+          isAllCompleted: false,
+        });
+      } catch (e) {}
+    } else {
+      mission = {
+        _id: `mission-${Date.now()}`,
+        dayNumber: 1,
+        trackTitle: selectedGoal,
+        dateString: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+        quote: missionData.quote,
+        tasks: missionData.tasks,
+        completedTasksCount: 0,
+        isAllCompleted: false,
+      };
+    }
 
     // Update user record in local MongoDB
     if (name && name.trim()) user.name = name.trim();
@@ -134,45 +163,77 @@ router.post('/complete', requireAuth, async (req: AuthRequest, res) => {
       }
     }
 
-    await user.save();
+    if (isMongoReady && typeof (user as any).save === 'function') {
+      try {
+        await (user as any).save();
+      } catch (e) {}
+    }
 
-    // Update student profile in local MongoDB
-    await StudentProfile.findOneAndUpdate(
-      { userId: user._id },
-      {
-        targetGoal: selectedGoal,
-        activeRoadmapId: roadmap._id,
-        progressPercent: chosenRole === 'mentor' ? 100 : 0,
-        skillsCompleted: chosenRole === 'mentor' ? 10 : 0,
-        streakDays: 0,
-      },
-      { upsert: true }
-    );
+    if (isMongoReady && user._id) {
+      try {
+        await StudentProfile.findOneAndUpdate(
+          { userId: user._id },
+          {
+            targetGoal: selectedGoal,
+            activeRoadmapId: roadmap._id,
+            progressPercent: chosenRole === 'mentor' ? 100 : 0,
+            skillsCompleted: chosenRole === 'mentor' ? 10 : 0,
+            streakDays: 0,
+          },
+          { upsert: true }
+        );
+      } catch (e) {}
+    }
 
-    // Sync to Supabase profiles if configured
+    // Sync to Supabase profiles & mentors table
     try {
-      const { supabase, isSupabaseConfigured } = await import('../config/supabase');
       if (isSupabaseConfigured() && supabase) {
-        await supabase
-          .from('profiles')
-          .update({
-            full_name: user.name,
-            role: finalRole,
-            target_goal: selectedGoal,
-            field_of_interest: selectedGoal,
-            college_name: user.college,
-            degree: user.degree,
-            year_of_study: user.year,
-            current_level: currentLevel,
-            available_time: availableTime,
-            desired_outcome: desiredOutcome,
-            verification_status: verificationStatus,
-            mentor_organization: user.mentorOrganization,
-            mentor_experience_years: user.mentorExperienceYears,
-            mentor_linkedin: user.mentorLinkedin,
-            is_onboarded: true,
-          })
-          .eq('email', user.email);
+        const targetId = user.id || user._id;
+        const profilePayload = {
+          full_name: user.name,
+          role: finalRole,
+          target_goal: selectedGoal,
+          field_of_interest: selectedGoal,
+          college_name: user.college,
+          degree: user.degree,
+          year_of_study: user.year,
+          current_level: currentLevel,
+          available_time: availableTime,
+          desired_outcome: desiredOutcome,
+          verification_status: verificationStatus,
+          mentor_organization: user.mentorOrganization,
+          mentor_experience_years: user.mentorExperienceYears,
+          mentor_linkedin: user.mentorLinkedin,
+          is_onboarded: true,
+        };
+
+        if (targetId) {
+          await supabase.from('profiles').update(profilePayload).eq('id', targetId);
+        }
+        if (user.email) {
+          await supabase.from('profiles').update(profilePayload).eq('email', user.email.toLowerCase());
+        }
+
+        if (chosenRole === 'mentor') {
+          const { data: existingMentor } = await supabase.from('mentors').select('id').eq('name', user.name).maybeSingle();
+          const mentorPayload = {
+            name: user.name,
+            title: `${selectedGoal} Specialist & Mentor`,
+            company: user.mentorOrganization || 'Industry Expert',
+            avatar: user.avatar || '/avatars/default.webp',
+            rating: 5.0,
+            bio: user.bio || `Specialized mentor in ${selectedGoal}.`,
+            hourly_rate_inr: 0,
+            topics: Array.isArray(user.mentorExpertise) && user.mentorExpertise.length > 0 ? user.mentorExpertise : [selectedGoal],
+            available_days: ['Monday', 'Wednesday', 'Friday', 'Saturday'],
+            domain: selectedGoal,
+          };
+          if (existingMentor) {
+            await supabase.from('mentors').update(mentorPayload).eq('id', existingMentor.id);
+          } else {
+            await supabase.from('mentors').insert(mentorPayload);
+          }
+        }
       }
     } catch (e: any) {
       console.warn('Could not sync onboarding to Supabase:', e.message);

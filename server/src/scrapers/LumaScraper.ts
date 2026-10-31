@@ -81,73 +81,80 @@ export class LumaScraper extends BaseScraper {
     ];
 
     try {
-      const categorySlugs = ['ai', 'crypto', 'tech'];
+      const categorySlugs = ['ai', 'crypto', 'tech', 'climate'];
+      const seenCalendarSlugs = new Set<string>();
+
       for (const catSlug of categorySlugs) {
         try {
           const url = `https://api.luma.com/discover/category/get-page?slug=${catSlug}`;
           const res = await this.fetchJson<any>(url);
 
-          if (res?.timeline_calendars && Array.isArray(res.timeline_calendars)) {
-            for (const item of res.timeline_calendars) {
-              const cal = item.calendar;
-              if (!cal || !cal.slug || !cal.name) continue;
+          const allCalendars = [
+            ...(Array.isArray(res?.timeline_calendars) ? res.timeline_calendars : []),
+            ...(Array.isArray(res?.featured_calendars) ? res.featured_calendars : []),
+          ];
 
-              const category = this.classifyCategory(
-                `${cal.name} ${cal.description_short || ''} ${catSlug}`,
-                cal.name,
-                [catSlug]
-              );
+          for (const item of allCalendars) {
+            const cal = item.calendar;
+            if (!cal || !cal.slug || !cal.name) continue;
+            if (seenCalendarSlugs.has(cal.slug)) continue;
+            seenCalendarSlugs.add(cal.slug);
 
-              // Guaranteed valid working Lu.ma URL
-              const registrationUrl = `https://lu.ma/${cal.slug}`;
-              const now = Date.now();
-              const deadline = item.end_date
-                ? new Date(item.end_date)
-                : new Date(now + 21 * 24 * 3600 * 1000);
+            const category = this.classifyCategory(
+              `${cal.name} ${cal.description_short || ''} ${catSlug}`,
+              cal.name,
+              [catSlug]
+            );
 
-              if (deadline.getTime() < now) {
-                continue; // Strictly discard closed events
-              }
+            // Guaranteed valid working Lu.ma URL
+            const registrationUrl = `https://lu.ma/${cal.slug}`;
+            const now = Date.now();
+            const deadline = item.end_date
+              ? new Date(item.end_date)
+              : new Date(now + 21 * 24 * 3600 * 1000);
 
-              const normalized: IHackathonNormalized = {
-                id: this.generateId(this.platform, String(cal.slug)),
-                title: cal.name.trim(),
-                sourcePlatform: this.platform,
-                sourceId: String(cal.slug),
-                category,
-                registrationUrl,
-                summary: (cal.description_short || `${cal.name} hosted on Luma.`)
-                  .replace(/\s+/g, ' ')
-                  .trim()
-                  .slice(0, 300),
-                description: `${cal.name}. Organized by verified hosts on Luma. ${cal.description_short || 'Join tech innovators and developers for live hacking, workshops, and project showcases.'}`,
-                prizes: {
-                  total: '$15,000 in Grants & Swag',
-                  breakdown: [
-                    { place: 'Best Technical Implementation', amount: '$7,500', perks: 'Fast track to Accelerator' },
-                    { place: 'Community Choice', amount: '$4,000', perks: 'Sponsor Developer Credits' },
-                  ],
-                },
-                timeline: [
-                  { stage: 'RSVP & Registration Open', date: 'Active Now', description: 'Builder registration on Luma calendar.' },
-                  { stage: 'Main Hacking Window', date: 'Upcoming', description: 'Sprint development and code submissions.' },
-                  { stage: 'Demo Day & Closing', date: item.end_date || 'Finale', description: 'Project showcases and ecosystem awards.' },
-                ],
-                scrapedAt: new Date(),
-                applicationDeadline: deadline,
-                location: typeof cal.location === 'string' ? cal.location : 'Online / Hybrid',
-                bannerUrl:
-                  cal.social_image_url ||
-                  cal.avatar_url ||
-                  'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80',
-                eligibility: 'Open to builders, software engineers, and university students with accepted RSVP.',
-                organization: cal.name || 'Luma Ecosystem Host',
-                tags: [catSlug.toUpperCase(), 'Luma', 'Developer Sprint'],
-                status: deadline.getTime() < now ? 'closed' : 'open',
-              };
-
-              results.push(normalized);
+            if (deadline.getTime() < now) {
+              continue; // Strictly discard closed events
             }
+
+            const normalized: IHackathonNormalized = {
+              id: this.generateId(this.platform, String(cal.slug)),
+              title: cal.name.trim(),
+              sourcePlatform: this.platform,
+              sourceId: String(cal.slug),
+              category,
+              registrationUrl,
+              summary: (cal.description_short || `${cal.name} hosted on Luma.`)
+                .replace(/\s+/g, ' ')
+                .trim()
+                .slice(0, 300),
+              description: `${cal.name}. Organized by verified hosts on Luma. ${cal.description_short || 'Join tech innovators and developers for live hacking, workshops, and project showcases.'}`,
+              prizes: {
+                total: '$15,000 in Grants & Swag',
+                breakdown: [
+                  { place: 'Best Technical Implementation', amount: '$7,500', perks: 'Fast track to Accelerator' },
+                  { place: 'Community Choice', amount: '$4,000', perks: 'Sponsor Developer Credits' },
+                ],
+              },
+              timeline: [
+                { stage: 'RSVP & Registration Open', date: 'Active Now', description: 'Builder registration on Luma calendar.' },
+                { stage: 'Main Hacking Window', date: 'Upcoming', description: 'Sprint development and code submissions.' },
+                { stage: 'Demo Day & Closing', date: item.end_date || 'Finale', description: 'Project showcases and ecosystem awards.' },
+              ],
+              scrapedAt: new Date(),
+              applicationDeadline: deadline,
+              location: typeof cal.location === 'string' ? cal.location : 'Online / Hybrid',
+              bannerUrl:
+                cal.social_image_url ||
+                cal.avatar_url ||
+                'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80',
+              eligibility: 'Open to builders, software engineers, and university students with accepted RSVP.',
+              organization: cal.name || 'Luma Ecosystem Host',
+              tags: [catSlug.toUpperCase(), 'Luma', 'Developer Sprint'],
+              status: deadline.getTime() < now ? 'closed' : 'open',
+            };
+
+            results.push(normalized);
           }
         } catch (catErr: any) {
           logger.warn(`[${this.platform}] Category ${catSlug} fetch notice: ${catErr.message}`);

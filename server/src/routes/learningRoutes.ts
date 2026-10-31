@@ -4,6 +4,7 @@ import { requireAuth, AuthRequest } from '../middleware/auth';
 import { Lesson } from '../models/Lesson';
 import { StudentProfile } from '../models/StudentProfile';
 import { getCleanLessons } from '../seed/seedData';
+import { supabase, isSupabaseConfigured } from '../config/supabase';
 
 const router = Router();
 
@@ -117,21 +118,34 @@ router.post('/:slug/complete', requireAuth, async (req: AuthRequest, res) => {
   try {
     const { slug } = req.params;
     const user = req.user!;
+    const isMongoReady = mongoose.connection.readyState === 1;
 
-    const lesson = await Lesson.findOne({ slug });
-    if (!lesson) return res.status(404).json({ message: 'Lesson not found' });
-
-    if (!lesson.isCompletedBy.includes(user._id)) {
-      lesson.isCompletedBy.push(user._id);
-      await lesson.save();
-
-      // Update student points and skills
-      await StudentProfile.findOneAndUpdate(
-        { userId: user._id },
-        {
-          $inc: { totalPoints: 30, skillsCompleted: 1 },
+    if (isMongoReady && user._id) {
+      try {
+        const lesson = await Lesson.findOne({ slug });
+        if (lesson && !lesson.isCompletedBy.includes(user._id)) {
+          lesson.isCompletedBy.push(user._id);
+          await lesson.save();
         }
-      );
+        await StudentProfile.findOneAndUpdate(
+          { userId: user._id },
+          { $inc: { totalPoints: 30, skillsCompleted: 1 } }
+        ).catch(() => null);
+      } catch (e) {}
+    }
+
+    // Award points and completed skills directly to Supabase profile
+    if (supabase && (user.id || user._id)) {
+      try {
+        const targetId = user.id || user._id;
+        const { data: prof } = await supabase.from('profiles').select('skills_completed, total_points').eq('id', targetId).maybeSingle();
+        if (prof) {
+          await supabase.from('profiles').update({
+            skills_completed: (prof.skills_completed || 0) + 1,
+            total_points: (prof.total_points || 0) + 30,
+          }).eq('id', targetId);
+        }
+      } catch (sbErr) {}
     }
 
     res.json({ success: true, message: 'Lesson marked as complete!' });
@@ -145,11 +159,40 @@ router.post('/:slug/quiz', async (req, res) => {
   try {
     const { slug } = req.params;
     const { answers } = req.body; // array of selected indices
+    const isMongoReady = mongoose.connection.readyState === 1;
 
-    const lesson = await Lesson.findOne({ slug });
-    if (!lesson) return res.status(404).json({ message: 'Lesson not found' });
+    let quiz: any[] = [];
 
-    const results = lesson.quiz.map((q, idx) => {
+    if (isMongoReady) {
+      try {
+        const lesson = await Lesson.findOne({ slug });
+        if (lesson?.quiz && Array.isArray(lesson.quiz)) {
+          quiz = lesson.quiz;
+        }
+      } catch (e) {}
+    }
+
+    if (quiz.length === 0 && isSupabaseConfigured() && supabase) {
+      try {
+        const { data: sbLesson } = await supabase.from('lessons').select('quiz').eq('slug', slug).maybeSingle();
+        if (sbLesson?.quiz && Array.isArray(sbLesson.quiz)) {
+          quiz = sbLesson.quiz;
+        }
+      } catch (e) {}
+    }
+
+    if (quiz.length === 0) {
+      const clean = getCleanLessons().find((l) => l.slug === slug);
+      if (clean?.quiz) {
+        quiz = clean.quiz;
+      }
+    }
+
+    if (quiz.length === 0) {
+      return res.status(404).json({ message: 'Lesson quiz not found' });
+    }
+
+    const results = quiz.map((q: any, idx: number) => {
       const selected = answers ? answers[idx] : undefined;
       const isCorrect = selected === q.correctIndex;
       return {
@@ -163,8 +206,8 @@ router.post('/:slug/quiz', async (req, res) => {
     const score = results.filter((r) => r.isCorrect).length;
     res.json({
       score,
-      total: lesson.quiz.length,
-      passed: score === lesson.quiz.length,
+      total: quiz.length,
+      passed: score === quiz.length,
       results,
     });
   } catch (err: any) {

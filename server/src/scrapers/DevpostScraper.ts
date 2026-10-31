@@ -12,71 +12,88 @@ export class DevpostScraper extends BaseScraper {
     const results: IHackathonNormalized[] = [];
 
     try {
-      // 1. Fetch live open/upcoming hackathons across multiple pages (7 pages = 63 real hackathons)
-      const pagesToFetch = [1, 2, 3, 4, 5, 6, 7];
-      for (const p of pagesToFetch) {
+      // 1. Fetch live open/upcoming hackathons dynamically across all available pages
+      const firstPageUrl = `https://devpost.com/api/hackathons?status[]=upcoming&status[]=open&page=1`;
+      const firstPageResponse = await this.fetchJson<any>(firstPageUrl);
+
+      const totalCount = firstPageResponse?.meta?.total_count || 0;
+      const perPage = firstPageResponse?.meta?.per_page || 9;
+      const totalPages = totalCount > 0 ? Math.min(25, Math.ceil(totalCount / perPage)) : 7;
+      logger.info(`[${this.platform}] Devpost reports ${totalCount} live hackathons. Ingesting across ${totalPages} pages...`);
+
+      const pages: any[] = [];
+      if (firstPageResponse?.hackathons) {
+        pages.push(firstPageResponse);
+      }
+
+      for (let p = 2; p <= totalPages; p++) {
         try {
           const url = `https://devpost.com/api/hackathons?status[]=upcoming&status[]=open&page=${p}`;
           const response = await this.fetchJson<any>(url);
-
           if (response?.hackathons && Array.isArray(response.hackathons)) {
-            for (const h of response.hackathons) {
-              if (!h.title || !h.url) continue;
-
-              const cleanPrize = h.prize_amount
-                ? h.prize_amount.replace(/<[^>]+>/g, '').trim()
-                : '$25,000 in Prizes';
-
-              const tags = (h.themes || []).map((t: any) => t.name).filter(Boolean);
-              const category = this.classifyCategory(
-                `${h.title} ${tags.join(' ')} ${h.analytics_identifier || ''}`,
-                h.title,
-                tags
-              );
-
-              const deadline = this.parseTimeLeft(h.time_left_to_submission, h.submission_period_dates);
-              if (deadline && deadline.getTime() < Date.now()) {
-                continue; // Strictly discard closed hackathons
-              }
-
-              const normalized: IHackathonNormalized = {
-                id: this.generateId(this.platform, String(h.id || h.url)),
-                title: h.title.trim(),
-                sourcePlatform: this.platform,
-                sourceId: String(h.id),
-                category,
-                registrationUrl: h.url, // Real, live Devpost URL
-                summary: `${h.title} hosted by ${h.organization_name || 'Global Tech Community'} on Devpost. Submission window: ${h.submission_period_dates || 'Active Now'}.`,
-                description: `Official developer hackathon: ${h.title}. Organized by ${h.organization_name || 'Ecosystem Host'}. Open for developer submissions with ${cleanPrize} in prize rewards.`,
-                prizes: {
-                  total: cleanPrize,
-                  breakdown: [
-                    { place: 'Grand Prize Winner', amount: cleanPrize, perks: 'Cloud Credits, Mentorship & Partner Fast-Track' },
-                    { place: '1st Runner Up', amount: 'Runner-Up Grant', perks: 'Ecosystem Introductions' },
-                  ],
-                },
-                timeline: [
-                  { stage: 'Submission Window', date: h.submission_period_dates || 'Active', description: 'Project development and prototype coding.' },
-                  { stage: 'Registration Deadline', date: h.time_left_to_submission || 'Upcoming', description: 'Submit functional prototype and GitHub repository.' },
-                  { stage: 'Winners Evaluation', date: 'Post Deadline', description: 'Judges review code architecture, innovation, and execution.' },
-                ],
-                scrapedAt: new Date(),
-                applicationDeadline: deadline,
-                location: h.displayed_location?.location || 'Online / Global',
-                bannerUrl: h.thumbnail_url?.startsWith('//')
-                  ? `https:${h.thumbnail_url}`
-                  : h.thumbnail_url || 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
-                eligibility: 'Open to all developers, software engineers, and university students globally.',
-                organization: h.organization_name || 'Devpost Ecosystem Partner',
-                tags: tags.length > 0 ? tags : ['Software', 'Global', 'Innovation'],
-                status: 'open',
-              };
-
-              results.push(normalized);
-            }
+            pages.push(response);
           }
         } catch (pageErr: any) {
           logger.warn(`[${this.platform}] Page ${p} fetch notice: ${pageErr.message}`);
+        }
+      }
+
+      for (const response of pages) {
+        if (response?.hackathons && Array.isArray(response.hackathons)) {
+          for (const h of response.hackathons) {
+            if (!h.title || !h.url) continue;
+
+            const cleanPrize = h.prize_amount
+              ? h.prize_amount.replace(/<[^>]+>/g, '').trim()
+              : '$25,000 in Prizes';
+
+            const tags = (h.themes || []).map((t: any) => t.name).filter(Boolean);
+            const category = this.classifyCategory(
+              `${h.title} ${tags.join(' ')} ${h.analytics_identifier || ''}`,
+              h.title,
+              tags
+            );
+
+            const deadline = this.parseTimeLeft(h.time_left_to_submission, h.submission_period_dates);
+            if (deadline && deadline.getTime() < Date.now()) {
+              continue; // Strictly discard closed hackathons
+            }
+
+            const normalized: IHackathonNormalized = {
+              id: this.generateId(this.platform, String(h.id || h.url)),
+              title: h.title.trim(),
+              sourcePlatform: this.platform,
+              sourceId: String(h.id),
+              category,
+              registrationUrl: h.url, // Real, live Devpost URL
+              summary: `${h.title} hosted by ${h.organization_name || 'Global Tech Community'} on Devpost. Submission window: ${h.submission_period_dates || 'Active Now'}.`,
+              description: `Official developer hackathon: ${h.title}. Organized by ${h.organization_name || 'Ecosystem Host'}. Open for developer submissions with ${cleanPrize} in prize rewards.`,
+              prizes: {
+                total: cleanPrize,
+                breakdown: [
+                  { place: 'Grand Prize Winner', amount: cleanPrize, perks: 'Cloud Credits, Mentorship & Partner Fast-Track' },
+                  { place: '1st Runner Up', amount: 'Runner-Up Grant', perks: 'Ecosystem Introductions' },
+                ],
+              },
+              timeline: [
+                { stage: 'Submission Window', date: h.submission_period_dates || 'Active', description: 'Project development and prototype coding.' },
+                { stage: 'Registration Deadline', date: h.time_left_to_submission || 'Upcoming', description: 'Submit functional prototype and GitHub repository.' },
+                { stage: 'Winners Evaluation', date: 'Post Deadline', description: 'Judges review code architecture, innovation, and execution.' },
+              ],
+              scrapedAt: new Date(),
+              applicationDeadline: deadline,
+              location: h.displayed_location?.location || 'Online / Global',
+              bannerUrl: h.thumbnail_url?.startsWith('//')
+                ? `https:${h.thumbnail_url}`
+                : h.thumbnail_url || 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
+              eligibility: 'Open to all developers, software engineers, and university students globally.',
+              organization: h.organization_name || 'Devpost Ecosystem Partner',
+              tags: tags.length > 0 ? tags : ['Software', 'Global', 'Innovation'],
+              status: 'open',
+            };
+
+            results.push(normalized);
+          }
         }
       }
     } catch (err: any) {

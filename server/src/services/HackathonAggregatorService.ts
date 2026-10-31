@@ -3,7 +3,6 @@ import { DevpostScraper } from '../scrapers/DevpostScraper';
 import { UnstopScraper } from '../scrapers/UnstopScraper';
 import { LumaScraper } from '../scrapers/LumaScraper';
 import { HackathonValidationService } from './HackathonValidationService';
-import { Hackathon } from '../models/Hackathon';
 import { logger } from '../config/logger';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
 
@@ -162,21 +161,6 @@ export class HackathonAggregatorService {
       } catch (sbErr: any) {
         logger.error(`[Aggregator] Supabase sync exception: ${sbErr.message}`);
       }
-    }
-
-    // Also update MongoDB asynchronously for fallback/compatibility (non-blocking)
-    if (allValidatedItems.length > 0) {
-      (async () => {
-        try {
-          for (const item of allValidatedItems) {
-            await Hackathon.findOneAndUpdate(
-              { sourcePlatform: item.sourcePlatform, sourceId: item.sourceId },
-              { $set: { ...item, scrapedAt: new Date() } },
-              { upsert: true, new: true, setDefaultsOnInsert: true }
-            ).catch(() => null);
-          }
-        } catch (_) {}
-      })();
     }
 
     const durationMs = Date.now() - startTime;

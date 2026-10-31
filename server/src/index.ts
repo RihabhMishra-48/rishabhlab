@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { connectDB } from './config/db';
-import { seedDatabase } from './seed/seedData';
 import { isSupabaseConfigured } from './config/supabase';
 import { seedSupabase } from './seed/seedSupabase';
 
@@ -19,7 +18,6 @@ import projectRoutes from './routes/projectRoutes';
 import hackathonRoutes from './routes/hackathonRoutes';
 import hackathonAggregatorRoutes from './routes/hackathonAggregatorRoutes';
 import { schedulerService } from './services/SchedulerService';
-import { Hackathon } from './models/Hackathon';
 import { logger } from './config/logger';
 import mentorshipRoutes from './routes/mentorshipRoutes';
 import weeklyReviewRoutes from './routes/weeklyReviewRoutes';
@@ -116,7 +114,6 @@ const startServer = async () => {
 
   try {
     await connectDB();
-    await seedDatabase();
   } catch (error) {
     console.error('Database connection notice:', error);
   }
@@ -137,43 +134,9 @@ const startServer = async () => {
       });
     }
 
-    // Initialize Hackathon Aggregator 24h cron & bootstrap initial scrape if database is fresh
+    // Initialize Hackathon Aggregator 24h cron
     schedulerService.initScheduler();
-    (async () => {
-      try {
-        // Purge any legacy unnormalized records or outdated dummy seeds
-        const legacyDummyIds = [
-          'ai-agents-unleashed-buildathon',
-          'global-open-innovation-jam',
-          'amazon-ml-summer-school-challenge',
-          'flipkart-grid-70-software-dev',
-          'tata-crucible-tech-security',
-          'sih-national-grand-finale-2026',
-          'superteam-solana-builder-house-2026',
-          'anthropic-claude-speed-run-soon',
-          'stripe-plaid-fintech-hack',
-          'aws-cloud-kubernetes-challenge',
-          'google-cloud-genai-sprint',
-          'chainlink-web3-hackathon',
-        ];
-
-        await Hackathon.deleteMany({
-          $or: [
-            { title: { $exists: false } },
-            { title: '' },
-            { id: { $exists: false } },
-            { status: 'closed' },
-            { applicationDeadline: { $lt: new Date() } },
-            { sourceId: { $in: legacyDummyIds } },
-          ],
-        });
-
-        const count = await Hackathon.countDocuments({ title: { $exists: true, $ne: '' } });
-        logger.info(`✨ [Startup] System ready. Live hackathons are synchronized directly in Supabase database (${count} cached in MongoDB).`);
-      } catch (e: any) {
-        logger.warn('[Startup] Database check notice:', e.message);
-      }
-    })();
+    logger.info(`✨ [Startup] System ready. Operating 100% on Supabase PostgreSQL cloud database.`);
   });
 
   // Handle port conflicts gracefully (prevents unhandled EADDRINUSE crash)

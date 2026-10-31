@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import path from 'path';
+import crypto from 'crypto';
+import { supabase, isSupabaseConfigured } from '../config/supabase';
 import { connectDB, closeDB } from '../config/db';
 import { User } from '../models/User';
 import { StudentProfile } from '../models/StudentProfile';
@@ -14,49 +16,52 @@ async function createAdmin() {
   const name = args[2] || 'Super Administrator';
   const role = (args[3] || 'super_admin') as any;
 
-  console.log(`\n⚙️ [Admin CLI] Creating / Updating administrator:`);
+  console.log(`\n [Admin CLI] Creating / Updating administrator:`);
   console.log(`   Email: ${email}`);
   console.log(`   Name:  ${name}`);
   console.log(`   Role:  ${role}`);
 
   try {
-    await connectDB();
+    // 1. Create or update in Supabase (Primary Cloud Datastore)
+    if (isSupabaseConfigured() && supabase) {
+      console.log('⚡ [Admin CLI] Synchronizing administrator with Supabase...');
+      let userId: string = crypto.randomUUID();
 
-    let user = await User.findOne({ email });
-    const hashedPassword = await bcrypt.hash(password, 10);
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
 
-    if (user) {
-      user.role = role;
-      user.name = name;
-      user.password = hashedPassword;
-      user.isOnboarded = true;
-      user.verificationStatus = 'approved';
-      await user.save();
-      console.log(`✅ [Admin CLI] Existing user updated to ${role} successfully!`);
-    } else {
-      user = await User.create({
-        name,
-        email,
-        password: hashedPassword,
-        role,
-        college: 'RishabhLabs Global HQ',
-        isOnboarded: true,
-        verificationStatus: 'approved',
-      });
+      if (existingUser) {
+        userId = existingUser.id;
+        await supabase.from('profiles').update({
+          full_name: name,
+          role,
+          is_onboarded: true,
+          verification_status: 'approved',
+        }).eq('id', userId);
+        console.log(`✅ [Admin CLI] Supabase profile updated to ${role}.`);
+      } else {
+        const { data: sbAuth } = await supabase.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: { full_name: name, role },
+        });
+        if (sbAuth?.user?.id) userId = sbAuth.user.id;
 
-      await StudentProfile.create({
-        userId: user._id,
-        targetGoal: 'AI / Machine Learning',
-        streakDays: 1,
-        totalPoints: 500,
-        progressPercent: 100,
-        skillsCompleted: 18,
-        totalSkills: 18,
-        projectsCompleted: 4,
-        totalProjects: 4,
-      });
-
-      console.log(`✅ [Admin CLI] New administrator account created successfully!`);
+        await supabase.from('profiles').upsert({
+          id: userId,
+          email,
+          full_name: name,
+          role,
+          college_name: 'RishabhLabs Global HQ',
+          is_onboarded: true,
+          verification_status: 'approved',
+        });
+        console.log(`✅ [Admin CLI] New administrator created in Supabase.`);
+      }
     }
 
     console.log(`\n🎉 Credentials Ready:`);
@@ -66,7 +71,6 @@ async function createAdmin() {
   } catch (err: any) {
     console.error(`❌ [Admin CLI] Failed to create admin:`, err.message);
   } finally {
-    await closeDB();
     process.exit(0);
   }
 }

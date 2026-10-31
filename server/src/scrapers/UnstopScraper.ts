@@ -12,13 +12,16 @@ export class UnstopScraper extends BaseScraper {
     const results: IHackathonNormalized[] = [];
 
     try {
-      const pagesToFetch = [1, 2, 3];
-      for (const p of pagesToFetch) {
+      // Ingest live hackathons across top 10 search result pages (50 items/page = 500 opportunities scanned)
+      let consecutiveZeroPages = 0;
+      for (let p = 1; p <= 10; p++) {
         try {
-          const url = `https://unstop.com/api/public/opportunity/search-result?opportunity=hackathons&per_page=40&page=${p}`;
+          const url = `https://unstop.com/api/public/opportunity/search-result?opportunity=hackathons&per_page=50&page=${p}`;
           const response = await this.fetchJson<any>(url);
 
           const items = response?.data?.data;
+          let unexpiredOnPage = 0;
+
           if (Array.isArray(items) && items.length > 0) {
             for (const item of items) {
               if (!item.title) continue;
@@ -58,6 +61,8 @@ export class UnstopScraper extends BaseScraper {
               if (deadline && deadline.getTime() < Date.now()) {
                 continue; // Strictly discard closed hackathons
               }
+
+              unexpiredOnPage++;
 
               const location = item.address_with_country_logo?.city
                 ? `${item.address_with_country_logo.city}, India`
@@ -108,6 +113,16 @@ export class UnstopScraper extends BaseScraper {
 
               results.push(normalized);
             }
+          }
+
+          if (unexpiredOnPage === 0 && p > 5) {
+            consecutiveZeroPages++;
+            if (consecutiveZeroPages >= 2) {
+              logger.info(`[${this.platform}] Reached end of unexpired listings at page ${p}. Stopping further page scans.`);
+              break;
+            }
+          } else {
+            consecutiveZeroPages = 0;
           }
         } catch (pageErr: any) {
           logger.warn(`[${this.platform}] Page ${p} fetch notice: ${pageErr.message}`);

@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { Hackathon } from '../models/Hackathon';
 import { HACKATHON_CATEGORIES, HackathonCategory } from '../config/scraperConfig';
 import { hackathonAggregatorService } from '../services/HackathonAggregatorService';
 import { logger } from '../config/logger';
@@ -76,38 +75,6 @@ export class HackathonController {
         } catch (sbEx: any) {
           logger.warn(`[HackathonController] Supabase read notice: ${sbEx.message}`);
         }
-      }
-
-      // 2. Fallback to MongoDB only if Supabase returned 0 items
-      if (hackathons.length === 0) {
-        try {
-          const rawHackathons = await Hackathon.find({
-            title: { $exists: true, $ne: '' },
-            id: { $exists: true },
-            status: { $ne: 'closed' },
-            $or: [{ applicationDeadline: { $gte: now } }, { applicationDeadline: null }],
-          }).lean();
-
-          if (rawHackathons && rawHackathons.length > 0) {
-            hackathons = rawHackathons.map((h) => {
-              const deadline = h.applicationDeadline ? new Date(h.applicationDeadline) : null;
-              const isClosed = h.status === 'closed' || Boolean(deadline && deadline.getTime() < now.getTime());
-              const isClosingSoon = Boolean(
-                deadline &&
-                !isClosed &&
-                deadline.getTime() - now.getTime() < 3 * 24 * 3600 * 1000 &&
-                deadline.getTime() > now.getTime()
-              );
-              return {
-                ...h,
-                _id: h._id ? h._id.toString() : h.id,
-                isClosed,
-                isClosingSoon,
-                status: isClosed ? 'closed' : h.status || 'open',
-              };
-            });
-          }
-        } catch (_) {}
       }
 
       // Filter: Category / Theme
@@ -253,38 +220,8 @@ export class HackathonController {
         } catch (_) {}
       }
 
-      // Fallback to MongoDB
-      const hackathon = await Hackathon.findOne({
-        $and: [
-          { title: { $exists: true, $ne: '' } },
-          { $or: [{ id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }] },
-        ],
-      }).lean();
-
-      if (!hackathon) {
-        res.status(404).json({ success: false, message: `Hackathon "${id}" not found.` });
-        return;
-      }
-
-      const now = new Date();
-      const deadline = hackathon.applicationDeadline ? new Date(hackathon.applicationDeadline) : null;
-      const isClosed = hackathon.status === 'closed' || Boolean(deadline && deadline.getTime() < now.getTime());
-      const isClosingSoon = Boolean(
-        deadline &&
-        !isClosed &&
-        deadline.getTime() - now.getTime() < 3 * 24 * 3600 * 1000 &&
-        deadline.getTime() > now.getTime()
-      );
-
-      res.json({
-        success: true,
-        hackathon: {
-          ...hackathon,
-          isClosed,
-          isClosingSoon,
-          status: isClosed ? 'closed' : hackathon.status || 'open',
-        },
-      });
+      res.status(404).json({ success: false, message: `Hackathon "${id}" not found.` });
+      return;
     } catch (err: any) {
       logger.error(`[HackathonController] getHackathonById error: ${err.message}`);
       res.status(500).json({ success: false, message: 'Failed to retrieve hackathon details.' });
@@ -316,19 +253,6 @@ export class HackathonController {
             }
           });
         }
-      } else {
-        const counts = await Hackathon.aggregate([
-          {
-            $match: {
-              title: { $exists: true, $ne: '' },
-              id: { $exists: true },
-              $or: [{ applicationDeadline: { $gte: now } }, { applicationDeadline: null }],
-              status: { $ne: 'closed' },
-            },
-          },
-          { $group: { _id: '$category', count: { $sum: 1 } } },
-        ]);
-        counts.forEach((c) => (countsMap[c._id] = c.count));
       }
 
       const categoriesWithCount = HACKATHON_CATEGORIES.map((cat) => ({
@@ -402,29 +326,6 @@ export class HackathonController {
             }
           });
         }
-      }
-
-      if (total === 0) {
-        const validMatch = { title: { $exists: true, $ne: '' }, id: { $exists: true } };
-        const [platformStats, totalDocs, activeDocs, latestScraped] = await Promise.all([
-          Hackathon.aggregate([
-            { $match: validMatch },
-            { $group: { _id: '$sourcePlatform', count: { $sum: 1 } } },
-          ]),
-          Hackathon.countDocuments(validMatch),
-          Hackathon.countDocuments({
-            ...validMatch,
-            $or: [{ applicationDeadline: { $gte: now } }, { applicationDeadline: null }],
-            status: { $ne: 'closed' },
-          }),
-          Hackathon.findOne(validMatch).sort({ scrapedAt: -1 }).select('scrapedAt').lean(),
-        ]);
-        total = totalDocs;
-        activeCount = activeDocs;
-        lastScrapedAt = latestScraped?.scrapedAt ? new Date(latestScraped.scrapedAt).toISOString() : null;
-        platformStats.forEach((p) => {
-          platformMap[p._id] = p.count;
-        });
       }
 
       res.json({
