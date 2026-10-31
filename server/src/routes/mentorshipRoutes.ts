@@ -1227,22 +1227,32 @@ router.put('/mentor/profile', requireAuth, async (req: AuthRequest, res) => {
         if (domain !== undefined) updatePayload.domain = domain;
         if (avatar !== undefined) updatePayload.avatar = avatar;
         if (bio !== undefined) updatePayload.bio = bio;
-        if (hourlyRate !== undefined) updatePayload.hourly_rate = hourlyRate;
+        if (hourlyRate !== undefined) {
+          const digits = String(hourlyRate).replace(/[^\d]/g, '');
+          updatePayload.hourly_rate_inr = digits ? parseInt(digits, 10) : 0;
+        }
         if (topicsArr !== undefined) updatePayload.topics = topicsArr;
         if (availArr !== undefined) {
-          updatePayload.availability = availArr;
-          updatePayload.available_days = availArr.map((a: string) => a.split(',')[0].trim());
+          updatePayload.available_days = availArr;
         }
-        if (isAvailableToday !== undefined) updatePayload.is_available_today = Boolean(isAvailableToday);
 
         if (matched) {
-          const { data: upd } = await supabase.from('mentors').update(updatePayload).eq('id', matched.id).select().single();
+          const { data: upd } = await supabase.from('mentors').update(updatePayload).eq('id', matched.id).select().maybeSingle();
           if (upd) matched = upd;
         } else {
           const { data: ins } = await supabase.from('mentors').insert({
             name: user.name || cleanUserEmail.split('@')[0] || 'Technical Mentor',
-            ...updatePayload,
-          }).select().single();
+            title: title || 'Technical Specialist & Mentor',
+            company: company || 'RishabhLabs',
+            domain: domain || 'Full-Stack Development',
+            avatar: avatar || user.avatar || '/avatars/default.webp',
+            bio: bio || 'Experienced engineering mentor at RishabhLabs.',
+            topics: topicsArr || ['Roadmap', 'Code Review'],
+            available_days: availArr || ['Monday', 'Wednesday', 'Saturday'],
+            hourly_rate_inr: updatePayload.hourly_rate_inr ?? 0,
+            rating: 5.0,
+            experience_years: 4,
+          }).select().maybeSingle();
           if (ins) matched = ins;
         }
 
@@ -1257,9 +1267,9 @@ router.put('/mentor/profile', requireAuth, async (req: AuthRequest, res) => {
             avatar: matched.avatar,
             bio: matched.bio,
             topics: matched.topics,
-            availability: matched.availability || matched.available_days,
-            hourlyRate: matched.hourly_rate || (matched.hourly_rate_inr ? `₹${matched.hourly_rate_inr}` : 'Free for Students'),
-            isAvailableToday: matched.is_available_today !== undefined ? Boolean(matched.is_available_today) : true,
+            availability: matched.available_days || availArr || ['Today, 7:00 PM IST'],
+            hourlyRate: (matched.hourly_rate_inr && matched.hourly_rate_inr > 0) ? `₹${matched.hourly_rate_inr}` : (hourlyRate || 'Free for Students'),
+            isAvailableToday: isAvailableToday !== undefined ? Boolean(isAvailableToday) : true,
           };
         }
 

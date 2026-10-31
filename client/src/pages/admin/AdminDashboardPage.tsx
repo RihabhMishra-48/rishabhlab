@@ -443,9 +443,13 @@ export const AdminDashboardPage: React.FC = () => {
     if (mentor) {
       setEditingMentor({
         ...mentor,
+        originalName: mentor.name,
+        originalId: mentor._id || mentor.id,
         avatar: mentor.avatar || mentor.avatar_url || '',
-        topics: Array.isArray(mentor.topics) ? mentor.topics.join(', ') : mentor.topics,
-        availability: Array.isArray(mentor.availability) ? mentor.availability.join(', ') : mentor.availability,
+        topics: Array.isArray(mentor.topics) ? mentor.topics.join(', ') : (mentor.topics || ''),
+        availability: Array.isArray(mentor.availability)
+          ? mentor.availability.join(', ')
+          : (Array.isArray(mentor.available_days) ? mentor.available_days.join(', ') : (mentor.availability || '')),
       });
     } else {
       setEditingMentor({
@@ -473,6 +477,7 @@ export const AdminDashboardPage: React.FC = () => {
     try {
       const payload = {
         ...editingMentor,
+        originalName: editingMentor.originalName || editingMentor.name,
         topics: typeof editingMentor.topics === 'string'
           ? editingMentor.topics.split(',').map((t: string) => t.trim()).filter(Boolean)
           : editingMentor.topics,
@@ -483,29 +488,34 @@ export const AdminDashboardPage: React.FC = () => {
 
       if (editingMentor._id || editingMentor.id) {
         const targetId = editingMentor._id || editingMentor.id;
-        const updated = await api.adminUpdateMentor(targetId, payload).catch(() => ({ ...payload, _id: targetId, id: targetId }));
+        const updated = await api.adminUpdateMentor(targetId, payload);
         const safeUpdated = {
           ...updated,
-          _id: updated._id || targetId,
-          id: updated.id || targetId,
+          _id: updated._id || updated.id || targetId,
+          id: updated.id || updated._id || targetId,
         };
-        setMentors((prev) => prev.map((m) => ((m._id === targetId || m.id === targetId) ? safeUpdated : m)));
+        setMentors((prev) => prev.map((m) => ((m._id === targetId || m.id === targetId || m.name === editingMentor.originalName) ? safeUpdated : m)));
         showNotification(`Mentor "${safeUpdated.name}" updated successfully!`);
       } else {
-        const created = await api.adminCreateMentor(payload).catch(() => null);
-        const safeCreated = created || {
-          ...payload,
-          _id: `mentor-${Date.now()}`,
-          id: `mentor-${Date.now()}`,
+        const created = await api.adminCreateMentor(payload);
+        const safeCreated = {
+          ...created,
+          _id: created._id || created.id || `mentor-${Date.now()}`,
+          id: created.id || created._id || `mentor-${Date.now()}`,
         };
-        safeCreated._id = safeCreated._id || safeCreated.id || `mentor-${Date.now()}`;
-        safeCreated.id = safeCreated.id || safeCreated._id;
         setMentors((prev) => [safeCreated, ...prev]);
         showNotification(`Mentor "${safeCreated.name}" created successfully!`);
       }
+
+      // Invalidate cache and fetch fresh mentors directly from the database
+      api.invalidateCache(/mentor/);
+      const freshMentors = await api.adminGetMentors().catch(() => null);
+      if (Array.isArray(freshMentors) && freshMentors.length > 0) {
+        setMentors(freshMentors);
+      }
       setMentorModalOpen(false);
     } catch (err: any) {
-      showNotification('Error saving mentor: ' + err.message);
+      showNotification('Error saving mentor: ' + (err.message || 'Server error'));
     }
   };
 
@@ -515,10 +525,10 @@ export const AdminDashboardPage: React.FC = () => {
       const safeId = (id && id !== 'undefined' && id !== 'null') ? id : name;
       await api.adminDeleteMentor(safeId, name);
       setMentors((prev) => prev.filter((m) => m._id !== id && m.id !== id && m.name !== name));
+      api.invalidateCache(/mentor/);
       showNotification(`Mentor "${name}" removed successfully.`);
     } catch (err: any) {
-      setMentors((prev) => prev.filter((m) => m._id !== id && m.id !== id && m.name !== name));
-      showNotification(`Mentor "${name}" removed.`);
+      showNotification('Error removing mentor: ' + (err.message || 'Server error'));
     }
   };
 

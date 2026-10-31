@@ -144,11 +144,10 @@ export const HackathonAggregatorView: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setGroupByCategory(!groupByCategory)}
-              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border transition-colors cursor-pointer ${
-                groupByCategory
+              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border transition-colors cursor-pointer ${groupByCategory
                   ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-transparent shadow-xs'
                   : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
-              }`}
+                }`}
             >
               <Layers className="w-3.5 h-3.5" />
               <span>{groupByCategory ? 'Grouped by Theme' : 'Group by Theme'}</span>
@@ -177,11 +176,10 @@ export const HackathonAggregatorView: React.FC = () => {
               <button
                 key={p}
                 onClick={() => setSelectedPlatform(p)}
-                className={`px-3 py-1 text-xs font-semibold rounded-lg border whitespace-nowrap transition-colors cursor-pointer ${
-                  selectedPlatform === p
+                className={`px-3 py-1 text-xs font-semibold rounded-lg border whitespace-nowrap transition-colors cursor-pointer ${selectedPlatform === p
                     ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-transparent'
                     : 'bg-neutral-50 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-800 hover:text-neutral-900 dark:hover:text-white'
-                }`}
+                  }`}
               >
                 {p}
               </button>
@@ -198,11 +196,10 @@ export const HackathonAggregatorView: React.FC = () => {
             <button
               key={c}
               onClick={() => setSelectedCategory(c)}
-              className={`px-3.5 py-1 text-xs font-medium rounded-full border whitespace-nowrap transition-colors cursor-pointer ${
-                selectedCategory === c
+              className={`px-3.5 py-1 text-xs font-medium rounded-full border whitespace-nowrap transition-colors cursor-pointer ${selectedCategory === c
                   ? 'bg-cyan-50 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 border-cyan-300 dark:border-cyan-700 font-bold'
                   : 'bg-neutral-100/70 dark:bg-neutral-800/60 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-800 hover:text-neutral-900 dark:hover:text-white'
-              }`}
+                }`}
             >
               {c}
             </button>
@@ -214,7 +211,6 @@ export const HackathonAggregatorView: React.FC = () => {
       {loading ? (
         <div className="py-20 flex flex-col items-center justify-center text-neutral-400 space-y-3">
           <div className="w-8 h-8 border-2 border-neutral-900 dark:border-white border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-mono font-medium">Loading live hackathons from MongoDB cache...</p>
         </div>
       ) : filteredHackathons.length === 0 ? (
         <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#1a1a1a] border border-neutral-200/90 dark:border-neutral-800 space-y-3">

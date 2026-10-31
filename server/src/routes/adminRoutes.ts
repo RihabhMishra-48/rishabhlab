@@ -237,27 +237,40 @@ router.post('/mentors', async (req, res) => {
       ? data.availability
       : (data.availability ? String(data.availability).split(',').map((t: string) => t.trim()).filter(Boolean) : ['Tomorrow, 6:00 PM IST']);
 
-    // 1. Insert into Supabase
+    let hourlyRateInr = 0;
+    if (data.hourlyRate !== undefined || data.hourly_rate_inr !== undefined || data.hourlyRateInr !== undefined) {
+      const rawRate = data.hourly_rate_inr ?? data.hourlyRateInr ?? data.hourlyRate;
+      if (typeof rawRate === 'number') {
+        hourlyRateInr = rawRate;
+      } else if (typeof rawRate === 'string') {
+        const digits = rawRate.replace(/[^\d]/g, '');
+        hourlyRateInr = digits ? parseInt(digits, 10) : 0;
+      }
+    }
+
+    const experienceYears = Number(data.experience_years || data.experienceYears) ||
+      (data.reviewsCount ? Math.max(1, Math.round(Number(data.reviewsCount) / 10)) : 5);
+
+    // 1. Insert into Supabase (strictly verified columns only)
     if (isSupabaseConfigured() && supabase) {
       try {
         const { data: inserted, error: sbErr } = await supabase
           .from('mentors')
           .insert({
-            name: data.name || 'New Mentor',
-            title: data.title || 'Technical Specialist',
-            company: data.company || 'RishabhLabs',
-            domain: data.domain || 'Full-Stack Development',
+            name: (data.name || 'New Mentor').trim(),
+            title: (data.title || 'Technical Specialist').trim(),
+            company: (data.company || 'RishabhLabs').trim(),
+            domain: (data.domain || 'Full-Stack Development').trim(),
             avatar: data.avatar || '/avatars/default.webp',
-            bio: data.bio || 'Experienced engineering mentor.',
+            bio: data.bio || 'Experienced engineering mentor at RishabhLabs.',
             topics: topicsArr,
-            availability: availArr,
-            hourly_rate: data.hourlyRate || 'Free for Pro',
+            available_days: availArr,
+            hourly_rate_inr: hourlyRateInr,
             rating: Number(data.rating) || 5.0,
-            reviews_count: Number(data.reviewsCount) || 12,
-            is_available_today: data.isAvailableToday !== undefined ? Boolean(data.isAvailableToday) : true,
+            experience_years: experienceYears,
           })
           .select()
-          .single();
+          .maybeSingle();
 
         if (inserted && !sbErr) {
           mentor = {
@@ -270,11 +283,11 @@ router.post('/mentors', async (req, res) => {
             avatar: inserted.avatar,
             bio: inserted.bio,
             topics: inserted.topics,
-            availability: inserted.availability,
-            hourlyRate: inserted.hourly_rate,
-            rating: inserted.rating,
-            reviewsCount: inserted.reviews_count,
-            isAvailableToday: inserted.is_available_today,
+            availability: inserted.available_days || availArr,
+            hourlyRate: (inserted.hourly_rate_inr && inserted.hourly_rate_inr > 0) ? `₹${inserted.hourly_rate_inr}` : 'Free for Pro',
+            rating: Number(inserted.rating) || 5.0,
+            reviewsCount: Number(data.reviewsCount) || experienceYears * 10,
+            isAvailableToday: data.isAvailableToday !== undefined ? Boolean(data.isAvailableToday) : true,
           };
         } else if (sbErr) {
           console.warn('Supabase create mentor error:', sbErr);
@@ -296,7 +309,7 @@ router.post('/mentors', async (req, res) => {
           rating: Number(data.rating) || 5.0,
           reviewsCount: Number(data.reviewsCount) || 10,
           bio: data.bio || '',
-          hourlyRate: data.hourlyRate || 'Free for Pro',
+          hourlyRate: hourlyRateInr > 0 ? `₹${hourlyRateInr}` : (data.hourlyRate || 'Free for Pro'),
           topics: topicsArr,
           availability: availArr,
           isAvailableToday: data.isAvailableToday !== undefined ? Boolean(data.isAvailableToday) : true,
@@ -320,6 +333,7 @@ router.post('/mentors', async (req, res) => {
         ...data,
         topics: topicsArr,
         availability: availArr,
+        hourlyRate: hourlyRateInr > 0 ? `₹${hourlyRateInr}` : (data.hourlyRate || 'Free for Pro'),
       };
     }
 
@@ -341,57 +355,127 @@ router.put('/mentors/:id', async (req, res) => {
       ? data.availability
       : (data.availability ? String(data.availability).split(',').map((t: string) => t.trim()).filter(Boolean) : undefined);
 
-    let updated: any = null;
+    let hourlyRateInr: number | undefined = undefined;
+    if (data.hourlyRate !== undefined || data.hourly_rate_inr !== undefined || data.hourlyRateInr !== undefined) {
+      const rawRate = data.hourly_rate_inr ?? data.hourlyRateInr ?? data.hourlyRate;
+      if (typeof rawRate === 'number') {
+        hourlyRateInr = rawRate;
+      } else if (typeof rawRate === 'string') {
+        const digits = rawRate.replace(/[^\d]/g, '');
+        hourlyRateInr = digits ? parseInt(digits, 10) : 0;
+      }
+    }
 
-    // 1. Update in Supabase
+    let updatedSb: any = null;
+    let updatedMongo: any = null;
+
+    // 1. Update in Supabase (only strictly verified columns that exist in the schema)
     if (isSupabaseConfigured() && supabase) {
       try {
         const sbPayload: any = {};
-        if (data.name !== undefined) sbPayload.name = data.name;
-        if (data.title !== undefined) sbPayload.title = data.title;
-        if (data.company !== undefined) sbPayload.company = data.company;
-        if (data.domain !== undefined) sbPayload.domain = data.domain;
-        if (data.avatar !== undefined) sbPayload.avatar = data.avatar;
-        if (data.bio !== undefined) sbPayload.bio = data.bio;
+        if (data.name !== undefined && String(data.name).trim() !== '') sbPayload.name = String(data.name).trim();
+        if (data.title !== undefined) sbPayload.title = String(data.title).trim();
+        if (data.company !== undefined) sbPayload.company = String(data.company).trim();
+        if (data.domain !== undefined) sbPayload.domain = String(data.domain).trim();
+        if (data.avatar !== undefined) sbPayload.avatar = String(data.avatar).trim();
+        if (data.bio !== undefined) sbPayload.bio = String(data.bio).trim();
         if (topicsArr !== undefined) sbPayload.topics = topicsArr;
-        if (availArr !== undefined) sbPayload.availability = availArr;
-        if (data.hourlyRate !== undefined) sbPayload.hourly_rate = data.hourlyRate;
-        if (data.rating !== undefined) sbPayload.rating = Number(data.rating);
-        if (data.isAvailableToday !== undefined) sbPayload.is_available_today = Boolean(data.isAvailableToday);
+        if (availArr !== undefined) sbPayload.available_days = availArr;
+        if (hourlyRateInr !== undefined) sbPayload.hourly_rate_inr = hourlyRateInr;
+        if (data.rating !== undefined) sbPayload.rating = Number(data.rating) || 5.0;
+        if (data.experience_years !== undefined) {
+          sbPayload.experience_years = Number(data.experience_years) || 5;
+        } else if (data.experienceYears !== undefined) {
+          sbPayload.experience_years = Number(data.experienceYears) || 5;
+        } else if (data.reviewsCount !== undefined) {
+          sbPayload.experience_years = Math.max(1, Math.round(Number(data.reviewsCount) / 10));
+        }
 
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-        let query = supabase.from('mentors').update(sbPayload);
+        let matchedSbId: string | null = null;
+
         if (isUUID) {
-          query = query.eq('id', id);
-        } else {
-          query = query.eq('name', data.name || id);
-        }
-        const { data: updatedSb, error: sbErr } = await query.select().single();
-        if (updatedSb && !sbErr) {
-          updated = {
-            _id: updatedSb.id,
-            id: updatedSb.id,
-            name: updatedSb.name,
-            title: updatedSb.title,
-            company: updatedSb.company,
-            domain: updatedSb.domain,
-            avatar: updatedSb.avatar,
-            bio: updatedSb.bio,
-            topics: updatedSb.topics,
-            availability: updatedSb.availability,
-            hourlyRate: updatedSb.hourly_rate,
-            rating: updatedSb.rating,
-            isAvailableToday: updatedSb.is_available_today,
-          };
-        } else if (sbErr) {
-          console.warn('Supabase update mentor error:', sbErr);
+          const { data: existById } = await supabase.from('mentors').select('id').eq('id', id).maybeSingle();
+          if (existById) matchedSbId = existById.id;
         }
 
-        // Keep profile avatar in sync if mentor corresponds to a registered user
-        if (data.avatar !== undefined && (data.name || updatedSb?.name)) {
-          const mentorName = data.name || updatedSb?.name;
+        if (!matchedSbId) {
+          const { data: allMentors } = await supabase.from('mentors').select('id, name');
+          const candidates = allMentors || [];
+          const origName = (data.originalName || '').toLowerCase().trim();
+          const currentName = (data.name || '').toLowerCase().trim();
+          const idTarget = id.toLowerCase().trim();
+          const slugTarget = idTarget.replace(/^mentor-/, '').replace(/-/g, ' ');
+
+          const match = candidates.find((m: any) => {
+            const mName = (m.name || '').toLowerCase().trim();
+            if (m.id === id) return true;
+            if (origName && mName === origName) return true;
+            if (currentName && mName === currentName) return true;
+            if (mName === idTarget) return true;
+            if (slugTarget && mName.includes(slugTarget)) return true;
+            return false;
+          });
+
+          if (match) matchedSbId = match.id;
+        }
+
+        if (matchedSbId) {
+          const { data: upd, error: sbErr } = await supabase
+            .from('mentors')
+            .update(sbPayload)
+            .eq('id', matchedSbId)
+            .select()
+            .maybeSingle();
+
+          if (upd && !sbErr) {
+            updatedSb = upd;
+          } else if (sbErr) {
+            console.warn('Supabase update mentor error:', sbErr);
+          }
+        } else {
+          // If mentor does not exist in Supabase yet, insert it to keep both datastores 100% in sync
+          const { data: ins, error: insErr } = await supabase
+            .from('mentors')
+            .insert({
+              name: sbPayload.name || 'New Mentor',
+              title: sbPayload.title || 'Technical Specialist',
+              company: sbPayload.company || 'RishabhLabs',
+              domain: sbPayload.domain || 'Full-Stack Development',
+              avatar: sbPayload.avatar || '/avatars/default.webp',
+              bio: sbPayload.bio || 'Experienced engineering mentor at RishabhLabs.',
+              topics: sbPayload.topics || ['Roadmap', 'Architecture'],
+              available_days: sbPayload.available_days || ['Monday', 'Wednesday', 'Saturday'],
+              hourly_rate_inr: sbPayload.hourly_rate_inr ?? 0,
+              rating: sbPayload.rating || 5.0,
+              experience_years: sbPayload.experience_years || 5,
+            })
+            .select()
+            .maybeSingle();
+
+          if (ins && !insErr) {
+            updatedSb = ins;
+          } else if (insErr) {
+            console.warn('Supabase insert mentor fallback error:', insErr);
+          }
+        }
+
+        // Keep profile synced if mentor corresponds to a registered user
+        const mentorNameToSync = data.name || updatedSb?.name || data.originalName;
+        if (mentorNameToSync) {
           try {
-            await supabase.from('profiles').update({ avatar_url: data.avatar }).ilike('full_name', `%${mentorName}%`);
+            const profileUpdates: any = {};
+            if (data.avatar) profileUpdates.avatar_url = data.avatar;
+            if (data.title) profileUpdates.target_goal = data.title;
+            if (data.company) profileUpdates.college_name = data.company;
+            if (data.domain) profileUpdates.field_of_interest = data.domain;
+
+            if (Object.keys(profileUpdates).length > 0) {
+              await supabase
+                .from('profiles')
+                .update(profileUpdates)
+                .ilike('full_name', `%${mentorNameToSync}%`);
+            }
           } catch (_) {}
         }
       } catch (sbErr) {
@@ -402,17 +486,34 @@ router.put('/mentors/:id', async (req, res) => {
     // 2. Update in MongoDB
     if (mongoose.connection.readyState === 1) {
       try {
+        const mongoPayload: any = {
+          name: data.name,
+          title: data.title,
+          company: data.company,
+          domain: data.domain,
+          avatar: data.avatar,
+          bio: data.bio,
+          rating: Number(data.rating) || 5.0,
+          reviewsCount: Number(data.reviewsCount) || 48,
+          hourlyRate: hourlyRateInr !== undefined && hourlyRateInr > 0 ? `₹${hourlyRateInr}` : (data.hourlyRate || 'Free for Pro'),
+          topics: topicsArr,
+          availability: availArr,
+          isAvailableToday: data.isAvailableToday !== undefined ? Boolean(data.isAvailableToday) : true,
+        };
+
         if (mongoose.Types.ObjectId.isValid(id)) {
-          const mUpdated = await Mentor.findByIdAndUpdate(id, { ...data, topics: topicsArr, availability: availArr }, { new: true });
-          if (mUpdated && !updated) updated = mUpdated;
+          updatedMongo = await Mentor.findByIdAndUpdate(id, mongoPayload, { new: true });
         } else {
-          const mUpdated = await Mentor.findOneAndUpdate({ $or: [{ name: id }, { name: data.name }] }, { ...data, topics: topicsArr, availability: availArr }, { new: true });
-          if (mUpdated && !updated) updated = mUpdated;
+          updatedMongo = await Mentor.findOneAndUpdate(
+            { $or: [{ name: data.originalName || id }, { name: data.name }] },
+            mongoPayload,
+            { new: true }
+          );
         }
 
-        if (data.avatar !== undefined && (data.name || updated?.name)) {
+        if (data.avatar !== undefined && (data.name || updatedSb?.name)) {
           await User.updateMany(
-            { name: new RegExp(data.name || updated?.name, 'i') },
+            { name: new RegExp(data.name || updatedSb?.name, 'i') },
             { $set: { avatar: data.avatar } }
           );
         }
@@ -421,11 +522,40 @@ router.put('/mentors/:id', async (req, res) => {
       }
     }
 
-    if (!updated) {
-      updated = { _id: id, id, ...data, topics: topicsArr, availability: availArr };
-    }
+    const finalId = updatedSb?.id || updatedMongo?._id?.toString() || id;
+    const finalName = updatedSb?.name || updatedMongo?.name || data.name;
+    const finalTitle = updatedSb?.title || updatedMongo?.title || data.title;
+    const finalCompany = updatedSb?.company || updatedMongo?.company || data.company;
+    const finalDomain = updatedSb?.domain || updatedMongo?.domain || data.domain;
+    const finalAvatar = updatedSb?.avatar || updatedMongo?.avatar || data.avatar;
+    const finalBio = updatedSb?.bio || updatedMongo?.bio || data.bio;
+    const finalRating = Number(updatedSb?.rating ?? updatedMongo?.rating ?? data.rating) || 5.0;
+    const finalTopics = updatedSb?.topics || updatedMongo?.topics || topicsArr || [];
+    const finalAvailability = updatedSb?.available_days || updatedMongo?.availability || availArr || ['Today, 7:00 PM IST'];
+    const finalHourlyRate = (updatedSb?.hourly_rate_inr && updatedSb.hourly_rate_inr > 0)
+      ? `₹${updatedSb.hourly_rate_inr}`
+      : (updatedMongo?.hourlyRate || data.hourlyRate || 'Free for Pro');
+    const finalReviewsCount = Number(data.reviewsCount) || updatedMongo?.reviewsCount || (updatedSb?.experience_years ? updatedSb.experience_years * 10 : 48);
+    const finalIsAvailableToday = data.isAvailableToday !== undefined ? Boolean(data.isAvailableToday) : true;
 
-    res.json(updated);
+    const result = {
+      _id: finalId,
+      id: finalId,
+      name: finalName,
+      title: finalTitle,
+      company: finalCompany,
+      domain: finalDomain,
+      avatar: finalAvatar,
+      bio: finalBio,
+      rating: finalRating,
+      reviewsCount: finalReviewsCount,
+      hourlyRate: finalHourlyRate,
+      topics: finalTopics,
+      availability: finalAvailability,
+      isAvailableToday: finalIsAvailableToday,
+    };
+
+    res.json(result);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }
@@ -436,6 +566,7 @@ router.delete('/mentors/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const name = (req.query.name as string) || '';
+    const targetName = (name || id || '').trim();
 
     // 1. Delete from Supabase
     if (isSupabaseConfigured() && supabase) {
@@ -443,11 +574,18 @@ router.delete('/mentors/:id', async (req, res) => {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
         if (isUUID) {
           await supabase.from('mentors').delete().eq('id', id);
-        }
-        if (name) {
-          await supabase.from('mentors').delete().eq('name', name);
-        } else if (!isUUID && id && id !== 'by-name' && id !== 'undefined') {
-          await supabase.from('mentors').delete().eq('name', id);
+        } else {
+          const { data: allM } = await supabase.from('mentors').select('id, name');
+          const matched = (allM || []).find((m: any) =>
+            m.id === id ||
+            m.name.toLowerCase() === targetName.toLowerCase() ||
+            (id.startsWith('mentor-') && m.name.toLowerCase().replace(/\s+/g, '-') === id.replace('mentor-', ''))
+          );
+          if (matched) {
+            await supabase.from('mentors').delete().eq('id', matched.id);
+          } else if (targetName && targetName !== 'undefined' && targetName !== 'by-name') {
+            await supabase.from('mentors').delete().ilike('name', targetName);
+          }
         }
       } catch (sbErr) {
         console.warn('Could not delete mentor from Supabase:', sbErr);
@@ -460,7 +598,6 @@ router.delete('/mentors/:id', async (req, res) => {
         if (mongoose.Types.ObjectId.isValid(id)) {
           await Mentor.findByIdAndDelete(id);
         }
-        const targetName = name || (!mongoose.Types.ObjectId.isValid(id) ? id : '');
         if (targetName && targetName !== 'undefined' && targetName !== 'by-name') {
           await Mentor.deleteMany({ name: new RegExp(`^${targetName}$`, 'i') });
           await User.updateMany({ name: new RegExp(`^${targetName}$`, 'i'), role: 'mentor' }, { role: 'student' });
@@ -470,7 +607,7 @@ router.delete('/mentors/:id', async (req, res) => {
       }
     }
 
-    res.json({ success: true, message: `Mentor "${name || id}" removed successfully` });
+    res.json({ success: true, message: `Mentor "${targetName}" removed successfully` });
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }
