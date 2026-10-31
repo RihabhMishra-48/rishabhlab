@@ -162,8 +162,8 @@ export const AdminDashboardPage: React.FC = () => {
       let finalMissions = Array.isArray(missionsData) && missionsData.length > 0 ? missionsData : [];
       let finalPricing = Array.isArray(pricingData) && pricingData.length > 0 ? pricingData : [];
 
-      // Direct Supabase Query Fallback for real-time cloud data
-      if (isSupabaseConfigured && supabase) {
+      // Direct Supabase Query Fallback for real-time cloud data if API returned empty
+      if (finalUsers.length === 0 && isSupabaseConfigured && supabase) {
         const { data: sbProfiles, error: profErr } = await supabase
           .from('profiles')
           .select('*')
@@ -379,23 +379,8 @@ export const AdminDashboardPage: React.FC = () => {
     try {
       setUpdatingUserId(userId);
 
-      // Persist directly to Supabase profiles
-      if (isSupabaseConfigured && supabase) {
-        if (userId) {
-          const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
-          if (error) {
-            const foundUser = users.find((u) => u._id === userId || u.id === userId);
-            if (foundUser?.email) {
-              await supabase.from('profiles').update({ role: newRole }).eq('email', foundUser.email);
-            }
-          }
-        }
-      }
-
-      // Sync with Express backend if active
-      if (userId) {
-        await api.adminUpdateUserRole(userId, newRole).catch(() => null);
-      }
+      // Perform authoritative update via Express backend (uses Supabase service-role key)
+      await api.adminUpdateUserRole(userId, newRole);
 
       setUsers((prev) => prev.map((u) => ((u._id === userId || u.id === userId) ? { ...u, role: newRole } : u)));
       
@@ -433,17 +418,7 @@ export const AdminDashboardPage: React.FC = () => {
   const handleDeleteUser = async (userId: string, email: string) => {
     if (!window.confirm(`Are you sure you want to delete user ${email}? This cannot be undone.`)) return;
     try {
-      if (isSupabaseConfigured && supabase) {
-        if (userId) {
-          await supabase.from('profiles').delete().eq('id', userId);
-        }
-        if (email) {
-          await supabase.from('profiles').delete().eq('email', email);
-        }
-      }
-      if (userId) {
-        await api.adminDeleteUser(userId).catch(() => null);
-      }
+      await api.adminDeleteUser(userId || email);
       setUsers((prev) => prev.filter((u) => u._id !== userId && u.id !== userId && u.email !== email));
       showNotification(`User ${email} deleted.`);
     } catch (err: any) {
