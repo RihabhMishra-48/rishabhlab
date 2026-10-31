@@ -17,6 +17,10 @@ import learningRoutes from './routes/learningRoutes';
 import codingRoutes from './routes/codingRoutes';
 import projectRoutes from './routes/projectRoutes';
 import hackathonRoutes from './routes/hackathonRoutes';
+import hackathonAggregatorRoutes from './routes/hackathonAggregatorRoutes';
+import { schedulerService } from './services/SchedulerService';
+import { Hackathon } from './models/Hackathon';
+import { logger } from './config/logger';
 import mentorshipRoutes from './routes/mentorshipRoutes';
 import weeklyReviewRoutes from './routes/weeklyReviewRoutes';
 import profileRoutes from './routes/profileRoutes';
@@ -61,7 +65,7 @@ app.use('/api/problems', codingRoutes);
 app.use('/api/code', codingRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/hackathon', hackathonRoutes);
-app.use('/api/hackathons', hackathonRoutes);
+app.use('/api/hackathons', hackathonAggregatorRoutes);
 app.use('/api/mentorship', mentorshipRoutes);
 app.use('/api/mentors', mentorshipRoutes);
 app.use('/api/weekly-review', weeklyReviewRoutes);
@@ -108,6 +112,49 @@ const startServer = async () => {
         console.error('❌ [Supabase Seed Error]:', err?.message || err);
       });
     }
+
+    // Initialize Hackathon Aggregator 24h cron & bootstrap initial scrape if database is fresh
+    schedulerService.initScheduler();
+    (async () => {
+      try {
+        // Purge any legacy unnormalized records or outdated dummy seeds
+        const legacyDummyIds = [
+          'ai-agents-unleashed-buildathon',
+          'global-open-innovation-jam',
+          'amazon-ml-summer-school-challenge',
+          'flipkart-grid-70-software-dev',
+          'tata-crucible-tech-security',
+          'sih-national-grand-finale-2026',
+          'superteam-solana-builder-house-2026',
+          'anthropic-claude-speed-run-soon',
+          'stripe-plaid-fintech-hack',
+          'aws-cloud-kubernetes-challenge',
+          'google-cloud-genai-sprint',
+          'chainlink-web3-hackathon',
+        ];
+
+        await Hackathon.deleteMany({
+          $or: [
+            { title: { $exists: false } },
+            { title: '' },
+            { id: { $exists: false } },
+            { status: 'closed' },
+            { applicationDeadline: { $lt: new Date() } },
+            { sourceId: { $in: legacyDummyIds } },
+          ],
+        });
+
+        const count = await Hackathon.countDocuments({ title: { $exists: true, $ne: '' } });
+        if (count < 25) {
+          logger.info(`🌱 [Startup] Database has ${count} records. Ingesting full verified live hackathons pipeline in background...`);
+          schedulerService.executeJob().catch((e) => logger.warn('[Startup] Initial scrape notice:', e.message));
+        } else {
+          logger.info(`✨ [Startup] Loaded ${count} verified aggregated hackathons from MongoDB cache.`);
+        }
+      } catch (e: any) {
+        logger.warn('[Startup] MongoDB check notice:', e.message);
+      }
+    })();
   });
 
   // Handle port conflicts gracefully (prevents unhandled EADDRINUSE crash)
@@ -136,6 +183,7 @@ const startServer = async () => {
   // Graceful shutdown: ensures socket is immediately freed on reload / exit
   const gracefulShutdown = () => {
     console.log('\n🛑 [Rishabh Labs Backend] Gracefully releasing port and closing server...');
+    schedulerService.stopScheduler();
     server.close(() => {
       process.exit(0);
     });

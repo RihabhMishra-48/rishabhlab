@@ -1,77 +1,100 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { HACKATHON_CATEGORIES, SOURCE_PLATFORMS, HackathonCategory, SourcePlatform } from '../config/scraperConfig';
 
-export interface IHackathonPhase {
-  phaseId: string;
-  name: string;
-  daysRange: string;
-  status: 'completed' | 'active' | 'upcoming';
+export interface IHackathonTimelineItem {
+  stage: string;
+  date: string;
+  description?: string;
+}
+
+export interface IHackathonPrizeTier {
+  place?: string;
+  amount?: string;
+  perks?: string;
+}
+
+export interface IHackathonPrizes {
+  total?: string;
+  currency?: string;
+  breakdown?: IHackathonPrizeTier[];
+  rawText?: string;
+}
+
+export interface IHackathonDocument extends Document {
+  id: string; // Deterministic system hash
+  title: string;
+  sourcePlatform: SourcePlatform;
+  sourceId: string;
+  category: HackathonCategory;
+  registrationUrl: string;
+  summary: string;
   description: string;
-  deliverables: string[];
+  prizes: IHackathonPrizes | string;
+  timeline: IHackathonTimelineItem[];
+  scrapedAt: Date;
+  applicationDeadline?: Date | null;
+  location?: string;
+  bannerUrl?: string;
+  eligibility?: string;
+  organization?: string;
+  tags: string[];
+  status: 'open' | 'upcoming' | 'closed';
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface IHackathon extends Document {
-  userId: mongoose.Types.ObjectId;
-  hackathonName: string;
-  targetEventDate: Date;
-  daysRemaining: number;
-  hoursRemaining: number;
-  problemStatement: string;
-  selectedTrack: string;
-  teamMembers: Array<{
-    name: string;
-    role: string;
-    avatar: string;
-  }>;
-  phases: IHackathonPhase[];
-  aiOutputs: {
-    ideas: Array<{ title: string; pitch: string; viability: string }>;
-    problemAnalysis: string;
-    techStackRecommendation: string[];
-    mvpChecklist: string[];
-    pitchDeckOutline: Array<{ slide: string; content: string }>;
-    judgeQuestions: Array<{ question: string; goodAnswerStrategy: string }>;
-  };
-}
-
-const HackathonPhaseSchema = new Schema<IHackathonPhase>({
-  phaseId: { type: String, required: true },
-  name: { type: String, required: true },
-  daysRange: { type: String, required: true },
-  status: { type: String, enum: ['completed', 'active', 'upcoming'], default: 'upcoming' },
-  description: { type: String },
-  deliverables: [{ type: String }],
-});
-
-const HackathonSchema = new Schema<IHackathon>(
+const TimelineItemSchema = new Schema<IHackathonTimelineItem>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: false },
-    hackathonName: { type: String, default: 'Smart India Hackathon & InnovateX' },
-    targetEventDate: { type: Date, default: () => new Date(Date.now() + 12 * 24 * 60 * 60 * 1000 + 4 * 3600 * 1000 + 32 * 60 * 1000) },
-    daysRemaining: { type: Number, default: 12 },
-    hoursRemaining: { type: Number, default: 4 },
-    problemStatement: {
-      type: String,
-      default: 'Automated AI platform for evaluating student code artifacts, detecting edge case vulnerabilities, and accelerating prototype delivery.',
-    },
-    selectedTrack: { type: String, default: 'Smart Education & AI' },
-    teamMembers: [
-      {
-        name: { type: String },
-        role: { type: String },
-        avatar: { type: String },
-      },
-    ],
-    phases: [HackathonPhaseSchema],
-    aiOutputs: {
-      ideas: [{ title: { type: String }, pitch: { type: String }, viability: { type: String } }],
-      problemAnalysis: { type: String },
-      techStackRecommendation: [{ type: String }],
-      mvpChecklist: [{ type: String }],
-      pitchDeckOutline: [{ slide: { type: String }, content: { type: String } }],
-      judgeQuestions: [{ question: { type: String }, goodAnswerStrategy: { type: String } }],
-    },
+    stage: { type: String, required: true },
+    date: { type: String, required: true },
+    description: { type: String },
   },
-  { timestamps: true }
+  { _id: false }
 );
 
-export const Hackathon = mongoose.model<IHackathon>('Hackathon', HackathonSchema);
+const HackathonSchema = new Schema<IHackathonDocument>(
+  {
+    id: { type: String, required: true, unique: true, index: true },
+    title: { type: String, required: true, trim: true, index: true },
+    sourcePlatform: {
+      type: String,
+      required: true,
+      enum: SOURCE_PLATFORMS,
+      index: true,
+    },
+    sourceId: { type: String, required: true, trim: true },
+    category: {
+      type: String,
+      required: true,
+      enum: HACKATHON_CATEGORIES,
+      index: true,
+    },
+    registrationUrl: { type: String, required: true, trim: true },
+    summary: { type: String, required: true, trim: true },
+    description: { type: String, default: '' },
+    prizes: { type: Schema.Types.Mixed, default: () => ({ total: 'TBD', breakdown: [] }) },
+    timeline: { type: [TimelineItemSchema], default: [] },
+    scrapedAt: { type: Date, default: Date.now, index: true },
+    applicationDeadline: { type: Date, default: null, index: true },
+    location: { type: String, default: 'Online / Virtual' },
+    bannerUrl: { type: String, default: '' },
+    eligibility: { type: String, default: 'Open to all builders and students globally.' },
+    organization: { type: String, default: '' },
+    tags: { type: [String], default: [] },
+    status: {
+      type: String,
+      enum: ['open', 'upcoming', 'closed'],
+      default: 'open',
+      index: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Compound unique index on sourcePlatform + sourceId to prevent duplicates at the DB level
+HackathonSchema.index({ sourcePlatform: 1, sourceId: 1 }, { unique: true });
+HackathonSchema.index({ category: 1, applicationDeadline: 1 });
+
+export const Hackathon = mongoose.model<IHackathonDocument>('Hackathon', HackathonSchema);

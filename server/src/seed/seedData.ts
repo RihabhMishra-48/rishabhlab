@@ -7,7 +7,7 @@ import { DailyMission } from '../models/DailyMission';
 import { Lesson } from '../models/Lesson';
 import { CodingProblem } from '../models/CodingProblem';
 import { Project } from '../models/Project';
-import { Hackathon } from '../models/Hackathon';
+import { HackathonPlan } from '../models/HackathonPlan';
 import { Mentor, MentorshipRequest } from '../models/Mentorship';
 import { WeeklyReview, College, PricingPlan } from '../models/CollegeAndReview';
 

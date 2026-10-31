@@ -11,3 +11,5 @@
 ## 3. Strict Real Data Invariant
 - Never inject fake mock datasets or starter templates into user-keyed storage/cache when an API account or resource returns empty. Display clean, modern empty states with self-driven action buttons (e.g. "Create File", "Upload").
 
+- **Persistent Profile Synchronizer**: Whenever a user submits contact or identity details (such as phone, handle, or avatar) in secondary operational flows (e.g. consultation booking, hackathon registration), immediately upsert those attributes to both the active session profile and backend persistent storage to guarantee seamless autofill in future workflows.
+

@@ -682,8 +682,8 @@ export const ProfilePage: React.FC = () => {
               <div
                 key={i}
                 className={`p-5 rounded-2xl border space-y-2 shadow-2xs ${a.unlocked
-                    ? 'bg-white dark:bg-[#212121] border-neutral-200/80 dark:border-neutral-800'
-                    : 'bg-neutral-50/50 dark:bg-neutral-900/30 border-dashed border-neutral-200 dark:border-neutral-800/80 opacity-70'
+                  ? 'bg-white dark:bg-[#212121] border-neutral-200/80 dark:border-neutral-800'
+                  : 'bg-neutral-50/50 dark:bg-neutral-900/30 border-dashed border-neutral-200 dark:border-neutral-800/80 opacity-70'
                   }`}
               >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${a.unlocked ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100' : 'bg-neutral-200/50 dark:bg-neutral-800/40 text-neutral-400'
@@ -806,7 +806,6 @@ export const ProfilePage: React.FC = () => {
                       <Phone className="w-3.5 h-3.5 text-neutral-400" />
                       <span>Mobile / WhatsApp</span>
                     </label>
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">For Mentorship</span>
                   </div>
                   <input
                     type="tel"

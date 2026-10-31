@@ -198,6 +198,34 @@ export interface Mentor {
   domain?: string;
 }
 
+export interface AggregatedHackathon {
+  _id?: string;
+  id: string;
+  title: string;
+  sourcePlatform: 'Unstop' | 'Devpost' | 'Luma';
+  sourceId: string;
+  category: string;
+  registrationUrl: string;
+  summary: string;
+  description: string;
+  prizes: {
+    total?: string;
+    breakdown?: Array<{ place?: string; amount?: string; perks?: string }>;
+    rawText?: string;
+  } | string;
+  timeline: Array<{ stage: string; date: string; description?: string }>;
+  scrapedAt: string;
+  applicationDeadline?: string | null;
+  location?: string;
+  bannerUrl?: string;
+  eligibility?: string;
+  organization?: string;
+  tags: string[];
+  status: 'open' | 'upcoming' | 'closed';
+  isClosed?: boolean;
+  isClosingSoon?: boolean;
+}
+
 export interface Hackathon {
   _id: string;
   hackathonName: string;

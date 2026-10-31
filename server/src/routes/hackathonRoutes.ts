@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth, AuthRequest } from '../middleware/auth';
-import { Hackathon } from '../models/Hackathon';
+import { HackathonPlan } from '../models/HackathonPlan';
 import { User } from '../models/User';
 import { aiService } from '../services/aiService';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
@@ -245,7 +245,7 @@ router.get('/', async (req, res) => {
     let hackathon: any = null;
     if (isMongoReady) {
       try {
-        hackathon = await Hackathon.findOne({});
+        hackathon = await HackathonPlan.findOne({});
       } catch (e) {
         console.warn('Mongo findOne error in hackathon:', e);
       }
@@ -319,7 +319,7 @@ router.get('/', async (req, res) => {
 
       if (isMongoReady) {
         try {
-          hackathon = await Hackathon.create(defaultData);
+          hackathon = await HackathonPlan.create(defaultData);
         } catch (e) {
           hackathon = { _id: 'default-hackathon', ...defaultData };
         }

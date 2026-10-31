@@ -114,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Missions', path: '/missions', icon: CheckCircle2, customGraphic: '/graphics/daily-calendar.svg' },
     { label: 'Practice', path: '/practice', icon: DisplayCodeIcon, customGraphic: '/graphics/display-code.svg' },
     { label: 'Projects', path: '/projects', icon: FolderGit2, customGraphic: '/graphics/support.png' },
-    { label: 'Contests & Arena', path: '/hackathon', icon: Trophy, customGraphic: '/graphics/troph-cap.svg' },
+    { label: 'Hackathons', path: '/hackathon', icon: Trophy, customGraphic: '/graphics/troph-cap.svg' },
     { label: 'Mentorship', path: '/mentorship', icon: Users, customGraphic: '/graphics/mentorship.png' },
     { label: 'Weekly Review', path: '/weekly-review', icon: CalendarDays, customGraphic: '/graphics/rectangle-history-circle-plus.svg' },
     { label: 'Profile', path: '/profile', icon: UserIcon, customGraphic: '/graphics/user.svg' },

@@ -85,6 +85,7 @@ export const App: React.FC = () => {
               <Route path="/debugging-lab" element={<DebuggingLabPage />} />
               <Route path="/projects" element={<ProjectsCatalogPage />} />
               <Route path="/projects/:slug" element={<ProjectWorkspacePage />} />
+              <Route path="/hackathons" element={<HackathonModePage />} />
               <Route path="/hackathon" element={<HackathonModePage />} />
               <Route path="/competitions" element={<HackathonModePage />} />
               <Route path="/leaderboard" element={<HackathonModePage />} />

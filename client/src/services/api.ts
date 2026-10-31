@@ -387,6 +387,22 @@ export const api = {
   runHackathonAITool: (toolName: string, problemStatement?: string) =>
     request<any>('/hackathon/ai-tool', { method: 'POST', body: JSON.stringify({ toolName, problemStatement }) }),
 
+  // Hackathon Aggregator Engine
+  getAggregatedHackathons: (category?: string, search?: string, source?: string, grouped?: boolean, status?: string) => {
+    const params = new URLSearchParams();
+    if (category && category !== 'All') params.append('category', category);
+    if (search) params.append('search', search);
+    if (source && source !== 'All') params.append('source', source);
+    if (status) params.append('status', status.toLowerCase());
+    if (grouped) params.append('grouped', 'true');
+    params.append('limit', '100');
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return cachedGet<any>(`/hackathons${qs}`, 30000);
+  },
+  getAggregatedHackathonsStats: () => cachedGet<any>('/hackathons/stats', 60000),
+  getAggregatedHackathonById: (id: string) => cachedGet<any>(`/hackathons/${id}`, 120000),
+  getAggregatedHackathonCategories: () => cachedGet<any>('/hackathons/categories', 120000),
+
   // Mentorship
   getMentors: (topic?: string) => cachedGet<any>(`/mentorship${topic ? `?topic=${topic}` : ''}`, 180000),
   requestMentorship: async (data: any) => {

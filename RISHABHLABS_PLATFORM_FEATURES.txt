@@ -1,0 +1,340 @@
+================================================================================
+          RISHABH LABS - COMPLETE PLATFORM FEATURE SPECIFICATION
+================================================================================
+Document: Comprehensive Inventory of Features, Modules & Technical Architecture
+File Format: Plain Text (.txt)
+Location: /Users/sakhi/Code/rishabhlab-bjg/RISHABHLABS_PLATFORM_FEATURES.txt
+Generated: 2026-10-31
+================================================================================
+
+1. EXECUTIVE OVERVIEW & PHILOSOPHY
+--------------------------------------------------------------------------------
+RishabhLabs is a high-performance developer execution and proof-of-work 
+ecosystem. Rather than passive video-watching, the platform is engineered 
+around active execution: daily missions, living adaptive roadmaps, browser-based
+Monaco sandboxes with progressive AI hints, automated multi-platform hackathon 
+aggregation, 1:1 industry mentorship, campus enterprise analytics, and 
+tamper-proof developer portfolios.
+
+The platform natively supports 4 distinct user roles:
+  - Students / Developers (Daily learning, practice, hackathons, portfolio)
+  - Industry Mentors (Office hours, 1:1 video review, profile management)
+  - College / Campus Admins (Department analytics, cohort velocity, placement KPIs)
+  - Super Admins (Full platform governance, questions, roadmaps, pricing)
+
+
+================================================================================
+2. AUTHENTICATION, PORTALS & ONBOARDING
+================================================================================
+Files: 
+  - client/src/pages/auth/LoginPage.tsx
+  - client/src/pages/auth/RegisterPage.tsx
+  - client/src/pages/onboarding/OnboardingPage.tsx
+  - server/src/routes/authRoutes.ts, onboardingRoutes.ts
+
+A. Role-Dedicated Authentication Portals:
+   - Student Login & Registration: Standard password and email credentials with 
+     JWT token lifecycle and persistent session recovery.
+   - Dedicated Portals:
+     * /mentor/login: Direct portal access for verified industry mentors.
+     * /college/login: Campus administration access for college placement heads.
+     * /admin/login: High-security gateway for platform super administrators.
+   - Password Recovery: Secure OTP-based reset flows via automated email dispatch.
+
+B. Adaptive Onboarding Engine:
+   - Career Track Selection: Full-Stack Web Development, AI & Machine Learning,
+     Data Analytics, Cybersecurity, or Python & Systems Engineering.
+   - Daily Time Budget Calibration: 1 hour, 2 hours, or 4+ hours daily.
+   - Target Timeline & Outcome: Job placement, internship, hackathon win, or freelance.
+   - AI "Not Sure" Diagnostic Quiz:
+     * Interactive questionnaire assessing current skills, comfort level, and passions.
+     * Gemini AI processes telemetry and generates a custom recommended track.
+
+
+================================================================================
+3. STUDENT DASHBOARD & DAILY EXECUTION
+================================================================================
+Files:
+  - client/src/pages/dashboard/StudentDashboard.tsx
+  - client/src/pages/mission/DailyMissionPage.tsx
+  - server/src/routes/dashboardRoutes.ts, missionRoutes.ts
+
+A. Unified Student Command Center (/dashboard):
+   - Real-time Day Streak counter with motivational flame telemetry.
+   - Today's Mission quick-action widget with live completion checkboxes.
+   - Career Roadmap progress meter and next recommended topic module.
+   - Recent Coding Practice statistics and Codeathon ranking overview.
+   - Fast shortcuts to Hackathons, 1:1 Mentorship, and Projects Workspace.
+
+B. Daily Mission Engine (/missions):
+   - Structured 4-Pillar Routine for consistent daily engineering habits:
+     1. Learn (30 mins): Core concept reading or visual walkthrough.
+     2. Practice (45 mins): LeetCode-style problem solving in Monaco.
+     3. Build (45 mins): Hands-on project milestone implementation.
+     4. Ship (End-of-day): Git commit and remote push verification.
+   - "Ship Today's Code" Verification Modal:
+     * Students paste their GitHub commit / Pull Request link.
+     * Triggers celebratory confetti and locks in the day's completed streak.
+
+
+================================================================================
+4. LIVING AI ROADMAPS & INTERACTIVE LEARNING
+================================================================================
+Files:
+  - client/src/pages/roadmap/RoadmapPage.tsx
+  - client/src/pages/learn/LearnCatalogPage.tsx
+  - client/src/pages/learn/LessonDetailPage.tsx
+  - client/src/components/learn/*
+
+A. Living Adaptive Roadmaps (/roadmap):
+   - Dynamic career progression tracks adapting to student quiz accuracy and code velocity.
+   - Visual milestone steppers with prerequisites, duration estimates, and syllabus trees.
+   - Comprehensive resource curation: curated documentation, deep-dives, and tutorials.
+
+B. Modular Learning Catalog (/learn):
+   - Full tracks for Web Development, AI/ML, Data Science, and Systems.
+   - Distraction-free markdown reader with collapsible section outlines.
+   - Rich Interactive Visualizers:
+     * Ipv4PacketHeaderVisualizer: Visual dissection of bit fields, TTL, flags, and headers.
+     * InteractiveSequenceFlowVisualizer: Animated client-server message cascades.
+     * VisualFlowDiagram: Interactive architecture and state-machine graphs.
+   - Embedded comprehension quizzes with instant grading and explanations.
+
+
+================================================================================
+5. MONACO PRACTICE ARENA & DEBUGGING LAB
+================================================================================
+Files:
+  - client/src/pages/practice/ProblemListPage.tsx
+  - client/src/pages/practice/ProblemWorkspacePage.tsx
+  - client/src/pages/practice/DebuggingLabPage.tsx
+  - server/src/services/codeExecutionService.ts
+
+A. Problem Catalog & Filtering (/practice):
+   - Categorized by algorithm domain: Arrays, Strings, Trees, Dynamic Programming, Graphs.
+   - Difficulty tiers: Easy (Emerald), Medium (Amber), Hard (Rose).
+   - Search by keyword, tag, company attribution, and solved status.
+
+B. Production Monaco Code Workspace (/practice/:slug):
+   - Full-screen LeetCode-style dual-pane IDE workspace.
+   - Multi-language switching: Python 3 and JavaScript (ES6+).
+   - Embedded Sandboxed Execution:
+     * Sub-process runner with strict memory bounds and execution timeouts.
+     * Public test case execution with side-by-side actual vs expected outputs.
+     * Hidden test cases for comprehensive edge-case submission scoring.
+   - 4-Tier Progressive AI Hint Engine:
+     * Level 1: Algorithmic Intuition & Conceptual Approach (no code leaks).
+     * Level 2: Recommended Data Structures & Space/Time target complexities.
+     * Level 3: Step-by-step Pseudocode logic skeleton.
+     * Level 4: Concrete code implementation tips.
+
+C. Interactive Debugging Lab (/debugging-lab):
+   - Dedicated "Fix the Bug" challenges simulating real-world engineering maintenance.
+   - Pre-loaded with broken codebases; students must diagnose logic flaws, memory leaks,
+     or edge cases and pass verified unit test suites.
+
+
+================================================================================
+6. PRODUCTION PROJECTS WORKSPACE
+================================================================================
+Files:
+  - client/src/pages/projects/ProjectsCatalogPage.tsx
+  - client/src/pages/projects/ProjectWorkspacePage.tsx
+
+A. Real-World Engineering Catalog:
+   - Full-stack applications, microservices, and AI models designed for production.
+   - Architectural specs, expected API contracts, database schemas, and UX wireframes.
+
+B. Interactive Project Workspace (/projects/:slug):
+   - Step-by-step milestone checklist (Scaffolding, Schema, Auth, Core APIs, UI, Deploy).
+   - Repository Connection: Link verified GitHub repositories.
+   - Deployment Verification: Live preview URL submission and verification.
+   - Direct portfolio artifact generator: Converts finished projects into verified portfolio entries.
+
+
+================================================================================
+7. HACKATHON & COMPETITION PLATFORM
+================================================================================
+Files:
+  - client/src/pages/hackathon/HackathonModePage.tsx
+  - client/src/components/hackathon/HackathonAggregatorView.tsx
+  - client/src/components/hackathon/HackathonDetailModal.tsx
+  - server/src/scrapers/UnstopScraper.ts, DevpostScraper.ts, LumaScraper.ts
+
+A. Multi-Platform Scraping Aggregator (Tab 0):
+   - Automated zero-API Playwright scrapers harvesting live events from:
+     * Unstop: Indian college competitions, corporate challenges, Smart India Hackathon.
+     * Devpost: Global software hackathons, Web3 bounties, AI competitions.
+     * Luma: Hacker houses, builder demo days, and AI founder sprints.
+   - Normalization into standardized categories: AI/ML, Web3, FinTech, Cybersecurity,
+     Mobile/Web Dev, Cloud & DevOps, Open Innovation.
+   - UI Controls: Real-time search, platform filter pills, category pills, "Group by Category"
+     layout toggle, and on-demand "Sync Platforms" scraping trigger.
+
+B. Deep-Scraped Hackathon Details Modal:
+   - High-res hero imagery, host organization, geographic location, and verified badges.
+   - Tiered prize pool breakdown (Cash, PPIs, cloud credits, venture fast-tracks).
+   - Milestone timeline phases (Round 1 Quiz, Prototype Submission, Grand Finale).
+   - Dual actions: Direct native external registration URL + AI sprint planner.
+
+C. Weekly Sprints & Timed Contests (Tab 1):
+   - Timed codeathons with countdown clocks and live leaderboards.
+
+D. Campus & Global Leaderboards (Tab 2):
+   - 3D Isometric podium displays for top 3 rankers.
+   - Campus-wide and national rankings with verified score telemetry.
+
+E. 48-Hour Hackathon AI Studio (Tab 3):
+   - 48-Hour Sprint Roadmap: Hour 0-12 (Ideation), 12-24 (MVP), 24-36 (UI), 36-48 (Pitch).
+   - AI Problem Statement Analyzer and recommended technology stacks.
+   - Pitch deck simulator with outline and presentation talking points.
+
+
+================================================================================
+8. PYCODE PYTHON MASTERY HUB
+================================================================================
+Files:
+  - client/src/pages/pycode/PythonHubPage.tsx
+  - client/src/components/pycode/*
+  - server/src/routes/pycodeRoutes.ts
+
+A. High-Speed Architecture:
+   - Instant Cache Hydration: 0ms latency profile and workspace file rendering.
+   - Background Network Revalidation: Fetches fresh ranking and streak data.
+
+B. Hub Modules:
+   - Student Profile Header: Badges, total problems solved, current rank, and active streak.
+   - GitHub-Style Activity Heatmap: Visual contribution frequency grid over 365 days.
+   - Practice Questions Arena: Curated Python challenges with difficulty chips.
+   - Student Workspace Viewer: Instant access to code files, projects, and execution outputs.
+   - Codeathons Hub: Live Python-focused competitive programming contests.
+
+
+================================================================================
+9. 1:1 INDUSTRY MENTORSHIP ECOSYSTEM
+================================================================================
+Files:
+  - client/src/pages/mentorship/MentorshipPage.tsx
+  - client/src/pages/mentor/MentorSessionsPage.tsx
+  - server/src/routes/mentorshipRoutes.ts
+  - server/src/services/emailService.ts
+
+A. Student Booking Hub (/mentorship):
+   - Domain-based filtering: Full-Stack, AI & ML, Cybersecurity, Cloud, Placement Prep.
+   - Vetted mentor cards with company badges, experience, rating, and hourly availability.
+   - Booking Modal: Select date & slot, describe blocker, provide contact info.
+   - Auto-Profile Sync: Auto-persists student contact info for future bookings.
+   - Automated Confirmation: Dispatches Google Meet video link and calendar invites via email.
+
+B. Dedicated Mentor Session Command Portal (/mentor/sessions):
+   - Secure login (/mentor/login) with mentor credentials.
+   - Session Management Tabs: Upcoming Calls, Completed Reviews, Cancelled.
+   - Student Context Card: Inspect student's career goal, active streak, and GitHub before calls.
+   - Instant Video Launch: Single-click to join the scheduled Google Meet room.
+   - Self-Service Profile Editor: Mentors update bios, company, domain, topics, and office hours.
+   - Real-Time Supabase Sync: Instant live status reflections without page refreshes.
+
+
+================================================================================
+10. COLLEGE & CAMPUS ENTERPRISE SUITE
+================================================================================
+Files:
+  - client/src/pages/college/CollegeDashboardPage.tsx
+  - server/src/routes/collegeRoutes.ts
+
+A. Campus Telemetry Dashboard (/college):
+   - Secure college admin portal (/college/login) for university placement cells.
+   - Department and batch filters (Computer Science, IT, AI & Data Science).
+   - Real-time active student enrollment metrics and weekly practice completion rates.
+   - Hackathon participation statistics and student submission velocity.
+   - Department-level leaderboard highlighting top placement-ready student developers.
+   - Real-time Supabase postgres change stream integration for live campus updates.
+
+
+================================================================================
+11. SUPER ADMIN CONTROL CENTER
+================================================================================
+Files:
+  - client/src/pages/admin/AdminDashboardPage.tsx
+  - server/src/routes/adminRoutes.ts
+
+A. 8 Enterprise Administration Modules (/admin):
+   1. Overview & Telemetry: Live metrics, total registered users, active sessions, API uptime.
+   2. User Management Suite: User search, profile inspector, role elevation (Student, Mentor,
+      College Admin, Super Admin), and account ban/unban moderation.
+   3. Mentor Governance: Review pending mentor applications, verify credentials, approve slots.
+   4. College Campus Governance: Onboard university partners, configure cohort seats.
+   5. Question Bank Studio: Full CRUD interface for coding problems, hidden/public test cases,
+      starter templates, difficulty levels, and 4-tier progressive hints.
+   6. Adaptive Roadmap Studio: Create and edit career tracks, milestone trees, and curriculum.
+   7. Daily Mission Studio: Curate and publish daily task sequences and streak multipliers.
+   8. Pricing & Monetization: Manage subscription plans (Free, Pro, Campus Enterprise) and feature flags.
+
+
+================================================================================
+12. PUBLIC PROOF-OF-WORK & VERIFIED PORTFOLIOS
+================================================================================
+Files:
+  - client/src/pages/profile/ProfilePage.tsx
+  - client/src/pages/profile/PublicPortfolioPage.tsx
+  - client/src/pages/weekly-review/WeeklyReviewPage.tsx
+
+A. Public Developer Showcase (/u/:username):
+   - Shareable vanity URLs designed specifically for technical recruiters.
+   - 100% Real Data Invariant: Zero fake starter mocks or artificial placeholder projects.
+   - Verified Credentials: Units of code tested, codeathons participated, deployed projects.
+   - GitHub integration, resume download button, and direct recruiter contact links.
+
+B. Weekly Adaptive Review (/weekly-review):
+   - Sunday evening reflection questionnaire: Planned vs completed study hours.
+   - Blocker Logger: Records college mid-term exams, sick days, or project deadlines.
+   - AI Pace Calibration: Dynamically scales down or reschedules next week's mission workload
+     to prevent student burnout.
+
+
+================================================================================
+13. PRODUCTIVITY UTILITIES & UX ACCELERATORS
+================================================================================
+Files:
+  - client/src/components/common/MascotCompanion.tsx
+  - client/src/components/common/CommandPalette.tsx
+  - client/src/components/layout/Navbar.tsx, Sidebar.tsx
+
+A. Interactive AI Mascot Companion:
+   - Dynamic floating desktop companion at bottom-right of workspace.
+   - Real-time 9-direction eye-gaze tracking following mouse cursor coordinates.
+   - Squash-and-stretch organic physics animations upon click and hover.
+   - Contextual micro-reactions: Streak congratulations, mission reminders, celebrate confetti.
+
+B. Global Command Palette (Ctrl+K / Cmd+K):
+   - Omnipresent keyboard-driven quick jump interface.
+   - Fuzzy searching across all tracks, coding problems, pages, tools, and actions.
+
+C. UI & Styling Standards:
+   - Responsive design adapted across ultra-low-spec mobile phones to high-spec 4K desktops.
+   - Native dark mode (#181818) and light mode (#FAFAFA).
+   - Zero unnecessary hover translateY / scale jank; clean standard border and color transitions.
+
+
+================================================================================
+14. TECHNICAL STACK & BACKEND SERVICES SUMMARY
+================================================================================
+A. Frontend Stack:
+   - React 18 with TypeScript and Vite.
+   - Tailwind CSS for modern responsive styling.
+   - Monaco Editor for code practice.
+   - Canvas-Confetti & Lucide React for rich micro-interactions and icons.
+
+B. Backend Stack:
+   - Node.js & Express with TypeScript.
+   - Dual Database Architecture:
+     * MongoDB (Mongoose): High-speed storage for questions, missions, roadmaps, and profiles.
+     * Supabase (PostgreSQL): Real-time change streams, mentorship sessions, and campus cohorts.
+   - Google Gemini API: Fast flash models powering adaptive roadmaps, mission generation,
+     and progressive hints.
+   - Isolated Code Execution Engine: Child process sandboxing with timeout and memory enforcement.
+   - Playwright Scrapers: Headless multi-platform scrapers for Devpost, Unstop, and Luma.
+   - Resend / Nodemailer: Transactional emails, session invites, and OTP verification.
+================================================================================
+                                END OF FILE
+================================================================================
